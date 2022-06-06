@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+<<<<<<< HEAD
+=======
+Upcoming
+------------------------------------
+- Fix: SDK can now be used on Intel x86_64 emulators
+- Prevent R8 warnings for apps consuming the SDK 
+
+>>>>>>> 9388d5c... [#537] Prevent R8 warnings for OkHttp
 Version 1.5.0-beta01
 ------------------------------------
 - New: Transactions can be created after NU5 activation.
