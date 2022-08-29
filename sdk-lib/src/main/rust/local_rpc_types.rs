@@ -201,7 +201,7 @@ impl TransparentTransactionList {
         ::std::default::Default::default()
     }
 
-    // repeated .cash.z.ecc.android.sdk.rpc.TransparentTransaction transactions = 1;
+    // repeated .pirate.android.sdk.rpc.TransparentTransaction transactions = 1;
 
 
     pub fn get_transactions(&self) -> &[TransparentTransaction] {
@@ -759,10 +759,10 @@ impl ::protobuf::reflect::ProtobufValue for TransparentTransaction {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x15local_rpc_types.proto\x12\x1acash.z.ecc.android.sdk.rpc\"-\n\x13Tr\
+    \n\x15local_rpc_types.proto\x12\x1apirate.android.sdk.rpc\"-\n\x13Tr\
     ansactionDataList\x12\x14\n\x04data\x18\x01\x20\x03(\x0cR\x04dataB\0:\0\
     \"x\n\x1aTransparentTransactionList\x12X\n\x0ctransactions\x18\x01\x20\
-    \x03(\x0b22.cash.z.ecc.android.sdk.rpc.TransparentTransactionR\x0ctransa\
+    \x03(\x0b22.pirate.android.sdk.rpc.TransparentTransactionR\x0ctransa\
     ctionsB\0:\0\"\xbe\x02\n\x16TransparentTransaction\x12$\n\x0cprotoVersio\
     n\x18\x01\x20\x01(\rR\x0cprotoVersionB\0\x12$\n\x0cexpiryHeight\x18\x02\
     \x20\x01(\rR\x0cexpiryHeightB\0\x120\n\x12hasShieldedOutputs\x18\x03\x20\

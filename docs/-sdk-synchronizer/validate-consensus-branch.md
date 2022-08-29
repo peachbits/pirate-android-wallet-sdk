@@ -1,8 +1,8 @@
-[zcash-android-wallet-sdk](../../index.md) / [cash.z.ecc.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [validateConsensusBranch](./validate-consensus-branch.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [validateConsensusBranch](./validate-consensus-branch.md)
 
 # validateConsensusBranch
 
-`suspend fun validateConsensusBranch(): `[`ConsensusMatchType`](../../cash.z.ecc.android.sdk.validate/-consensus-match-type/index.md)
+`suspend fun validateConsensusBranch(): `[`ConsensusMatchType`](../../pirate.android.sdk.validate/-consensus-match-type/index.md)
 
 Validate whether the server and this SDK share the same consensus branch. This is
 particularly important to check around network updates so that any wallet that's connected to
@@ -12,6 +12,6 @@ function compares the server's branch id to this SDK's and returns information t
 determine whether they match.
 
 **Return**
-an instance of [ConsensusMatchType](../../cash.z.ecc.android.sdk.validate/-consensus-match-type/index.md) that is essentially a wrapper for both branch ids
+an instance of [ConsensusMatchType](../../pirate.android.sdk.validate/-consensus-match-type/index.md) that is essentially a wrapper for both branch ids
 and provides helper functions for communicating detailed errors to the user.
 

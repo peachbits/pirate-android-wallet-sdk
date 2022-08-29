@@ -1,8 +1,8 @@
-[zcash-android-wallet-sdk](../../index.md) / [cash.z.ecc.android.sdk.data](../index.md) / [SdkSynchronizer](index.md) / [cancelSend](./cancel-send.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [SdkSynchronizer](index.md) / [cancelSend](./cancel-send.md)
 
 # cancelSend
 
-`fun cancelSend(transaction: `[`SentTransaction`](../../cash.z.ecc.android.sdk.entity/-sent-transaction/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)
+`fun cancelSend(transaction: `[`SentTransaction`](../../pirate.android.sdk.entity/-sent-transaction/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)
 
 Overrides [Synchronizer.cancelSend](../-synchronizer/cancel-send.md)
 

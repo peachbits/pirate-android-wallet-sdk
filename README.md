@@ -1,5 +1,6 @@
 [![license](https://img.shields.io/github/license/zcash/zcash-android-wallet-sdk.svg?maxAge=2592000&style=plastic)](https://github.com/zcash/zcash-android-wallet-sdk/blob/master/LICENSE)
-![Maven Central](https://img.shields.io/maven-central/v/cash.z.ecc.android/zcash-android-sdk?color=success&style=plastic)
+
+![Maven Central](https://img.shields.io/maven-central/v/pirate.android/pirate-android-sdk?color=success&style=plastic)
 
 This is a beta build and is currently under active development. Please be advised of the following:
 
@@ -9,15 +10,19 @@ This is a beta build and is currently under active development. Please be advise
 
 🔒 Security Warnings
 
-- The Zcash Android Wallet SDK is experimental and a work in progress. Use it at your own risk.
+- The Pirate Android Wallet SDK is experimental and a work in progress. Use it at your own risk.
 - Developers using this SDK must familiarize themselves with the current [threat
   model](https://zcash.readthedocs.io/en/latest/rtd_pages/wallet_threat_model.html), especially the known weaknesses described there.
 
 ---
 
-# Zcash Android SDK
+# Pirate Android SDK
 
-This lightweight SDK connects Android to Zcash. It welds together Rust and Kotlin in a minimal way, allowing third-party Android apps to send and receive shielded transactions easily, securely and privately.
+This lightweight SDK connects Android to the Pirate network. It welds together Rust and Kotlin in a minimal way, allowing third-party Android apps to send and receive shielded transactions easily, securely and privately.
+
+Implemented:
+ - Pirate Chain - Mainnet
+ - Pirate Chain - Testnet (incomplete)
 
 ## Contents
 
@@ -37,7 +42,7 @@ This SDK is designed to work with [lightwalletd](https://github.com/zcash-hackwo
 
 ## Structure
 
-From an app developer's perspective, this SDK will encapsulate the most complex aspects of using Zcash, freeing the developer to focus on UI and UX, rather than scanning blockchains and building commitment trees! Internally, the SDK is structured as follows:
+From an app developer's perspective, this SDK will encapsulate the most complex aspects of using Pirate, freeing the developer to focus on UI and UX, rather than scanning blockchains and building commitment trees! Internally, the SDK is structured as follows:
 
 ![SDK Diagram](assets/sdk_diagram_final.png?raw=true "SDK Diagram")
 
@@ -49,7 +54,7 @@ Thankfully, the only thing an app developer has to be concerned with is the foll
 
 ## Overview
 
-At a high level, this SDK simply helps native Android codebases connect to Zcash's Rust crypto libraries without needing to know Rust or be a Cryptographer. Think of it as welding. The SDK takes separate things and tightly bonds them together such that each can remain as idiomatic as possible. Its goal is to make it easy for an app to incorporate shielded transactions while remaining a good citizen on mobile devices.
+At a high level, this SDK simply helps native Android codebases connect to Pirate's Rust crypto libraries without needing to know Rust or be a Cryptographer. Think of it as welding. The SDK takes separate things and tightly bonds them together such that each can remain as idiomatic as possible. Its goal is to make it easy for an app to incorporate shielded transactions while remaining a good citizen on mobile devices.
 
 Given all the moving parts, making things easy requires coordination. The [Synchronizer](docs/-synchronizer/README.md) provides that layer of abstraction so that the primary steps to make use of this SDK are simply:
 
@@ -62,7 +67,7 @@ The [Synchronizer](docs/-synchronizer/README.md) takes care of
     - Downloading the latest compact blocks in a privacy-sensitive way
     - Scanning and trial decrypting those blocks for shielded transactions related to the wallet
     - Processing those related transactions into useful data for the UI
-    - Sending payments to a full node through [lightwalletd](https://github.com/zcash/lightwalletd)
+    - Sending payments to a full node through [lightwalletd](https://github.com/piratenetwork/lightwalletd)
     - Monitoring sent payments for status updates
 
 To accomplish this, these responsibilities of the SDK are divided into separate components. Each component is coordinated by the [Synchronizer](docs/-synchronizer/README.md), which is the thread that ties it all together.
@@ -83,20 +88,18 @@ To accomplish this, these responsibilities of the SDK are divided into separate 
 
 ## Quickstart
 
-Add flavors for testnet v mainnet. Since `productFlavors` cannot start with the word 'test' we recommend:
-
-build.gradle:
+Add flavors for testnet, mainnet and piratenet. Since `productFlavors` cannot start with the word 'test' we recommend:
 ```groovy
 flavorDimensions 'network'
 productFlavors {
     // would rather name them "testnet" and "mainnet" but product flavor names cannot start with the word "test"
-    zcashtestnet {
+    piratetestnet {
         dimension 'network'
-        matchingFallbacks = ['zcashtestnet', 'debug']
+        matchingFallbacks = ['piratetestnet', 'debug']
     }
-    zcashmainnet {
+    piratemainnet {
         dimension 'network'
-        matchingFallbacks = ['zcashmainnet', 'release']
+        matchingFallbacks = ['piratemainnet', 'release']
     }
 }
 ```
@@ -107,22 +110,22 @@ flavorDimensions.add("network")
 
 productFlavors {
     // would rather name them "testnet" and "mainnet" but product flavor names cannot start with the word "test"
-    create("zcashtestnet") {
+    create("piratetestnet") {
         dimension = "network"
-        matchingFallbacks.addAll(listOf("zcashtestnet", "debug"))
+        matchingFallbacks.addAll(listOf("piratetestnet", "debug"))
     }
 
-    create("zcashmainnet") {
+    create("piratemainnet") {
         dimension = "network"
-        matchingFallbacks.addAll(listOf("zcashmainnet", "release"))
+        matchingFallbacks.addAll(listOf("piratemainnet", "release"))
     }
 }
 ```
 
 Add the SDK dependency:
 
-```kotlin
-implementation("cash.z.ecc.android:zcash-android-sdk:1.4.0-beta01")
+```groovy
+implementation 'pirate.android:pirate-android-sdk:1.5.0-beta01'
 ```
 
 Start the [Synchronizer](docs/-synchronizer/README.md)
@@ -157,14 +160,14 @@ Full working examples can be found in the [demo app](demo-app), covering all maj
 
 Menu Item|Related Code|Description
 :-----|:-----|:-----
-Get Private Key|[GetPrivateKeyFragment.kt](demo-app/src/main/java/cash/z/ecc/android/sdk/demoapp/demos/getprivatekey/GetPrivateKeyFragment.kt)|Given a seed, display its viewing key and spending key
-Get Address|[GetAddressFragment.kt](demo-app/src/main/java/cash/z/ecc/android/sdk/demoapp/demos/getaddress/GetAddressFragment.kt)|Given a seed, display its z-addr
-Get Balance|[GetBalanceFragment.kt](demo-app/src/main/java/cash/z/ecc/android/sdk/demoapp/demos/getbalance/GetBalanceFragment.kt)|Display the balance
-Get Latest Height|[GetLatestHeightFragment.kt](demo-app/src/main/java/cash/z/ecc/android/sdk/demoapp/demos/getlatestheight/GetLatestHeightFragment.kt)|Given a lightwalletd server, retrieve the latest block height
-Get Block|[GetBlockFragment.kt](demo-app/src/main/java/cash/z/ecc/android/sdk/demoapp/demos/getblock/GetBlockFragment.kt)|Given a lightwalletd server, retrieve a compact block
-Get Block Range|[GetBlockRangeFragment.kt](demo-app/src/main/java/cash/z/ecc/android/sdk/demoapp/demos/getblockrange/GetBlockRangeFragment.kt)|Given a lightwalletd server, retrieve a range of compact blocks
-List Transactions|[ListTransactionsFragment.kt](demo-app/src/main/java/cash/z/ecc/android/sdk/demoapp/demos/listtransactions/ListTransactionsFragment.kt)|Given a seed, list all related shielded transactions
-Send|[SendFragment.kt](demo-app/src/main/java/cash/z/ecc/android/sdk/demoapp/demos/send/SendFragment.kt)|Send and monitor a transaction, the most complex demo
+Get Private Key|[GetPrivateKeyFragment.kt](demo-app/src/main/java/pirate/android/sdk/demoapp/demos/getprivatekey/GetPrivateKeyFragment.kt)|Given a seed, display its viewing key and spending key
+Get Address|[GetAddressFragment.kt](demo-app/src/main/java/pirate/android/sdk/demoapp/demos/getaddress/GetAddressFragment.kt)|Given a seed, display its z-addr
+Get Balance|[GetBalanceFragment.kt](demo-app/src/main/java/pirate/android/sdk/demoapp/demos/getbalance/GetBalanceFragment.kt)|Display the balance
+Get Latest Height|[GetLatestHeightFragment.kt](demo-app/src/main/java/pirate/android/sdk/demoapp/demos/getlatestheight/GetLatestHeightFragment.kt)|Given a lightwalletd server, retrieve the latest block height
+Get Block|[GetBlockFragment.kt](demo-app/src/main/java/pirate/android/sdk/demoapp/demos/getblock/GetBlockFragment.kt)|Given a lightwalletd server, retrieve a compact block
+Get Block Range|[GetBlockRangeFragment.kt](demo-app/src/main/java/pirate/android/sdk/demoapp/demos/getblockrange/GetBlockRangeFragment.kt)|Given a lightwalletd server, retrieve a range of compact blocks
+List Transactions|[ListTransactionsFragment.kt](demo-app/src/main/java/pirate/android/sdk/demoapp/demos/listtransactions/ListTransactionsFragment.kt)|Given a seed, list all related shielded transactions
+Send|[SendFragment.kt](demo-app/src/main/java/pirate/android/sdk/demoapp/demos/send/SendFragment.kt)|Send and monitor a transaction, the most complex demo
 
 
 [Back to contents](#contents)
@@ -183,8 +186,8 @@ In the event that you *do* want to compile the SDK from sources, follow these st
 ```bash
 rustup target add armv7-linux-androideabi aarch64-linux-android i686-linux-android x86_64-linux-android
 ```
-3. Clone this repo 
-4. [Install Android Studio](https://developer.android.com/studio/install) and open this project via `/your/path/to/zcash-android-wallet-sdk/build.gradle.kts`
+3. Clone this repo
+4. [Install Android Studio](https://developer.android.com/studio/install) and open this project via `/your/path/to/pirate-android-wallet-sdk/build.gradle.kts`
 5. Open Android Studio’s SDK manager
 <p align="center">
     <img src="assets/sdk-manager-icon.png?raw=true" width="70%"/>
@@ -199,9 +202,9 @@ rustup target add armv7-linux-androideabi aarch64-linux-android i686-linux-andro
   8. To build from the command line, run:
   ```bash
   ./gradlew assemble
-  
+
   // or to install in MavenLocal
-  
+
   ./gradlew publishToMavenLocal
   ```
 
@@ -212,14 +215,14 @@ Note that merely using the SDK does not require installing Rust or Cargo--that i
 The repo also contains a small demo application, to verify integration with the SDK.  Note that by default, the demo application is configured to retrieve dependencies from artifact hosting and therefore does not rely on the local compilation of the SDK.  This can be changed by publishing to maven local as described above, as local maven publications will take precedence over hosted publications in the demo app.
 1. [Create an emulator](https://developer.android.com/studio/run/managing-avds) if you don’t already have one (recommended target: API 31)
 2. Import the subdirectory samples/demo-app as a separate Android Studio project
-3. Select your desired build variant. Currently, we recommend `zcashmainnetDebug` as the testnet variants are slower to sync to current height due to a lack of checkpoints.
+3. Select your desired build variant. Currently, we recommend `piratemainnetDebug` as the testnet variants are slower to sync to current height due to a lack of checkpoints.
 <p align="center">
     <img src="assets/build-variants.png?raw=true" width="54%"/>
 </p>
 
 4. Sync project with Gradle files, and build from the IDE. Alternatively, to build from the command line run:
   ```bash
-  ./gradlew clean assembleZcashmainnetDebug
+  ./gradlew clean assemblePiratemainnetDebug
   ```
 
 [Back to contents](#contents)
@@ -248,7 +251,7 @@ There's also a more comprehensive [Sample Wallet](https://github.com/zcash/zcash
 [Back to contents](#contents)
 
 ## Checkpoints
-To improve the speed of syncing with the Zcash network, the SDK contains a series of embedded checkpoints.  These should be updated periodically, as new transactions are added to the network.  Checkpoints are stored under the [assets](sdk-lib/src/main/assets) directory as JSON files.  Checkpoints for both mainnet and testnet are bundled into the SDK.
+To improve the speed of syncing with the Pirate network, the SDK contains a series of embedded checkpoints.  These should be updated periodically, as new transactions are added to the network.  Checkpoints are stored under the [assets](sdk-lib/src/main/assets) directory as JSON files.  Checkpoints for both mainnet and testnet are bundled into the SDK.
 
 To update the checkpoints, see [Checkmate](https://github.com/zcash-hackworks/checkmate).
 

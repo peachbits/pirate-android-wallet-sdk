@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [cash.z.ecc.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [onCriticalErrorHandler](./on-critical-error-handler.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [onCriticalErrorHandler](./on-critical-error-handler.md)
 
 # onCriticalErrorHandler
 

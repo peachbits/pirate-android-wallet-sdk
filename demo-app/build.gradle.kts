@@ -9,7 +9,7 @@ plugins {
 
 android {
     defaultConfig {
-        applicationId = "cash.z.ecc.android.sdk.demoapp"
+        applicationId = "pirate.android.sdk.demoapp"
         minSdk = 21 // Different from the SDK min
         versionCode = 1
         versionName = "1.0"
@@ -22,16 +22,16 @@ android {
 
     productFlavors {
         // would rather name them "testnet" and "mainnet" but product flavor names cannot start with the word "test"
-        create("zcashtestnet") {
+        create("piratetestnet") {
             dimension = "network"
-            applicationId = "cash.z.ecc.android.sdk.demoapp.testnet"
-            matchingFallbacks.addAll(listOf("zcashtestnet", "debug"))
+            applicationId = "pirate.android.sdk.demoapp.testnet"
+            matchingFallbacks.addAll(listOf("piratetestnet", "debug"))
         }
 
-        create("zcashmainnet") {
+        create("piratemainnet") {
             dimension = "network"
-            applicationId = "cash.z.ecc.android.sdk.demoapp.mainnet"
-            matchingFallbacks.addAll(listOf("zcashmainnet", "release"))
+            applicationId = "pirate.android.sdk.demoapp.mainnet"
+            matchingFallbacks.addAll(listOf("piratemainnet", "release"))
         }
     }
 
@@ -106,7 +106,7 @@ if (firebaseTestLabKeyPath.isNotBlank()) {
 
                 debugApk.set(
                     project.provider {
-                        "${buildDir}/outputs/apk/zcashmainnet/release/demo-app-zcashmainnet-release.apk"
+                        "${buildDir}/outputs/apk/piratemainnet/release/demo-app-piratemainnet-release.apk"
                     }
                 )
 

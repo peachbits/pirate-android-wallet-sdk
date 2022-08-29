@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [cash.z.ecc.android.sdk.ext](../index.md) / [Twig](index.md) / [prune](./prune.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.ext](../index.md) / [Twig](index.md) / [prune](./prune.md)
 
 # prune
 

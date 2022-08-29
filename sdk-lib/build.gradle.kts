@@ -21,7 +21,7 @@ plugins {
 val isSnapshot = project.property("IS_SNAPSHOT").toString().toBoolean()
 val version = project.property("LIBRARY_VERSION").toString()
 val ARTIFACT_ID = project.property("POM_ARTIFACT_ID").toString()
-project.group = "cash.z.ecc.android"
+project.group = "io.github.piratenetwork"
 project.version = if (isSnapshot) {
     "$version-SNAPSHOT"
 } else {
@@ -108,14 +108,14 @@ mavenPublish {
 
 allOpen {
     // marker for classes that we want to be able to extend in debug builds for testing purposes
-    annotation("cash.z.ecc.android.sdk.annotation.OpenClass")
+    annotation("pirate.android.sdk.annotation.OpenClass")
 }
 
 tasks.dokkaHtml.configure {
     dokkaSourceSets {
         configureEach {
             outputDirectory.set(file("build/docs/rtd"))
-            displayName.set("Zcash Android SDK")
+            displayName.set("Pirate Android SDK")
             includes.from("packages.md")
         }
     }

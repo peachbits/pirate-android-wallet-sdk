@@ -178,7 +178,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "zcash-android-sdk"
+rootProject.name = "pirate-android-sdk"
 
 includeBuild("build-conventions")
 

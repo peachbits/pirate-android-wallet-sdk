@@ -12,7 +12,7 @@ There are a variety of aspects to building the SDK and demo app.  Although much 
 # Publishing
 1. Run the task `./gradlew publishToMavenLocal`
 1. Open the `~/.m2` directory and look for the newly published artifact
-1. Verify the coordinate are correct, e.g. `cash/z/ecc/android/zcash-android-sdk`
+1. Verify the coordinate are correct, e.g. `pirate/android/pirate-android-sdk`
 1. Verify the version is correct, matching the version set in `gradle.properties`
 1. Verify the file size looks correct—the AAR should be on the order of 9 megabytes, which indicates that the native libraries have been bundled in
 

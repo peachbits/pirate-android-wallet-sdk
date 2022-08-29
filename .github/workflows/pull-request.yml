@@ -149,7 +149,7 @@ jobs:
           # Disable minify, since it makes lint run faster
           ORG_GRADLE_PROJECT_IS_MINIFY_APP_ENABLED: false
         run: |
-          ./gradlew :sdk-lib:lintRelease :demo-app:lintZcashmainnetRelease
+          ./gradlew :sdk-lib:lintRelease :demo-app:lintPiratemainnetRelease
       - name: Collect Artifacts
         timeout-minutes: 1
         env:

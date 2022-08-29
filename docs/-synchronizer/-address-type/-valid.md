@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../../index.md) / [cash.z.wallet.sdk](../../index.md) / [Synchronizer](../index.md) / [AddressType](index.md) / [Valid](./-valid.md)
+[zcash-android-wallet-sdk](../../../index.md) / [pirate.wallet.sdk](../../index.md) / [Synchronizer](../index.md) / [AddressType](index.md) / [Valid](./-valid.md)
 
 # Valid
 

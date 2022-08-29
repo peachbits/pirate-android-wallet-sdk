@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [cash.z.ecc.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [findBlockHashAsHex](./find-block-hash-as-hex.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [findBlockHashAsHex](./find-block-hash-as-hex.md)
 
 # findBlockHashAsHex
 
