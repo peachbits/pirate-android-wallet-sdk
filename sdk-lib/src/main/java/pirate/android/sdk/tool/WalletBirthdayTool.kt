@@ -64,7 +64,7 @@ object WalletBirthdayTool {
      */
     @VisibleForTesting
     internal fun birthdayDirectory(network: PirateNetwork) =
-        "saplingtree/${(network.networkName as java.lang.String).toLowerCase(Locale.US)}"
+        "piratesaplingtree/${(network.networkName as java.lang.String).toLowerCase(Locale.US)}"
 
     internal fun birthdayHeight(fileName: String) = fileName.split('.').first().toInt()
 
