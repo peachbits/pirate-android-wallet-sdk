@@ -468,7 +468,7 @@ dependencies = [
 [[package]]
 name = "equihash"
 version = "0.1.0"
-source = "git+https://github.com/piratenetwork/librustzcash?rev=190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e#190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e"
+source = "git+https://github.com/piratenetwork/librustzcash?rev=6cb335650a4625d0ab713de14685443ebc4f318e#6cb335650a4625d0ab713de14685443ebc4f318e"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -1552,7 +1552,7 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 [[package]]
 name = "zcash_client_backend"
 version = "0.5.0"
-source = "git+https://github.com/piratenetwork/librustzcash?rev=190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e#190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e"
+source = "git+https://github.com/piratenetwork/librustzcash?rev=6cb335650a4625d0ab713de14685443ebc4f318e#6cb335650a4625d0ab713de14685443ebc4f318e"
 dependencies = [
  "base64",
  "bech32",
@@ -1581,7 +1581,7 @@ dependencies = [
 [[package]]
 name = "zcash_client_sqlite"
 version = "0.3.0"
-source = "git+https://github.com/piratenetwork/librustzcash?rev=190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e#190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e"
+source = "git+https://github.com/piratenetwork/librustzcash?rev=6cb335650a4625d0ab713de14685443ebc4f318e#6cb335650a4625d0ab713de14685443ebc4f318e"
 dependencies = [
  "bech32",
  "bs58",
@@ -1600,7 +1600,7 @@ dependencies = [
 [[package]]
 name = "zcash_note_encryption"
 version = "0.0.0"
-source = "git+https://github.com/piratenetwork/librustzcash?rev=190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e#190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e"
+source = "git+https://github.com/piratenetwork/librustzcash?rev=6cb335650a4625d0ab713de14685443ebc4f318e#6cb335650a4625d0ab713de14685443ebc4f318e"
 dependencies = [
  "blake2b_simd",
  "byteorder",
@@ -1614,7 +1614,7 @@ dependencies = [
 [[package]]
 name = "zcash_primitives"
 version = "0.5.0"
-source = "git+https://github.com/piratenetwork/librustzcash?rev=190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e#190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e"
+source = "git+https://github.com/piratenetwork/librustzcash?rev=6cb335650a4625d0ab713de14685443ebc4f318e#6cb335650a4625d0ab713de14685443ebc4f318e"
 dependencies = [
  "aes",
  "bitvec 0.18.5",
@@ -1644,7 +1644,7 @@ dependencies = [
 [[package]]
 name = "zcash_proofs"
 version = "0.5.0"
-source = "git+https://github.com/piratenetwork/librustzcash?rev=190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e#190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e"
+source = "git+https://github.com/piratenetwork/librustzcash?rev=6cb335650a4625d0ab713de14685443ebc4f318e#6cb335650a4625d0ab713de14685443ebc4f318e"
 dependencies = [
  "bellman",
  "blake2b_simd",

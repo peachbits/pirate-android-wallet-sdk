@@ -44,10 +44,10 @@ secp256k1 = "0.19"
 
 # Uncomment this to test someone else's librustzcash changes in a branch
 [patch.crates-io]
-zcash_client_backend = {git = 'https://github.com/piratenetwork/librustzcash', rev = '190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e'}
-zcash_client_sqlite = {git = 'https://github.com/piratenetwork/librustzcash', rev = '190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e'}
-zcash_primitives = {git = 'https://github.com/piratenetwork/librustzcash', rev = '190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e'}
-zcash_proofs = {git = 'https://github.com/piratenetwork/librustzcash', rev = '190c19e00f7df60c7cdbf6cd0c71b84a3458fb1e'}
+zcash_client_backend = {git = 'https://github.com/piratenetwork/librustzcash', rev = '6cb335650a4625d0ab713de14685443ebc4f318e'}
+zcash_client_sqlite = {git = 'https://github.com/piratenetwork/librustzcash', rev = '6cb335650a4625d0ab713de14685443ebc4f318e'}
+zcash_primitives = {git = 'https://github.com/piratenetwork/librustzcash', rev = '6cb335650a4625d0ab713de14685443ebc4f318e'}
+zcash_proofs = {git = 'https://github.com/piratenetwork/librustzcash', rev = '6cb335650a4625d0ab713de14685443ebc4f318e'}
 
 [features]
 mainnet = ["zcash_client_sqlite/mainnet"]
