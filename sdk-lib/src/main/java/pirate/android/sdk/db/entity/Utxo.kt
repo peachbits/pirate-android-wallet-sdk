@@ -15,7 +15,7 @@ import androidx.room.ForeignKey
         )
     ]
 )
-data class Utxo(
+data class PirateUtxo(
     @ColumnInfo(name = "id_utxo")
     val id: Long? = 0L,
 
@@ -43,7 +43,7 @@ data class Utxo(
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is Utxo) return false
+        if (other !is PirateUtxo) return false
 
         if (id != other.id) return false
         if (address != other.address) return false

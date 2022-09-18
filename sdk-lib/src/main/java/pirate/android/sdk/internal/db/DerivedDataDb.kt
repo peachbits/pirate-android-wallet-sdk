@@ -15,7 +15,7 @@ import pirate.android.sdk.db.entity.PirateEncodedTransaction
 import pirate.android.sdk.db.entity.PirateReceived
 import pirate.android.sdk.db.entity.PirateSent
 import pirate.android.sdk.db.entity.PirateTransactionEntity
-import pirate.android.sdk.db.entity.Utxo
+import pirate.android.sdk.db.entity.PirateUtxo
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.type.UnifiedAddressAccount
 
@@ -37,7 +37,7 @@ import pirate.android.sdk.type.UnifiedAddressAccount
         PirateReceived::class,
         PirateAccount::class,
         PirateSent::class,
-        Utxo::class
+        PirateUtxo::class
     ],
     version = 7,
     exportSchema = true
