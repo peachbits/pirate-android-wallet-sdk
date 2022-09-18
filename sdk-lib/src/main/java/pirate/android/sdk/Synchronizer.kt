@@ -1,7 +1,7 @@
 package pirate.android.sdk
 
 import pirate.android.sdk.block.PirateCompactBlockProcessor
-import pirate.android.sdk.db.entity.ConfirmedTransaction
+import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.type.AddressType
@@ -125,17 +125,17 @@ interface Synchronizer {
     /**
      * A flow of all the transactions that are on the blockchain.
      */
-    val clearedTransactions: Flow<List<ConfirmedTransaction>>
+    val clearedTransactions: Flow<List<PirateConfirmedTransaction>>
 
     /**
      * A flow of all transactions related to sending funds.
      */
-    val sentTransactions: Flow<List<ConfirmedTransaction>>
+    val sentTransactions: Flow<List<PirateConfirmedTransaction>>
 
     /**
      * A flow of all transactions related to receiving funds.
      */
-    val receivedTransactions: Flow<List<ConfirmedTransaction>>
+    val receivedTransactions: Flow<List<PirateConfirmedTransaction>>
 
     //
     // Latest Properties

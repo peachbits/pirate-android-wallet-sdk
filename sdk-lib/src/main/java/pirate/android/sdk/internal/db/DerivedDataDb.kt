@@ -10,7 +10,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import pirate.android.sdk.db.entity.PirateAccount
 import pirate.android.sdk.db.entity.PirateBlock
-import pirate.android.sdk.db.entity.ConfirmedTransaction
+import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.db.entity.EncodedTransaction
 import pirate.android.sdk.db.entity.PirateReceived
 import pirate.android.sdk.db.entity.PirateSent
@@ -302,7 +302,7 @@ interface TransactionDao {
         LIMIT  :limit
         """
     )
-    fun getSentTransactions(limit: Int = Int.MAX_VALUE): DataSource.Factory<Int, ConfirmedTransaction>
+    fun getSentTransactions(limit: Int = Int.MAX_VALUE): DataSource.Factory<Int, PirateConfirmedTransaction>
 
     /**
      * Query transactions, aggregating information on send/receive, sorted carefully so the newest
@@ -328,7 +328,7 @@ interface TransactionDao {
         LIMIT  :limit
         """
     )
-    fun getReceivedTransactions(limit: Int = Int.MAX_VALUE): DataSource.Factory<Int, ConfirmedTransaction>
+    fun getReceivedTransactions(limit: Int = Int.MAX_VALUE): DataSource.Factory<Int, PirateConfirmedTransaction>
 
     /**
      * Query all transactions, joining outbound and inbound transactions into the same table.
@@ -373,7 +373,7 @@ interface TransactionDao {
          LIMIT  :limit
         """
     )
-    fun getAllTransactions(limit: Int = Int.MAX_VALUE): DataSource.Factory<Int, ConfirmedTransaction>
+    fun getAllTransactions(limit: Int = Int.MAX_VALUE): DataSource.Factory<Int, PirateConfirmedTransaction>
 
     /**
      * Query the transactions table over the given block range, this includes transactions that
@@ -418,7 +418,7 @@ interface TransactionDao {
         LIMIT  :limit
         """
     )
-    suspend fun findAllTransactionsByRange(blockRangeStart: Int, blockRangeEnd: Int = blockRangeStart, limit: Int = Int.MAX_VALUE): List<ConfirmedTransaction>
+    suspend fun findAllTransactionsByRange(blockRangeStart: Int, blockRangeEnd: Int = blockRangeStart, limit: Int = Int.MAX_VALUE): List<PirateConfirmedTransaction>
 
     // Experimental: cleanup cancelled transactions
     //               This should probably be a rust call but there's not a lot of bandwidth for this

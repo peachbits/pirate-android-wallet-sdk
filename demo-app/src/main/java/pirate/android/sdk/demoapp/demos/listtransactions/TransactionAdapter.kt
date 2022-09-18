@@ -4,13 +4,13 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import pirate.android.sdk.db.entity.ConfirmedTransaction
+import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.demoapp.R
 
 /**
  * Simple adapter implementation that knows how to bind a recyclerview to ClearedTransactions.
  */
-class TransactionAdapter<T : ConfirmedTransaction> :
+class TransactionAdapter<T : PirateConfirmedTransaction> :
     ListAdapter<T, TransactionViewHolder<T>>(
         object : DiffUtil.ItemCallback<T>() {
             override fun areItemsTheSame(

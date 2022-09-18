@@ -11,7 +11,7 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Scanned
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Scanning
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Stopped
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Validating
-import pirate.android.sdk.db.entity.ConfirmedTransaction
+import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException.EnhanceTransactionError.EnhanceTxDecryptError
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException.EnhanceTransactionError.EnhanceTxDownloadError
@@ -361,7 +361,7 @@ class PirateCompactBlockProcessor(
     }
 
     // TODO: we still need a way to identify those transactions that failed to be enhanced
-    private suspend fun enhance(transaction: ConfirmedTransaction) = withContext(Dispatchers.IO) {
+    private suspend fun enhance(transaction: PirateConfirmedTransaction) = withContext(Dispatchers.IO) {
         var downloaded = false
         try {
             twig("START: enhancing transaction (id:${transaction.id}  block:${transaction.minedHeight})")

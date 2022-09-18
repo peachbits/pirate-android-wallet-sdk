@@ -1,6 +1,6 @@
 package pirate.android.sdk.internal.transaction
 
-import pirate.android.sdk.db.entity.ConfirmedTransaction
+import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.db.entity.EncodedTransaction
 import pirate.android.sdk.type.UnifiedAddressAccount
 import kotlinx.coroutines.flow.Flow
@@ -51,7 +51,7 @@ interface TransactionRepository {
      *
      * @return a list of transactions that were mined in the given range, inclusive.
      */
-    suspend fun findNewTransactions(blockHeightRange: IntRange): List<ConfirmedTransaction>
+    suspend fun findNewTransactions(blockHeightRange: IntRange): List<PirateConfirmedTransaction>
 
     /**
      * Find the mined height that matches the given raw tx_id in bytes. This is useful for matching
@@ -92,11 +92,11 @@ interface TransactionRepository {
     //
 
     /** A flow of all the inbound confirmed transactions */
-    val receivedTransactions: Flow<List<ConfirmedTransaction>>
+    val receivedTransactions: Flow<List<PirateConfirmedTransaction>>
 
     /** A flow of all the outbound confirmed transactions */
-    val sentTransactions: Flow<List<ConfirmedTransaction>>
+    val sentTransactions: Flow<List<PirateConfirmedTransaction>>
 
     /** A flow of all the inbound and outbound confirmed transactions */
-    val allTransactions: Flow<List<ConfirmedTransaction>>
+    val allTransactions: Flow<List<PirateConfirmedTransaction>>
 }

@@ -151,7 +151,7 @@ data class PiratePendingTransactionEntity(
  * A mined, shielded transaction. Since this is a [MinedTransaction], it represents data
  * on the blockchain.
  */
-data class ConfirmedTransaction(
+data class PirateConfirmedTransaction(
     override val id: Long = 0L,
     override val value: Long = 0L,
     override val memo: ByteArray? = ByteArray(0),
@@ -168,7 +168,7 @@ data class ConfirmedTransaction(
 ) : MinedTransaction, SignedTransaction {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is ConfirmedTransaction) return false
+        if (other !is PirateConfirmedTransaction) return false
 
         if (id != other.id) return false
         if (value != other.value) return false

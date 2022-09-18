@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.paging.PagedList
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import pirate.android.sdk.db.entity.ConfirmedTransaction
+import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.SdkExecutors
@@ -42,17 +42,17 @@ class PagedTransactionRepository private constructor(
     private val allTransactionsFactory = transactions.getAllTransactions().toRefreshable()
 
     override val receivedTransactions
-        get() = flow<List<ConfirmedTransaction>> {
+        get() = flow<List<PirateConfirmedTransaction>> {
             emitAll(
                 transactions.getReceivedTransactions().toRefreshable().toFlowPagedList(pageSize)
             )
         }
     override val sentTransactions
-        get() = flow<List<ConfirmedTransaction>> {
+        get() = flow<List<PirateConfirmedTransaction>> {
             emitAll(transactions.getSentTransactions().toRefreshable().toFlowPagedList(pageSize))
         }
     override val allTransactions
-        get() = flow<List<ConfirmedTransaction>> {
+        get() = flow<List<PirateConfirmedTransaction>> {
             emitAll(allTransactionsFactory.toFlowPagedList(pageSize))
         }
 
@@ -71,7 +71,7 @@ class PagedTransactionRepository private constructor(
     override suspend fun findEncodedTransactionById(txId: Long) =
         transactions.findEncodedTransactionById(txId)
 
-    override suspend fun findNewTransactions(blockHeightRange: IntRange): List<ConfirmedTransaction> =
+    override suspend fun findNewTransactions(blockHeightRange: IntRange): List<PirateConfirmedTransaction> =
         transactions.findAllTransactionsByRange(blockHeightRange.first, blockHeightRange.last)
 
     override suspend fun findMinedHeight(rawTransactionId: ByteArray) =

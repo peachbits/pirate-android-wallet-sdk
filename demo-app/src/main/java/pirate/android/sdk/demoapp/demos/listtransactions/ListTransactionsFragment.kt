@@ -10,7 +10,7 @@ import cash.z.ecc.android.bip39.toSeed
 import pirate.android.sdk.Initializer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
-import pirate.android.sdk.db.entity.ConfirmedTransaction
+import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentListTransactionsBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
@@ -31,7 +31,7 @@ import kotlinx.coroutines.runBlocking
 class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBinding>() {
     private lateinit var initializer: Initializer
     private lateinit var synchronizer: Synchronizer
-    private lateinit var adapter: TransactionAdapter<ConfirmedTransaction>
+    private lateinit var adapter: TransactionAdapter<PirateConfirmedTransaction>
     private lateinit var address: String
     private var status: Synchronizer.Status? = null
     private val isSynced get() = status == Synchronizer.Status.SYNCED
@@ -100,7 +100,7 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
         binding.textInfo.visibility = View.INVISIBLE
     }
 
-    private fun onTransactionsUpdated(transactions: List<ConfirmedTransaction>) {
+    private fun onTransactionsUpdated(transactions: List<PirateConfirmedTransaction>) {
         twig("got a new paged list of transactions")
         adapter.submitList(transactions)
 

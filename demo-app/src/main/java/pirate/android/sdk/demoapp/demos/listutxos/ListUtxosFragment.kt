@@ -11,7 +11,7 @@ import pirate.android.sdk.Initializer
 import pirate.android.sdk.SdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
-import pirate.android.sdk.db.entity.ConfirmedTransaction
+import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.DemoConstants
 import pirate.android.sdk.demoapp.databinding.FragmentListUtxosBinding
@@ -44,7 +44,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
     private lateinit var seed: ByteArray
     private lateinit var initializer: Initializer
     private lateinit var synchronizer: Synchronizer
-    private lateinit var adapter: UtxoAdapter<ConfirmedTransaction>
+    private lateinit var adapter: UtxoAdapter<PirateConfirmedTransaction>
     private val address: String = "t1RwbKka1CnktvAJ1cSqdn7c6PXWG4tZqgd"
     private var status: Synchronizer.Status? = null
 
@@ -232,7 +232,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
         binding.textStatus.visibility = View.INVISIBLE
     }
 
-    private fun onTransactionsUpdated(transactions: List<ConfirmedTransaction>) {
+    private fun onTransactionsUpdated(transactions: List<PirateConfirmedTransaction>) {
         twig("got a new paged list of transactions of size ${transactions.size}")
         adapter.submitList(transactions)
     }
