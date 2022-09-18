@@ -251,7 +251,7 @@ class SdkSynchronizer internal constructor(
 
     /**
      * Starts this synchronizer within the given scope. For simplicity, attempting to start an
-     * instance that has already been started will throw a [PirateSynchronizerException.FalseStart]
+     * instance that has already been started will throw a [PirateSynchronizerException.PirateFalseStart]
      * exception. This reduces the complexity of managing resources that must be recycled. Instead,
      * each synchronizer is designed to have a long lifespan and should be started from an activity,
      * application or session.
@@ -265,7 +265,7 @@ class SdkSynchronizer internal constructor(
      * @return an instance of this class so that this function can be used fluidly.
      */
     override fun start(parentScope: CoroutineScope?): Synchronizer {
-        if (isStarted) throw PirateSynchronizerException.FalseStart
+        if (isStarted) throw PirateSynchronizerException.PirateFalseStart
         // base this scope on the parent so that when the parent's job cancels, everything here
         // cancels as well also use a supervisor job so that one failure doesn't bring down the
         // whole synchronizer

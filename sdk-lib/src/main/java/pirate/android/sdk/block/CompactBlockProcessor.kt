@@ -13,12 +13,12 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Stopped
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Validating
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException
-import pirate.android.sdk.exception.PirateCompactBlockProcessorException.EnhanceTransactionError.EnhanceTxDecryptError
-import pirate.android.sdk.exception.PirateCompactBlockProcessorException.EnhanceTransactionError.EnhanceTxDownloadError
-import pirate.android.sdk.exception.PirateCompactBlockProcessorException.MismatchedBranch
-import pirate.android.sdk.exception.PirateCompactBlockProcessorException.MismatchedNetwork
-import pirate.android.sdk.exception.InitializerException
-import pirate.android.sdk.exception.RustLayerException
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateEnhanceTransactionError.PirateEnhanceTxDecryptError
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateEnhanceTransactionError.PirateEnhanceTxDownloadError
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateMismatchedBranch
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateMismatchedNetwork
+import pirate.android.sdk.exception.PirateInitializerException
+import pirate.android.sdk.exception.PirateRustLayerException
 import pirate.android.sdk.ext.BatchMetrics
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.PirateSdk.DOWNLOAD_BATCH_SIZE
@@ -207,7 +207,7 @@ class PirateCompactBlockProcessor(
                 } else {
                     if (consecutiveChainErrors.get() >= RETRIES) {
                         val errorMessage = "ERROR: unable to resolve reorg at height $result after ${consecutiveChainErrors.get()} correction attempts!"
-                        fail(PirateCompactBlockProcessorException.FailedReorgRepair(errorMessage))
+                        fail(PirateCompactBlockProcessorException.PirateFailedReorgRepair(errorMessage))
                     } else {
                         handleChainError(result)
                     }
@@ -318,7 +318,7 @@ class PirateCompactBlockProcessor(
             // rather than a boolean
             setState(Scanning)
             val success = scanNewBlocks(lastScanRange)
-            if (!success) throw PirateCompactBlockProcessorException.FailedScan()
+            if (!success) throw PirateCompactBlockProcessorException.PirateFailedScan()
             else {
                 setState(Scanned(lastScanRange))
             }
@@ -374,8 +374,8 @@ class PirateCompactBlockProcessor(
         } catch (t: Throwable) {
             twig("Warning: failure on transaction: error: $t\ttransaction: $transaction")
             onProcessorError(
-                if (downloaded) EnhanceTxDecryptError(transaction.minedHeight, t)
-                else EnhanceTxDownloadError(transaction.minedHeight, t)
+                if (downloaded) PirateEnhanceTxDecryptError(transaction.minedHeight, t)
+                else PirateEnhanceTxDownloadError(transaction.minedHeight, t)
             )
         }
     }
@@ -394,8 +394,8 @@ class PirateCompactBlockProcessor(
                     val clientBranch = "%x".format(rustBackend.getBranchIdForHeight(info.blockHeight.toInt()))
                     val network = rustBackend.network.networkName
                     when {
-                        !info.matchingNetwork(network) -> MismatchedNetwork(clientNetwork = network, serverNetwork = info.chainName)
-                        !info.matchingConsensusBranchId(clientBranch) -> MismatchedBranch(clientBranch = clientBranch, serverBranch = info.consensusBranchId, networkName = network)
+                        !info.matchingNetwork(network) -> PirateMismatchedNetwork(clientNetwork = network, serverNetwork = info.chainName)
+                        !info.matchingConsensusBranchId(clientBranch) -> PirateMismatchedBranch(clientBranch = clientBranch, serverBranch = info.consensusBranchId, networkName = network)
                         else -> null
                     }
                 }
@@ -497,7 +497,7 @@ class PirateCompactBlockProcessor(
             var progress: Int
             twig("found $missingBlockCount missing blocks, downloading in $batches batches of $DOWNLOAD_BATCH_SIZE...")
             for (i in 1..batches) {
-                retryUpTo(RETRIES, { PirateCompactBlockProcessorException.FailedDownload(it) }) {
+                retryUpTo(RETRIES, { PirateCompactBlockProcessorException.PirateFailedDownload(it) }) {
                     val end = min((range.first + (i * DOWNLOAD_BATCH_SIZE)) - 1, range.last) // subtract 1 on the first value because the range is inclusive
                     var count = 0
                     twig("downloaded $downloadedBlockHeight..$end (batch $i of $batches) [${downloadedBlockHeight..end}]") {
@@ -558,7 +558,7 @@ class PirateCompactBlockProcessor(
             var metrics = BatchMetrics(range, SCAN_BATCH_SIZE, onScanMetricCompleteListener)
             // Attempt to scan a few times to work around any concurrent modification errors, then
             // rethrow as an official processorError which is handled by [start.retryWithBackoff]
-            retryUpTo(3, { PirateCompactBlockProcessorException.FailedScan(it) }) { failedAttempts ->
+            retryUpTo(3, { PirateCompactBlockProcessorException.PirateFailedScan(it) }) { failedAttempts ->
                 if (failedAttempts > 0) twig("retrying the scan after $failedAttempts failure(s)...")
                 do {
                     var scannedNewBlocks = false
@@ -792,11 +792,11 @@ class PirateCompactBlockProcessor(
      */
     suspend fun getShieldedAddress(accountId: Int = 0) =
         repository.getAccount(accountId)?.rawShieldedAddress
-            ?: throw InitializerException.MissingAddressException("shielded")
+            ?: throw PirateInitializerException.PirateMissingAddressException("shielded")
 
     suspend fun getTransparentAddress(accountId: Int = 0) =
         repository.getAccount(accountId)?.rawTransparentAddress
-            ?: throw InitializerException.MissingAddressException("transparent")
+            ?: throw PirateInitializerException.PirateMissingAddressException("transparent")
 
     /**
      * Calculates the latest balance info. Defaults to the first account.
@@ -815,7 +815,7 @@ class PirateCompactBlockProcessor(
                 PirateWalletBalance(balanceTotal, balanceAvailable)
             } catch (t: Throwable) {
                 twig("failed to get balance due to $t")
-                throw RustLayerException.BalanceException(t)
+                throw PirateRustLayerException.PirateBalanceException(t)
             }
         }
 

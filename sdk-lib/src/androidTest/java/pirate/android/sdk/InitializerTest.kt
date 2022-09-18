@@ -42,7 +42,7 @@ class InitializerTest {
 //        assertFalse("Expected false when erasing nothing.", Initializer.erase(context))
 //    }
 //
-//    @Test(expected = InitializerException.MissingDefaultBirthdayException::class)
+//    @Test(expected = PirateInitializerException.PirateMissingDefaultBirthdayException::class)
 //    fun testMissingBirthday() {
 //        val config = Initializer.Config { config ->
 //            config.setViewingKeys("vk1")
@@ -50,7 +50,7 @@ class InitializerTest {
 //        config.validate()
 //    }
 //
-//    @Test(expected = InitializerException.InvalidBirthdayHeightException::class)
+//    @Test(expected = PirateInitializerException.PirateInvalidBirthdayHeightException::class)
 //    fun testOutOfBoundsBirthday() {
 //        val config = Initializer.Config { config ->
 //            config.setViewingKeys("vk1")

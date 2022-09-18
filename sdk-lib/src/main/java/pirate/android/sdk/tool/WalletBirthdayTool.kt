@@ -2,7 +2,7 @@ package pirate.android.sdk.tool
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import pirate.android.sdk.exception.BirthdayException
+import pirate.android.sdk.exception.PirateBirthdayException
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.type.WalletBirthday
 import pirate.android.sdk.type.PirateNetwork
@@ -45,7 +45,7 @@ object WalletBirthdayTool {
     suspend fun loadExact(context: Context, network: PirateNetwork, birthdayHeight: Int) =
         loadNearest(context, network, birthdayHeight).also {
             if (it.height != birthdayHeight)
-                throw BirthdayException.ExactBirthdayNotFoundException(
+                throw PirateBirthdayException.PirateExactBirthdayNotFoundException(
                     birthdayHeight,
                     it.height
                 )
@@ -102,7 +102,7 @@ object WalletBirthdayTool {
     ): List<String> {
         val unfilteredTreeFiles = listBirthdayDirectoryContents(context, directory)
         if (unfilteredTreeFiles.isNullOrEmpty()) {
-            throw BirthdayException.MissingBirthdayFilesException(directory)
+            throw PirateBirthdayException.PirateMissingBirthdayFilesException(directory)
         }
 
         val filteredTreeFiles = unfilteredTreeFiles
@@ -112,7 +112,7 @@ object WalletBirthdayTool {
             }
 
         if (filteredTreeFiles.isEmpty()) {
-            throw BirthdayException.BirthdayFileNotFoundException(
+            throw PirateBirthdayException.PirateBirthdayFileNotFoundException(
                 directory,
                 birthdayHeight
             )
@@ -143,7 +143,7 @@ object WalletBirthdayTool {
                     }
                 }
             } catch (t: Throwable) {
-                val exception = BirthdayException.MalformattedBirthdayFilesException(
+                val exception = PirateBirthdayException.PirateMalformattedBirthdayFilesException(
                     directory,
                     treefile
                 )

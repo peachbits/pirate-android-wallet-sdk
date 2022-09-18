@@ -4,8 +4,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
-import pirate.android.sdk.exception.LightWalletException.ChangeServerException.ChainInfoNotMatching
-import pirate.android.sdk.exception.LightWalletException.ChangeServerException.StatusException
+import pirate.android.sdk.exception.PirateLightWalletException.PirateChangeServerException.PirateChainInfoNotMatching
+import pirate.android.sdk.exception.PirateLightWalletException.PirateChangeServerException.PirateStatusException
 import pirate.android.sdk.internal.block.CompactBlockDownloader
 import pirate.android.sdk.internal.block.CompactBlockStore
 import pirate.android.sdk.internal.service.LightWalletGrpcService
@@ -111,7 +111,7 @@ class ChangeServiceTest : ScopedTest() {
         assertNotNull("Using an invalid host should generate an exception.", caughtException)
         assertTrue(
             "Exception was of the wrong type.",
-            caughtException is StatusException
+            caughtException is PirateStatusException
         )
     }
 
@@ -123,10 +123,10 @@ class ChangeServiceTest : ScopedTest() {
         }
         assertNotNull("Using an invalid host should generate an exception.", caughtException)
         assertTrue(
-            "Exception was of the wrong type. Expected ${ChainInfoNotMatching::class.simpleName} but was ${caughtException!!::class.simpleName}",
-            caughtException is ChainInfoNotMatching
+            "Exception was of the wrong type. Expected ${PirateChainInfoNotMatching::class.simpleName} but was ${caughtException!!::class.simpleName}",
+            caughtException is PirateChainInfoNotMatching
         )
-        (caughtException as ChainInfoNotMatching).propertyNames.let { props ->
+        (caughtException as PirateChainInfoNotMatching).propertyNames.let { props ->
             arrayOf("saplingActivationHeight", "chainName").forEach {
                 assertTrue(
                     "$it should be a non-matching property but properties were [$props]", props.contains(it, true)

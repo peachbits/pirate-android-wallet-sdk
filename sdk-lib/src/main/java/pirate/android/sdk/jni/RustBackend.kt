@@ -1,6 +1,6 @@
 package pirate.android.sdk.jni
 
-import pirate.android.sdk.exception.BirthdayException
+import pirate.android.sdk.exception.PirateBirthdayException
 import pirate.android.sdk.ext.PirateSdk.OUTPUT_PARAM_FILE_NAME
 import pirate.android.sdk.ext.PirateSdk.SPEND_PARAM_FILE_NAME
 import pirate.android.sdk.internal.SdkDispatchers
@@ -31,7 +31,7 @@ class RustBackend private constructor() : RustBackendWelding {
     override lateinit var network: PirateNetwork
 
     internal var birthdayHeight: Int = -1
-        get() = if (field != -1) field else throw BirthdayException.UninitializedBirthdayException
+        get() = if (field != -1) field else throw PirateBirthdayException.UninitializedBirthdayException
         private set
 
     suspend fun clear(clearCacheDb: Boolean = true, clearDataDb: Boolean = true) {

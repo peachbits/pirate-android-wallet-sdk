@@ -15,8 +15,8 @@ open class PirateSdkException(message: String, cause: Throwable?) : RuntimeExcep
  * Exceptions thrown in the Rust layer of the SDK. We may not always be able to surface details about this
  * exception so it's important for the SDK to provide helpful messages whenever these errors are encountered.
  */
-sealed class RustLayerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    class BalanceException(cause: Throwable) : RustLayerException(
+sealed class PirateRustLayerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+    class PirateBalanceException(cause: Throwable) : PirateRustLayerException(
         "Error while requesting the current balance over " +
             "JNI. This might mean that the database has been corrupted and needs to be rebuilt. Verify that " +
             "blocks are not missing or have not been scanned out of order.",
@@ -28,7 +28,7 @@ sealed class RustLayerException(message: String, cause: Throwable? = null) : Pir
  * User-facing exceptions thrown by the transaction repository.
  */
 sealed class PirateRepositoryException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    object FalseStart : PirateRepositoryException(
+    object PirateFalseStart : PirateRepositoryException(
         "The channel is closed. Note that once a repository has stopped it " +
             "cannot be restarted. Verify that the repository is not being restarted."
     )
@@ -47,7 +47,7 @@ sealed class PirateRepositoryException(message: String, cause: Throwable? = null
  * child component.
  */
 sealed class PirateSynchronizerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    object FalseStart : PirateSynchronizerException(
+    object PirateFalseStart : PirateSynchronizerException(
         "This synchronizer was already started. Multiple calls to start are not" +
             "allowed and once a synchronizer has stopped it cannot be restarted."
     )
@@ -62,30 +62,30 @@ sealed class PirateSynchronizerException(message: String, cause: Throwable? = nu
  * Potentially user-facing exceptions that occur while processing compact blocks.
  */
 sealed class PirateCompactBlockProcessorException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    class DataDbMissing(path: String) : PirateCompactBlockProcessorException(
+    class PirateDataDbMissing(path: String) : PirateCompactBlockProcessorException(
         "No data db file found at path $path. Verify " +
             "that the data DB has been initialized via `rustBackend.initDataDb(path)`"
     )
-    open class ConfigurationException(message: String, cause: Throwable?) : PirateCompactBlockProcessorException(message, cause)
-    class FileInsteadOfPath(fileName: String) : ConfigurationException(
+    open class PirateConfigurationException(message: String, cause: Throwable?) : PirateCompactBlockProcessorException(message, cause)
+    class PirateFileInsteadOfPath(fileName: String) : PirateConfigurationException(
         "Invalid Path: the given path appears to be a" +
             " file name instead of a path: $fileName. The RustBackend expects the absolutePath to the database rather" +
             " than just the database filename because Rust does not access the app Context." +
             " So pass in context.getDatabasePath(dbFileName).absolutePath instead of just dbFileName alone.",
         null
     )
-    class FailedReorgRepair(message: String) : PirateCompactBlockProcessorException(message)
-    class FailedDownload(cause: Throwable? = null) : PirateCompactBlockProcessorException(
+    class PirateFailedReorgRepair(message: String) : PirateCompactBlockProcessorException(message)
+    class PirateFailedDownload(cause: Throwable? = null) : PirateCompactBlockProcessorException(
         "Error while downloading blocks. This most " +
             "likely means the server is down or slow to respond. See logs for details.",
         cause
     )
-    class FailedScan(cause: Throwable? = null) : PirateCompactBlockProcessorException(
+    class PirateFailedScan(cause: Throwable? = null) : PirateCompactBlockProcessorException(
         "Error while scanning blocks. This most " +
             "likely means a block was missed or a reorg was mishandled. See logs for details.",
         cause
     )
-    class Disconnected(cause: Throwable? = null) : PirateCompactBlockProcessorException("Disconnected Error. Unable to download blocks due to ${cause?.message}", cause)
+    class PirateDisconnected(cause: Throwable? = null) : PirateCompactBlockProcessorException("Disconnected Error. Unable to download blocks due to ${cause?.message}", cause)
     object Uninitialized : PirateCompactBlockProcessorException(
         "Cannot process blocks because the wallet has not been" +
             " initialized. Verify that the seed phrase was properly created or imported. If so, then this problem" +
@@ -95,16 +95,16 @@ sealed class PirateCompactBlockProcessorException(message: String, cause: Throwa
         "Attempting to scan without an account. This is probably a setup error or a race condition."
     )
 
-    open class EnhanceTransactionError(message: String, val height: Int, cause: Throwable) : PirateCompactBlockProcessorException(message, cause) {
-        class EnhanceTxDownloadError(height: Int, cause: Throwable) : EnhanceTransactionError("Error while attempting to download a transaction to enhance", height, cause)
-        class EnhanceTxDecryptError(height: Int, cause: Throwable) : EnhanceTransactionError("Error while attempting to decrypt and store a transaction to enhance", height, cause)
+    open class PirateEnhanceTransactionError(message: String, val height: Int, cause: Throwable) : PirateCompactBlockProcessorException(message, cause) {
+        class PirateEnhanceTxDownloadError(height: Int, cause: Throwable) : PirateEnhanceTransactionError("Error while attempting to download a transaction to enhance", height, cause)
+        class PirateEnhanceTxDecryptError(height: Int, cause: Throwable) : PirateEnhanceTransactionError("Error while attempting to decrypt and store a transaction to enhance", height, cause)
     }
 
-    class MismatchedNetwork(clientNetwork: String?, serverNetwork: String?) : PirateCompactBlockProcessorException(
+    class PirateMismatchedNetwork(clientNetwork: String?, serverNetwork: String?) : PirateCompactBlockProcessorException(
         "Incompatible server: this client expects a server using $clientNetwork but it was $serverNetwork! Try updating the client or switching servers."
     )
 
-    class MismatchedBranch(clientBranch: String?, serverBranch: String?, networkName: String?) : PirateCompactBlockProcessorException(
+    class PirateMismatchedBranch(clientBranch: String?, serverBranch: String?, networkName: String?) : PirateCompactBlockProcessorException(
         "Incompatible server: this client expects a server following consensus branch $clientBranch on $networkName but it was $serverBranch! Try updating the client or switching servers."
     )
 }
@@ -112,26 +112,26 @@ sealed class PirateCompactBlockProcessorException(message: String, cause: Throwa
 /**
  * Exceptions related to the wallet's birthday.
  */
-sealed class BirthdayException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    object UninitializedBirthdayException : BirthdayException(
+sealed class PirateBirthdayException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+    object UninitializedBirthdayException : PirateBirthdayException(
         "Error the birthday cannot be" +
             " accessed before it is initialized. Verify that the new, import or open functions" +
             " have been called on the initializer."
     )
-    class MissingBirthdayFilesException(directory: String) : BirthdayException(
+    class PirateMissingBirthdayFilesException(directory: String) : PirateBirthdayException(
         "Cannot initialize wallet because no birthday files were found in the $directory directory."
     )
-    class ExactBirthdayNotFoundException(height: Int, nearestMatch: Int? = null) : BirthdayException(
+    class PirateExactBirthdayNotFoundException(height: Int, nearestMatch: Int? = null) : PirateBirthdayException(
         "Unable to find birthday that exactly matches $height.${
         if (nearestMatch != null)
             " An exact match was request but the nearest match found was $nearestMatch."
         else ""
         }"
     )
-    class BirthdayFileNotFoundException(directory: String, height: Int?) : BirthdayException(
+    class PirateBirthdayFileNotFoundException(directory: String, height: Int?) : PirateBirthdayException(
         "Unable to find birthday file for $height verify that $directory/$height.json exists."
     )
-    class MalformattedBirthdayFilesException(directory: String, file: String) : BirthdayException(
+    class PirateMalformattedBirthdayFilesException(directory: String, file: String) : PirateBirthdayException(
         "Failed to parse file $directory/$file verify that it is formatted as #####.json, " +
             "where the first portion is an Int representing the height of the tree contained in the file"
     )
@@ -140,26 +140,26 @@ sealed class BirthdayException(message: String, cause: Throwable? = null) : Pira
 /**
  * Exceptions thrown by the initializer.
  */
-sealed class InitializerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    class FalseStart(cause: Throwable?) : InitializerException("Failed to initialize accounts due to: $cause", cause)
-    class AlreadyInitializedException(cause: Throwable, dbPath: String) : InitializerException(
+sealed class PirateInitializerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+    class PirateFalseStart(cause: Throwable?) : PirateInitializerException("Failed to initialize accounts due to: $cause", cause)
+    class PirateAlreadyInitializedException(cause: Throwable, dbPath: String) : PirateInitializerException(
         "Failed to initialize the blocks table" +
             " because it already exists in $dbPath",
         cause
     )
-    object MissingBirthdayException : InitializerException(
+    object MissingBirthdayException : PirateInitializerException(
         "Expected a birthday for this wallet but failed to find one. This usually means that " +
             "wallet setup did not happen correctly. A workaround might be to interpret the " +
             "birthday,  based on the contents of the wallet data but it is probably better " +
             "not to mask this error because the root issue should be addressed."
     )
-    object MissingViewingKeyException : InitializerException(
+    object MissingViewingKeyException : PirateInitializerException(
         "Expected a unified viewingKey for this wallet but failed to find one. This usually means" +
             " that wallet setup happened incorrectly. A workaround might be to derive the" +
             " unified viewingKey from the seed or seedPhrase, if they exist, but it is probably" +
             " better not to mask this error because the root issue should be addressed."
     )
-    class MissingAddressException(description: String, cause: Throwable? = null) : InitializerException(
+    class PirateMissingAddressException(description: String, cause: Throwable? = null) : PirateInitializerException(
         "Expected a $description address for this wallet but failed to find one. This usually" +
             " means that wallet setup happened incorrectly. If this problem persists, a" +
             " workaround might be to go to settings and WIPE the wallet and rescan. Doing so" +
@@ -168,18 +168,18 @@ sealed class InitializerException(message: String, cause: Throwable? = null) : P
             if (cause != null) "\nCaused by: $cause" else ""
     )
     object DatabasePathException :
-        InitializerException(
+        PirateInitializerException(
             "Critical failure to locate path for storing databases. Perhaps this device prevents" +
                 " apps from storing data? We cannot initialize the wallet unless we can store" +
                 " data."
         )
 
-    class InvalidBirthdayHeightException(height: Int?, network: PirateNetwork) : InitializerException(
+    class PirateInvalidBirthdayHeightException(height: Int?, network: PirateNetwork) : PirateInitializerException(
         "Invalid birthday height of $height. The birthday height must be at least the height of" +
             " Sapling activation on ${network.networkName} (${network.saplingActivationHeight})."
     )
 
-    object MissingDefaultBirthdayException : InitializerException(
+    object PirateMissingDefaultBirthdayException : PirateInitializerException(
         "The birthday height is missing and it is unclear which value to use as a default."
     )
 }
@@ -187,15 +187,15 @@ sealed class InitializerException(message: String, cause: Throwable? = null) : P
 /**
  * Exceptions thrown while interacting with lightwalletd.
  */
-sealed class LightWalletException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    object InsecureConnection : LightWalletException(
+sealed class PirateLightWalletException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+    object InsecureConnection : PirateLightWalletException(
         "Error: attempted to connect to lightwalletd" +
             " with an insecure connection! Plaintext connections are only allowed when the" +
             " resource value for 'R.bool.lightwalletd_allow_very_insecure_connections' is true" +
             " because this choice should be explicit."
     )
-    class ConsensusBranchException(sdkBranch: String, lwdBranch: String) :
-        LightWalletException(
+    class PirateConsensusBranchException(sdkBranch: String, lwdBranch: String) :
+        PirateLightWalletException(
             "Error: the lightwalletd server is using a consensus branch" +
                 " (branch: $lwdBranch) that does not match the transactions being created" +
                 " (branch: $sdkBranch). This probably means the SDK and Server are on two" +
@@ -203,11 +203,11 @@ sealed class LightWalletException(message: String, cause: Throwable? = null) : P
                 " update the SDK to match lightwalletd or use a lightwalletd that matches the SDK."
         )
 
-    open class ChangeServerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-        class ChainInfoNotMatching(val propertyNames: String, val expectedInfo: Service.LightdInfo, val actualInfo: Service.LightdInfo) : ChangeServerException(
+    open class PirateChangeServerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+        class PirateChainInfoNotMatching(val propertyNames: String, val expectedInfo: Service.LightdInfo, val actualInfo: Service.LightdInfo) : PirateChangeServerException(
             "Server change error: the $propertyNames values did not match."
         )
-        class StatusException(val status: Status, cause: Throwable? = null) : PirateSdkException(status.toMessage(), cause) {
+        class PirateStatusException(val status: Status, cause: Throwable? = null) : PirateSdkException(status.toMessage(), cause) {
             companion object {
                 private fun Status.toMessage(): String {
                     return when (this.code) {
@@ -225,23 +225,23 @@ sealed class LightWalletException(message: String, cause: Throwable? = null) : P
 /**
  * Potentially user-facing exceptions thrown while encoding transactions.
  */
-sealed class TransactionEncoderException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    class FetchParamsException(message: String) : TransactionEncoderException("Failed to fetch params due to: $message")
-    object MissingParamsException : TransactionEncoderException(
+sealed class PirateTransactionEncoderException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+    class PirateFetchParamsException(message: String) : PirateTransactionEncoderException("Failed to fetch params due to: $message")
+    object MissingParamsException : PirateTransactionEncoderException(
         "Cannot send funds due to missing spend or output params and attempting to download them failed."
     )
-    class TransactionNotFoundException(transactionId: Long) : TransactionEncoderException(
+    class PirateTransactionNotFoundException(transactionId: Long) : PirateTransactionEncoderException(
         "Unable to find transactionId " +
             "$transactionId in the repository. This means the wallet created a transaction and then returned a row ID " +
             "that does not actually exist. This is a scenario where the wallet should have thrown an exception but failed " +
             "to do so."
     )
-    class TransactionNotEncodedException(transactionId: Long) : TransactionEncoderException(
+    class PirateTransactionNotEncodedException(transactionId: Long) : PirateTransactionEncoderException(
         "The transaction returned by the wallet," +
             " with id $transactionId, does not have any raw data. This is a scenario where the wallet should have thrown" +
             " an exception but failed to do so."
     )
-    class IncompleteScanException(lastScannedHeight: Int) : TransactionEncoderException(
+    class PirateIncompleteScanException(lastScannedHeight: Int) : PirateTransactionEncoderException(
         "Cannot" +
             " create spending transaction because scanning is incomplete. We must scan up to the" +
             " latest height to know which consensus rules to apply. However, the last scanned" +

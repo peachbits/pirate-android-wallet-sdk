@@ -1,6 +1,6 @@
 package pirate.android.sdk.internal
 
-import pirate.android.sdk.exception.TransactionEncoderException
+import pirate.android.sdk.exception.PirateTransactionEncoderException
 import pirate.android.sdk.ext.PirateSdk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -37,7 +37,7 @@ class SaplingParamTool {
                     }
                 } catch (e: Throwable) {
                     twig("failed to fetch params due to: $e")
-                    throw TransactionEncoderException.MissingParamsException
+                    throw PirateTransactionEncoderException.MissingParamsException
                 }
             }
         }
@@ -86,7 +86,7 @@ class SaplingParamTool {
 
                 twig("fetch succeeded, done writing $paramFileName")
             }
-            if (failureMessage.isNotEmpty()) throw TransactionEncoderException.FetchParamsException(
+            if (failureMessage.isNotEmpty()) throw PirateTransactionEncoderException.PirateFetchParamsException(
                 failureMessage
             )
         }

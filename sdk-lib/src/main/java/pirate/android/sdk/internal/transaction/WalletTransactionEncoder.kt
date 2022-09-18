@@ -1,7 +1,7 @@
 package pirate.android.sdk.internal.transaction
 
 import pirate.android.sdk.db.entity.PirateEncodedTransaction
-import pirate.android.sdk.exception.TransactionEncoderException
+import pirate.android.sdk.exception.PirateTransactionEncoderException
 import pirate.android.sdk.ext.masked
 import pirate.android.sdk.internal.SaplingParamTool
 import pirate.android.sdk.internal.twig
@@ -45,7 +45,7 @@ class WalletTransactionEncoder(
     ): PirateEncodedTransaction {
         val transactionId = createSpend(spendingKey, zatoshi, toAddress, memo)
         return repository.findEncodedTransactionById(transactionId)
-            ?: throw TransactionEncoderException.TransactionNotFoundException(transactionId)
+            ?: throw PirateTransactionEncoderException.PirateTransactionNotFoundException(transactionId)
     }
 
     override suspend fun createShieldingTransaction(
@@ -55,7 +55,7 @@ class WalletTransactionEncoder(
     ): PirateEncodedTransaction {
         val transactionId = createShieldingSpend(spendingKey, transparentSecretKey, memo)
         return repository.findEncodedTransactionById(transactionId)
-            ?: throw TransactionEncoderException.TransactionNotFoundException(transactionId)
+            ?: throw PirateTransactionEncoderException.PirateTransactionNotFoundException(transactionId)
     }
 
     /**
@@ -83,7 +83,7 @@ class WalletTransactionEncoder(
     override suspend fun getConsensusBranchId(): Long {
         val height = repository.lastScannedHeight()
         if (height < rustBackend.network.saplingActivationHeight)
-            throw TransactionEncoderException.IncompleteScanException(height)
+            throw PirateTransactionEncoderException.PirateIncompleteScanException(height)
         return rustBackend.getBranchIdForHeight(height)
     }
 

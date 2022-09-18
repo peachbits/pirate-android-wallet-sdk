@@ -3,7 +3,7 @@ package pirate.android.sdk.internal.service
 import android.content.Context
 import pirate.android.sdk.R
 import pirate.android.sdk.annotation.OpenForTesting
-import pirate.android.sdk.exception.LightWalletException
+import pirate.android.sdk.exception.PirateLightWalletException
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.type.PirateNetwork
 import cash.z.wallet.sdk.rpc.CompactFormats
@@ -221,7 +221,7 @@ class LightWalletGrpcService private constructor(
                         if (!appContext.resources.getBoolean(
                                 R.bool.lightwalletd_allow_very_insecure_connections
                             )
-                        ) throw LightWalletException.InsecureConnection
+                        ) throw PirateLightWalletException.InsecureConnection
                         usePlaintext()
                     } else {
                         useTransportSecurity()

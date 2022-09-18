@@ -1,7 +1,7 @@
 package pirate.android.sdk
 
 import android.content.Context
-import pirate.android.sdk.exception.InitializerException
+import pirate.android.sdk.exception.PirateInitializerException
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.ext.getCacheDirSuspend
@@ -280,14 +280,14 @@ class Initializer private constructor(
             // if birthday is missing then we need to know how to interpret it
             // so defaultToOldestHeight ought to be set, in that case
             if (birthdayHeight == null && defaultToOldestHeight == null) {
-                throw InitializerException.MissingDefaultBirthdayException
+                throw PirateInitializerException.PirateMissingDefaultBirthdayException
             }
             // allow either null or a value greater than the activation height
             if (
                 (birthdayHeight ?: network.saplingActivationHeight)
                 < network.saplingActivationHeight
             ) {
-                throw InitializerException.InvalidBirthdayHeightException(birthdayHeight, network)
+                throw PirateInitializerException.PirateInvalidBirthdayHeightException(birthdayHeight, network)
             }
         }
 
@@ -449,7 +449,7 @@ class Initializer private constructor(
         ): String {
             val parentDir: String =
                 appContext.getDatabasePathSuspend("unused.db").parentFile?.absolutePath
-                    ?: throw InitializerException.DatabasePathException
+                    ?: throw PirateInitializerException.DatabasePathException
             val prefix = if (alias.endsWith('_')) alias else "${alias}_"
             return File(parentDir, "$prefix${network.networkName}_$dbFileName").absolutePath
         }

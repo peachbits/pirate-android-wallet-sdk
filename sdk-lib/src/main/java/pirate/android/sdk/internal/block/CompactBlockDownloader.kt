@@ -1,5 +1,5 @@
 package pirate.android.sdk.internal.block
-import pirate.android.sdk.exception.LightWalletException
+import pirate.android.sdk.exception.PirateLightWalletException
 import pirate.android.sdk.internal.ext.retryUpTo
 import pirate.android.sdk.internal.ext.tryWarn
 import pirate.android.sdk.internal.service.LightWalletService
@@ -100,7 +100,7 @@ open class CompactBlockDownloader private constructor(val compactBlockStore: Com
 
             if (nonMatching.size > 0) {
                 errorHandler(
-                    LightWalletException.ChangeServerException.ChainInfoNotMatching(
+                    PirateLightWalletException.PirateChangeServerException.PirateChainInfoNotMatching(
                         nonMatching.joinToString(),
                         existing,
                         new
@@ -111,7 +111,7 @@ open class CompactBlockDownloader private constructor(val compactBlockStore: Com
             gracefullyShutdown(lightWalletService)
             lightWalletService = newService
         } catch (s: StatusRuntimeException) {
-            errorHandler(LightWalletException.ChangeServerException.StatusException(s.status))
+            errorHandler(PirateLightWalletException.PirateChangeServerException.PirateStatusException(s.status))
         } catch (t: Throwable) {
             errorHandler(t)
         }
