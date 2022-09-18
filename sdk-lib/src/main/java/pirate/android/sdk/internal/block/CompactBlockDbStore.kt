@@ -15,7 +15,7 @@ import kotlin.math.max
  * An implementation of CompactBlockStore that persists information to a database in the given
  * path. This represents the "cache db" or local cache of compact blocks waiting to be scanned.
  */
-class CompactBlockDbStore private constructor(
+class PirateCompactBlockDbStore private constructor(
     private val cacheDb: CompactBlockDb
 ) : CompactBlockStore {
 
@@ -43,10 +43,10 @@ class CompactBlockDbStore private constructor(
          * @param appContext the application context. This is used for creating the database.
          * @property dbPath the absolute path to the database.
          */
-        fun new(appContext: Context, dbPath: String): CompactBlockDbStore {
+        fun new(appContext: Context, dbPath: String): PirateCompactBlockDbStore {
             val cacheDb = createCompactBlockCacheDb(appContext.applicationContext, dbPath)
 
-            return CompactBlockDbStore(cacheDb)
+            return PirateCompactBlockDbStore(cacheDb)
         }
 
         private fun createCompactBlockCacheDb(

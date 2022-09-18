@@ -31,7 +31,7 @@ import pirate.android.sdk.db.entity.isSubmitted
 import pirate.android.sdk.exception.SynchronizerException
 import pirate.android.sdk.ext.ConsensusBranchId
 import pirate.android.sdk.ext.PirateSdk
-import pirate.android.sdk.internal.block.CompactBlockDbStore
+import pirate.android.sdk.internal.block.PirateCompactBlockDbStore
 import pirate.android.sdk.internal.block.CompactBlockDownloader
 import pirate.android.sdk.internal.block.CompactBlockStore
 import pirate.android.sdk.internal.ext.toHexReversed
@@ -791,7 +791,7 @@ object DefaultSynchronizerFactory {
         )
 
     fun defaultBlockStore(initializer: Initializer): CompactBlockStore =
-        CompactBlockDbStore.new(initializer.context, initializer.rustBackend.pathCacheDb)
+        PirateCompactBlockDbStore.new(initializer.context, initializer.rustBackend.pathCacheDb)
 
     fun defaultService(initializer: Initializer): LightWalletService =
         LightWalletGrpcService(initializer.context, initializer.host, initializer.port)

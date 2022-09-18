@@ -39,7 +39,7 @@ class BalancePrinterUtil {
 //
 //    private val downloader = CompactBlockDownloader(
 //        LightWalletGrpcService(context, host, port),
-//        CompactBlockDbStore(context, caceDbPath)
+//        PirateCompactBlockDbStore(context, caceDbPath)
 //    )
 
 //    private val processor = CompactBlockProcessor(downloader)
