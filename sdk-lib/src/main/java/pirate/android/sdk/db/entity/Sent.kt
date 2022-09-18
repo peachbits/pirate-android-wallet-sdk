@@ -19,7 +19,7 @@ import androidx.room.ForeignKey
         )
     ]
 )
-data class Sent(
+data class PirateSent(
     @ColumnInfo(name = "id_note")
     val id: Int? = 0,
 
@@ -42,7 +42,7 @@ data class Sent(
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is Sent) return false
+        if (other !is PirateSent) return false
 
         if (id != other.id) return false
         if (transactionId != other.transactionId) return false
