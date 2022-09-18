@@ -4,7 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
-import pirate.android.sdk.db.entity.EncodedTransaction
+import pirate.android.sdk.db.entity.PirateEncodedTransaction
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.db.entity.isCancelled
 import pirate.android.sdk.internal.TroubleshootingTwig
@@ -63,7 +63,7 @@ class PersistentTransactionManagerTest : ScopedTest() {
             }.thenAnswer { invocation ->
                 runBlocking {
                     delay(200)
-                    EncodedTransaction(byteArrayOf(1, 2, 3), byteArrayOf(8, 9), 5_000_000)
+                    PirateEncodedTransaction(byteArrayOf(1, 2, 3), byteArrayOf(8, 9), 5_000_000)
                 }
             }
         }

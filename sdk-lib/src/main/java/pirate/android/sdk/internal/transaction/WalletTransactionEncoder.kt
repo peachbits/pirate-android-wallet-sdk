@@ -1,6 +1,6 @@
 package pirate.android.sdk.internal.transaction
 
-import pirate.android.sdk.db.entity.EncodedTransaction
+import pirate.android.sdk.db.entity.PirateEncodedTransaction
 import pirate.android.sdk.exception.TransactionEncoderException
 import pirate.android.sdk.ext.masked
 import pirate.android.sdk.internal.SaplingParamTool
@@ -42,7 +42,7 @@ class WalletTransactionEncoder(
         toAddress: String,
         memo: ByteArray?,
         fromAccountIndex: Int
-    ): EncodedTransaction {
+    ): PirateEncodedTransaction {
         val transactionId = createSpend(spendingKey, zatoshi, toAddress, memo)
         return repository.findEncodedTransactionById(transactionId)
             ?: throw TransactionEncoderException.TransactionNotFoundException(transactionId)
@@ -52,7 +52,7 @@ class WalletTransactionEncoder(
         spendingKey: String,
         transparentSecretKey: String,
         memo: ByteArray?
-    ): EncodedTransaction {
+    ): PirateEncodedTransaction {
         val transactionId = createShieldingSpend(spendingKey, transparentSecretKey, memo)
         return repository.findEncodedTransactionById(transactionId)
             ?: throw TransactionEncoderException.TransactionNotFoundException(transactionId)

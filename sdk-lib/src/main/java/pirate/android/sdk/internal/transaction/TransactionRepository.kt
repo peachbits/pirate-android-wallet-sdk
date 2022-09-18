@@ -1,7 +1,7 @@
 package pirate.android.sdk.internal.transaction
 
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
-import pirate.android.sdk.db.entity.EncodedTransaction
+import pirate.android.sdk.db.entity.PirateEncodedTransaction
 import pirate.android.sdk.type.UnifiedAddressAccount
 import kotlinx.coroutines.flow.Flow
 
@@ -38,7 +38,7 @@ interface TransactionRepository {
      *
      * @return the transaction or null when it cannot be found.
      */
-    suspend fun findEncodedTransactionById(txId: Long): EncodedTransaction?
+    suspend fun findEncodedTransactionById(txId: Long): PirateEncodedTransaction?
 
     /**
      * Find all the newly scanned transactions in the given range, including transactions (like

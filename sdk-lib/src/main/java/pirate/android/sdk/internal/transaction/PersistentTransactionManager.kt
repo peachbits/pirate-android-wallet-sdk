@@ -29,7 +29,7 @@ import kotlin.math.max
  * transactions. This database effectively serves as the mempool for transactions created by this
  * wallet.
  * @property encoder responsible for encoding a transaction by taking all the inputs and returning
- * an [pirate.android.sdk.entity.EncodedTransaction] object containing the raw bytes and transaction
+ * an [pirate.android.sdk.entity.PirateEncodedTransaction] object containing the raw bytes and transaction
  * id.
  * @property service the lightwallet service used to submit transactions.
  */

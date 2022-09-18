@@ -1,6 +1,6 @@
 package pirate.android.sdk.internal.transaction
 
-import pirate.android.sdk.db.entity.EncodedTransaction
+import pirate.android.sdk.db.entity.PirateEncodedTransaction
 
 interface TransactionEncoder {
     /**
@@ -22,13 +22,13 @@ interface TransactionEncoder {
         toAddress: String,
         memo: ByteArray? = byteArrayOf(),
         fromAccountIndex: Int = 0
-    ): EncodedTransaction
+    ): PirateEncodedTransaction
 
     suspend fun createShieldingTransaction(
         spendingKey: String,
         transparentSecretKey: String,
         memo: ByteArray? = byteArrayOf()
-    ): EncodedTransaction
+    ): PirateEncodedTransaction
 
     /**
      * Utility function to help with validation. This is not called during [createTransaction]

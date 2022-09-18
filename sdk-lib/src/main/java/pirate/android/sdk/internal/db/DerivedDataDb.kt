@@ -11,7 +11,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import pirate.android.sdk.db.entity.PirateAccount
 import pirate.android.sdk.db.entity.PirateBlock
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
-import pirate.android.sdk.db.entity.EncodedTransaction
+import pirate.android.sdk.db.entity.PirateEncodedTransaction
 import pirate.android.sdk.db.entity.PirateReceived
 import pirate.android.sdk.db.entity.PirateSent
 import pirate.android.sdk.db.entity.PirateTransactionEntity
@@ -263,7 +263,7 @@ interface TransactionDao {
         WHERE  id_tx = :id AND raw is not null
         """
     )
-    suspend fun findEncodedTransactionById(id: Long): EncodedTransaction?
+    suspend fun findEncodedTransactionById(id: Long): PirateEncodedTransaction?
 
     @Query(
         """

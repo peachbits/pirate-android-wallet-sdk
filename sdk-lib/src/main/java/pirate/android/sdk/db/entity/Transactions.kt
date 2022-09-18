@@ -207,11 +207,11 @@ data class PirateConfirmedTransaction(
     }
 }
 
-data class EncodedTransaction(val txId: ByteArray, override val raw: ByteArray, val expiryHeight: Int?) :
+data class PirateEncodedTransaction(val txId: ByteArray, override val raw: ByteArray, val expiryHeight: Int?) :
     SignedTransaction {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is EncodedTransaction) return false
+        if (other !is PirateEncodedTransaction) return false
 
         if (!txId.contentEquals(other.txId)) return false
         if (!raw.contentEquals(other.raw)) return false
