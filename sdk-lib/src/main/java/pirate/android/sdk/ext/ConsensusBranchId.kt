@@ -7,7 +7,7 @@ import java.util.Locale
  * omitted since this is not the source of truth for branch information but rather a tool for
  * printing that information to users.
  */
-enum class ConsensusBranchId(val displayName: String, val id: Long, val hexId: String) {
+enum class PirateConsensusBranchId(val displayName: String, val id: Long, val hexId: String) {
     // TODO: see if we can find a way to not rely on this separate source of truth (either stop converting from hex to display name in the apps or use Rust to get this info)
     SPROUT("Sprout", 0, "0"),
     OVERWINTER("Overwinter", 0x5ba8_1b19, "5ba81b19"),
@@ -19,11 +19,11 @@ enum class ConsensusBranchId(val displayName: String, val id: Long, val hexId: S
     override fun toString(): String = displayName
 
     companion object {
-        fun fromName(name: String): ConsensusBranchId? = values().firstOrNull { it.displayName.equals(name, true) }
+        fun fromName(name: String): PirateConsensusBranchId? = values().firstOrNull { it.displayName.equals(name, true) }
 
-        fun fromId(id: Long): ConsensusBranchId? = values().firstOrNull { it.id == id }
+        fun fromId(id: Long): PirateConsensusBranchId? = values().firstOrNull { it.id == id }
 
-        fun fromHex(hex: String): ConsensusBranchId? = values().firstOrNull { branch ->
+        fun fromHex(hex: String): PirateConsensusBranchId? = values().firstOrNull { branch ->
             hex.toLowerCase(Locale.US).replace("_", "").replaceFirst("0x", "").let { sanitized ->
                 branch.hexId.equals(sanitized, true)
             }

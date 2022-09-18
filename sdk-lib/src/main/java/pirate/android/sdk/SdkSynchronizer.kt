@@ -29,7 +29,7 @@ import pirate.android.sdk.db.entity.isSafeToDiscard
 import pirate.android.sdk.db.entity.isSubmitSuccess
 import pirate.android.sdk.db.entity.isSubmitted
 import pirate.android.sdk.exception.PirateSynchronizerException
-import pirate.android.sdk.ext.ConsensusBranchId
+import pirate.android.sdk.ext.PirateConsensusBranchId
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.block.PirateCompactBlockDbStore
 import pirate.android.sdk.internal.block.CompactBlockDownloader
@@ -731,8 +731,8 @@ class SdkSynchronizer internal constructor(
             (txManager as PersistentTransactionManager).encoder.getConsensusBranchId()
         }
         return ConsensusMatchType(
-            sdkBranchId?.let { ConsensusBranchId.fromId(it) },
-            serverBranchId?.let { ConsensusBranchId.fromHex(it) }
+            sdkBranchId?.let { PirateConsensusBranchId.fromId(it) },
+            serverBranchId?.let { PirateConsensusBranchId.fromHex(it) }
         )
     }
 
