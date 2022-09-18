@@ -10,21 +10,21 @@ package pirate.android.sdk.type
  * notes that are tied up because we are awaiting change from a transaction. When a note has
  * been spent, its change cannot be used until there are enough confirmations.
  */
-data class WalletBalance(
+data class PirateWalletBalance(
     val totalZatoshi: Long = -1,
     val availableZatoshi: Long = -1
 ) {
     val pendingZatoshi = totalZatoshi.coerceAtLeast(0) - availableZatoshi.coerceAtLeast(0)
-    operator fun plus(other: WalletBalance): WalletBalance {
+    operator fun plus(other: PirateWalletBalance): PirateWalletBalance {
         return if (
             totalZatoshi == -1L && other.totalZatoshi == -1L &&
             availableZatoshi == -1L && other.availableZatoshi == -1L
         ) {
             // if everything is uninitialized, then return the same
-            WalletBalance(-1L, -1L)
+            PirateWalletBalance(-1L, -1L)
         } else {
             // otherwise, ignore any uninitialized values
-            WalletBalance(
+            PirateWalletBalance(
                 totalZatoshi = totalZatoshi.coerceAtLeast(0) + other.totalZatoshi.coerceAtLeast(0),
                 availableZatoshi = availableZatoshi.coerceAtLeast(0) + other.availableZatoshi.coerceAtLeast(
                     0

@@ -6,7 +6,7 @@ import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.type.AddressType
 import pirate.android.sdk.type.ConsensusMatchType
-import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import cash.z.wallet.sdk.rpc.Service
 import kotlinx.coroutines.CoroutineScope
@@ -102,17 +102,17 @@ interface Synchronizer {
     /**
      * A stream of balance values for the orchard pool. Includes the available and total balance.
      */
-    val orchardBalances: StateFlow<WalletBalance>
+    val orchardBalances: StateFlow<PirateWalletBalance>
 
     /**
      * A stream of balance values for the sapling pool. Includes the available and total balance.
      */
-    val saplingBalances: StateFlow<WalletBalance>
+    val saplingBalances: StateFlow<PirateWalletBalance>
 
     /**
      * A stream of balance values for the transparent pool. Includes the available and total balance.
      */
-    val transparentBalances: StateFlow<WalletBalance>
+    val transparentBalances: StateFlow<PirateWalletBalance>
 
     /* Transactions */
 
@@ -307,7 +307,7 @@ interface Synchronizer {
     /**
      * Returns the balance that the wallet knows about. This should be called after [refreshUtxos].
      */
-    suspend fun getTransparentBalance(tAddr: String): WalletBalance
+    suspend fun getTransparentBalance(tAddr: String): PirateWalletBalance
 
     suspend fun getNearestRewindHeight(height: Int): Int
 

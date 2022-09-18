@@ -39,7 +39,7 @@ import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.jni.RustBackend
 import pirate.android.sdk.jni.RustBackendWelding
-import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.type.PirateWalletBalance
 import cash.z.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.Dispatchers
@@ -803,23 +803,23 @@ class CompactBlockProcessor(
      *
      * @param accountIndex the account to check for balance info.
      *
-     * @return an instance of WalletBalance containing information about available and total funds.
+     * @return an instance of PirateWalletBalance containing information about available and total funds.
      */
-    suspend fun getBalanceInfo(accountIndex: Int = 0): WalletBalance =
+    suspend fun getBalanceInfo(accountIndex: Int = 0): PirateWalletBalance =
         twigTask("checking balance info", -1) {
             try {
                 val balanceTotal = rustBackend.getBalance(accountIndex)
                 twig("found total balance: $balanceTotal")
                 val balanceAvailable = rustBackend.getVerifiedBalance(accountIndex)
                 twig("found available balance: $balanceAvailable")
-                WalletBalance(balanceTotal, balanceAvailable)
+                PirateWalletBalance(balanceTotal, balanceAvailable)
             } catch (t: Throwable) {
                 twig("failed to get balance due to $t")
                 throw RustLayerException.BalanceException(t)
             }
         }
 
-    suspend fun getUtxoCacheBalance(address: String): WalletBalance = rustBackend.getDownloadedUtxoBalance(address)
+    suspend fun getUtxoCacheBalance(address: String): PirateWalletBalance = rustBackend.getDownloadedUtxoBalance(address)
 
     /**
      * Transmits the given state for this processor.

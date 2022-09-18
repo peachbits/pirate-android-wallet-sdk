@@ -15,7 +15,7 @@ import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.ext.convertZatoshiToZecString
 import pirate.android.sdk.tool.DerivationTool
-import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 
@@ -71,7 +71,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         synchronizer.saplingBalances.collectWith(lifecycleScope, ::onBalance)
     }
 
-    private fun onBalance(balance: WalletBalance) {
+    private fun onBalance(balance: PirateWalletBalance) {
         binding.textBalance.text = """
                 Available balance: ${balance.availableZatoshi.convertZatoshiToZecString(12)}
                 Total balance: ${balance.totalZatoshi.convertZatoshiToZecString(12)}
@@ -80,7 +80,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
 
     private fun onStatus(status: Synchronizer.Status) {
         binding.textStatus.text = "Status: $status"
-        if (WalletBalance().none()) {
+        if (PirateWalletBalance().none()) {
             binding.textBalance.text = "Calculating balance..."
         } else {
             onBalance(synchronizer.saplingBalances.value)
@@ -96,7 +96,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
     /**
      * Extension function which checks if the balance has been updated or its -1
      */
-    private fun WalletBalance.none(): Boolean {
+    private fun PirateWalletBalance.none(): Boolean {
         if (synchronizer.saplingBalances.value.totalZatoshi == -1L &&
             synchronizer.saplingBalances.value.availableZatoshi == -1L
         ) return true

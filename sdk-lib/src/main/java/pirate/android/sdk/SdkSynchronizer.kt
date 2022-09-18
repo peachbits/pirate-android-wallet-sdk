@@ -51,7 +51,7 @@ import pirate.android.sdk.type.AddressType
 import pirate.android.sdk.type.AddressType.Shielded
 import pirate.android.sdk.type.AddressType.Transparent
 import pirate.android.sdk.type.ConsensusMatchType
-import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import cash.z.wallet.sdk.rpc.Service
 import io.grpc.ManagedChannel
@@ -101,9 +101,9 @@ class SdkSynchronizer internal constructor(
 ) : Synchronizer {
 
     // pools
-    private val _orchardBalances = MutableStateFlow(WalletBalance())
-    private val _saplingBalances = MutableStateFlow(WalletBalance())
-    private val _transparentBalances = MutableStateFlow(WalletBalance())
+    private val _orchardBalances = MutableStateFlow(PirateWalletBalance())
+    private val _saplingBalances = MutableStateFlow(PirateWalletBalance())
+    private val _transparentBalances = MutableStateFlow(PirateWalletBalance())
 
     private val _status = ConflatedBroadcastChannel<Synchronizer.Status>(DISCONNECTED)
 
@@ -697,7 +697,7 @@ class SdkSynchronizer internal constructor(
         return processor.refreshUtxos(address, startHeight)
     }
 
-    override suspend fun getTransparentBalance(tAddr: String): WalletBalance {
+    override suspend fun getTransparentBalance(tAddr: String): PirateWalletBalance {
         return processor.getUtxoCacheBalance(tAddr)
     }
 

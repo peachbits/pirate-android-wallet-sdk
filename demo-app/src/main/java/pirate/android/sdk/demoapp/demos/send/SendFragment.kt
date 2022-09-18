@@ -30,7 +30,7 @@ import pirate.android.sdk.ext.toZecString
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.tool.DerivationTool
-import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 
@@ -79,7 +79,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
     // Observable properties (done without livedata or flows for simplicity)
     //
 
-    private var balance = WalletBalance()
+    private var balance = PirateWalletBalance()
         set(value) {
             field = value
             onUpdateSendButton()
@@ -144,7 +144,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
         if (info.isScanning) binding.textStatus.text = "Scanning blocks...${info.scanProgress}%"
     }
 
-    private fun onBalance(balance: WalletBalance) {
+    private fun onBalance(balance: PirateWalletBalance) {
         this.balance = balance
         if (!isSyncing) {
             binding.textBalance.text = """

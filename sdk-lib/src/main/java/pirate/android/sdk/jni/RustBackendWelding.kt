@@ -1,7 +1,7 @@
 package pirate.android.sdk.jni
 
 import pirate.android.sdk.type.UnifiedViewingKey
-import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 
 /**
@@ -78,7 +78,7 @@ interface RustBackendWelding {
 
     suspend fun clearUtxos(tAddress: String, aboveHeight: Int = network.saplingActivationHeight - 1): Boolean
 
-    suspend fun getDownloadedUtxoBalance(address: String): WalletBalance
+    suspend fun getDownloadedUtxoBalance(address: String): PirateWalletBalance
 
     // Implemented by `DerivationTool`
     interface Derivation {

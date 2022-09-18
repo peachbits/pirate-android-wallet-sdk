@@ -11,7 +11,7 @@ import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.LightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.tool.DerivationTool
-import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -79,7 +79,7 @@ class TestWallet(
     val networkName get() = synchronizer.network.networkName
     val connectionInfo get() = service.connectionInfo.toString()
 
-    suspend fun transparentBalance(): WalletBalance {
+    suspend fun transparentBalance(): PirateWalletBalance {
         synchronizer.refreshUtxos(transparentAddress, synchronizer.latestBirthdayHeight)
         return synchronizer.getTransparentBalance(transparentAddress)
     }

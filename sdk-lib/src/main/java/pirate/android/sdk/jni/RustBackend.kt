@@ -8,7 +8,7 @@ import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.tool.DerivationTool
 import pirate.android.sdk.type.UnifiedViewingKey
-import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -266,7 +266,7 @@ class RustBackend private constructor() : RustBackendWelding {
         )
     }
 
-    override suspend fun getDownloadedUtxoBalance(address: String): WalletBalance {
+    override suspend fun getDownloadedUtxoBalance(address: String): PirateWalletBalance {
         val verified = withContext(SdkDispatchers.DATABASE_IO) {
             getVerifiedTransparentBalance(
                 pathDataDb,
@@ -281,7 +281,7 @@ class RustBackend private constructor() : RustBackendWelding {
                 networkId = network.id
             )
         }
-        return WalletBalance(total, verified)
+        return PirateWalletBalance(total, verified)
     }
 
     override fun isValidShieldedAddr(addr: String) =

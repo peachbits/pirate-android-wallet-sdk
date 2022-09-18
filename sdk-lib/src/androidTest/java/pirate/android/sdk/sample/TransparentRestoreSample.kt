@@ -158,7 +158,7 @@ class TransparentRestoreSample {
 //        val transparentAddress = DerivationTool.deriveTransparentAddress(seed, Testnet)
 //        val birthdayHeight get() = synchronizer.latestBirthdayHeight
 //
-//        suspend fun transparentBalance(): WalletBalance {
+//        suspend fun transparentBalance(): PirateWalletBalance {
 //            synchronizer.refreshUtxos(transparentAddress, synchronizer.latestBirthdayHeight)
 //            return synchronizer.getTransparentBalance(transparentAddress)
 //        }
