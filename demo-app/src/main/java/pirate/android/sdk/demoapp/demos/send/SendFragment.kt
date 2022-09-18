@@ -9,7 +9,7 @@ import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
 import pirate.android.sdk.Initializer
 import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.block.CompactBlockProcessor
+import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.db.entity.isCreated
 import pirate.android.sdk.db.entity.isCreating
@@ -140,7 +140,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
         }
     }
 
-    private fun onProcessorInfoUpdated(info: CompactBlockProcessor.ProcessorInfo) {
+    private fun onProcessorInfoUpdated(info: PirateCompactBlockProcessor.ProcessorInfo) {
         if (info.isScanning) binding.textStatus.text = "Scanning blocks...${info.scanProgress}%"
     }
 

@@ -32,7 +32,7 @@ class DataDbScannerUtil {
 //        PirateCompactBlockDbStore(context, caceDbPath)
 //    )
 
-//    private val processor = CompactBlockProcessor(downloader)
+//    private val processor = PirateCompactBlockProcessor(downloader)
 
 //    private val rustBackend = RustBackend.init(context, cacheDbName, dataDbName)
 

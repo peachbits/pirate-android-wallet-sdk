@@ -61,12 +61,12 @@ sealed class SynchronizerException(message: String, cause: Throwable? = null) : 
 /**
  * Potentially user-facing exceptions that occur while processing compact blocks.
  */
-sealed class CompactBlockProcessorException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
-    class DataDbMissing(path: String) : CompactBlockProcessorException(
+sealed class PirateCompactBlockProcessorException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+    class DataDbMissing(path: String) : PirateCompactBlockProcessorException(
         "No data db file found at path $path. Verify " +
             "that the data DB has been initialized via `rustBackend.initDataDb(path)`"
     )
-    open class ConfigurationException(message: String, cause: Throwable?) : CompactBlockProcessorException(message, cause)
+    open class ConfigurationException(message: String, cause: Throwable?) : PirateCompactBlockProcessorException(message, cause)
     class FileInsteadOfPath(fileName: String) : ConfigurationException(
         "Invalid Path: the given path appears to be a" +
             " file name instead of a path: $fileName. The RustBackend expects the absolutePath to the database rather" +
@@ -74,37 +74,37 @@ sealed class CompactBlockProcessorException(message: String, cause: Throwable? =
             " So pass in context.getDatabasePath(dbFileName).absolutePath instead of just dbFileName alone.",
         null
     )
-    class FailedReorgRepair(message: String) : CompactBlockProcessorException(message)
-    class FailedDownload(cause: Throwable? = null) : CompactBlockProcessorException(
+    class FailedReorgRepair(message: String) : PirateCompactBlockProcessorException(message)
+    class FailedDownload(cause: Throwable? = null) : PirateCompactBlockProcessorException(
         "Error while downloading blocks. This most " +
             "likely means the server is down or slow to respond. See logs for details.",
         cause
     )
-    class FailedScan(cause: Throwable? = null) : CompactBlockProcessorException(
+    class FailedScan(cause: Throwable? = null) : PirateCompactBlockProcessorException(
         "Error while scanning blocks. This most " +
             "likely means a block was missed or a reorg was mishandled. See logs for details.",
         cause
     )
-    class Disconnected(cause: Throwable? = null) : CompactBlockProcessorException("Disconnected Error. Unable to download blocks due to ${cause?.message}", cause)
-    object Uninitialized : CompactBlockProcessorException(
+    class Disconnected(cause: Throwable? = null) : PirateCompactBlockProcessorException("Disconnected Error. Unable to download blocks due to ${cause?.message}", cause)
+    object Uninitialized : PirateCompactBlockProcessorException(
         "Cannot process blocks because the wallet has not been" +
             " initialized. Verify that the seed phrase was properly created or imported. If so, then this problem" +
             " can be fixed by re-importing the wallet."
     )
-    object NoAccount : CompactBlockProcessorException(
+    object NoAccount : PirateCompactBlockProcessorException(
         "Attempting to scan without an account. This is probably a setup error or a race condition."
     )
 
-    open class EnhanceTransactionError(message: String, val height: Int, cause: Throwable) : CompactBlockProcessorException(message, cause) {
+    open class EnhanceTransactionError(message: String, val height: Int, cause: Throwable) : PirateCompactBlockProcessorException(message, cause) {
         class EnhanceTxDownloadError(height: Int, cause: Throwable) : EnhanceTransactionError("Error while attempting to download a transaction to enhance", height, cause)
         class EnhanceTxDecryptError(height: Int, cause: Throwable) : EnhanceTransactionError("Error while attempting to decrypt and store a transaction to enhance", height, cause)
     }
 
-    class MismatchedNetwork(clientNetwork: String?, serverNetwork: String?) : CompactBlockProcessorException(
+    class MismatchedNetwork(clientNetwork: String?, serverNetwork: String?) : PirateCompactBlockProcessorException(
         "Incompatible server: this client expects a server using $clientNetwork but it was $serverNetwork! Try updating the client or switching servers."
     )
 
-    class MismatchedBranch(clientBranch: String?, serverBranch: String?, networkName: String?) : CompactBlockProcessorException(
+    class MismatchedBranch(clientBranch: String?, serverBranch: String?, networkName: String?) : PirateCompactBlockProcessorException(
         "Incompatible server: this client expects a server following consensus branch $clientBranch on $networkName but it was $serverBranch! Try updating the client or switching servers."
     )
 }

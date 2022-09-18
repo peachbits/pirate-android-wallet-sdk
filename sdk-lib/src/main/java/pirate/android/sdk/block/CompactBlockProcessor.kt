@@ -3,20 +3,20 @@ package pirate.android.sdk.block
 import androidx.annotation.VisibleForTesting
 import pirate.android.sdk.BuildConfig
 import pirate.android.sdk.annotation.OpenForTesting
-import pirate.android.sdk.block.CompactBlockProcessor.State.Disconnected
-import pirate.android.sdk.block.CompactBlockProcessor.State.Downloading
-import pirate.android.sdk.block.CompactBlockProcessor.State.Enhancing
-import pirate.android.sdk.block.CompactBlockProcessor.State.Initialized
-import pirate.android.sdk.block.CompactBlockProcessor.State.Scanned
-import pirate.android.sdk.block.CompactBlockProcessor.State.Scanning
-import pirate.android.sdk.block.CompactBlockProcessor.State.Stopped
-import pirate.android.sdk.block.CompactBlockProcessor.State.Validating
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Disconnected
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Downloading
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Enhancing
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Initialized
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Scanned
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Scanning
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Stopped
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Validating
 import pirate.android.sdk.db.entity.ConfirmedTransaction
-import pirate.android.sdk.exception.CompactBlockProcessorException
-import pirate.android.sdk.exception.CompactBlockProcessorException.EnhanceTransactionError.EnhanceTxDecryptError
-import pirate.android.sdk.exception.CompactBlockProcessorException.EnhanceTransactionError.EnhanceTxDownloadError
-import pirate.android.sdk.exception.CompactBlockProcessorException.MismatchedBranch
-import pirate.android.sdk.exception.CompactBlockProcessorException.MismatchedNetwork
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException.EnhanceTransactionError.EnhanceTxDecryptError
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException.EnhanceTransactionError.EnhanceTxDownloadError
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException.MismatchedBranch
+import pirate.android.sdk.exception.PirateCompactBlockProcessorException.MismatchedNetwork
 import pirate.android.sdk.exception.InitializerException
 import pirate.android.sdk.exception.RustLayerException
 import pirate.android.sdk.ext.BatchMetrics
@@ -75,7 +75,7 @@ import kotlin.math.roundToInt
  * of the current wallet--the height before which we do not need to scan for transactions.
  */
 @OpenForTesting
-class CompactBlockProcessor(
+class PirateCompactBlockProcessor(
     val downloader: CompactBlockDownloader,
     private val repository: TransactionRepository,
     private val rustBackend: RustBackendWelding,
@@ -207,7 +207,7 @@ class CompactBlockProcessor(
                 } else {
                     if (consecutiveChainErrors.get() >= RETRIES) {
                         val errorMessage = "ERROR: unable to resolve reorg at height $result after ${consecutiveChainErrors.get()} correction attempts!"
-                        fail(CompactBlockProcessorException.FailedReorgRepair(errorMessage))
+                        fail(PirateCompactBlockProcessorException.FailedReorgRepair(errorMessage))
                     } else {
                         handleChainError(result)
                     }
@@ -318,7 +318,7 @@ class CompactBlockProcessor(
             // rather than a boolean
             setState(Scanning)
             val success = scanNewBlocks(lastScanRange)
-            if (!success) throw CompactBlockProcessorException.FailedScan()
+            if (!success) throw PirateCompactBlockProcessorException.FailedScan()
             else {
                 setState(Scanned(lastScanRange))
             }
@@ -386,8 +386,8 @@ class CompactBlockProcessor(
     private suspend fun verifySetup() {
         // verify that the data is initialized
         var error = when {
-            !repository.isInitialized() -> CompactBlockProcessorException.Uninitialized
-            repository.getAccountCount() == 0 -> CompactBlockProcessorException.NoAccount
+            !repository.isInitialized() -> PirateCompactBlockProcessorException.Uninitialized
+            repository.getAccountCount() == 0 -> PirateCompactBlockProcessorException.NoAccount
             else -> {
                 // verify that the server is correct
                 downloader.getServerInfo().let { info ->
@@ -497,7 +497,7 @@ class CompactBlockProcessor(
             var progress: Int
             twig("found $missingBlockCount missing blocks, downloading in $batches batches of $DOWNLOAD_BATCH_SIZE...")
             for (i in 1..batches) {
-                retryUpTo(RETRIES, { CompactBlockProcessorException.FailedDownload(it) }) {
+                retryUpTo(RETRIES, { PirateCompactBlockProcessorException.FailedDownload(it) }) {
                     val end = min((range.first + (i * DOWNLOAD_BATCH_SIZE)) - 1, range.last) // subtract 1 on the first value because the range is inclusive
                     var count = 0
                     twig("downloaded $downloadedBlockHeight..$end (batch $i of $batches) [${downloadedBlockHeight..end}]") {
@@ -558,7 +558,7 @@ class CompactBlockProcessor(
             var metrics = BatchMetrics(range, SCAN_BATCH_SIZE, onScanMetricCompleteListener)
             // Attempt to scan a few times to work around any concurrent modification errors, then
             // rethrow as an official processorError which is handled by [start.retryWithBackoff]
-            retryUpTo(3, { CompactBlockProcessorException.FailedScan(it) }) { failedAttempts ->
+            retryUpTo(3, { PirateCompactBlockProcessorException.FailedScan(it) }) { failedAttempts ->
                 if (failedAttempts > 0) twig("retrying the scan after $failedAttempts failure(s)...")
                 do {
                     var scannedNewBlocks = false

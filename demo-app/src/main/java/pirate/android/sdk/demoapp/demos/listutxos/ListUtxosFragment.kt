@@ -10,7 +10,7 @@ import cash.z.ecc.android.bip39.toSeed
 import pirate.android.sdk.Initializer
 import pirate.android.sdk.SdkSynchronizer
 import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.block.CompactBlockProcessor
+import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.ConfirmedTransaction
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.DemoConstants
@@ -214,7 +214,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
         synchronizer.progress.collectWith(lifecycleScope, ::onProgress)
     }
 
-    private fun onProcessorInfoUpdated(info: CompactBlockProcessor.ProcessorInfo) {
+    private fun onProcessorInfoUpdated(info: PirateCompactBlockProcessor.ProcessorInfo) {
         if (info.isScanning) binding.textStatus.text = "Scanning blocks...${info.scanProgress}%"
     }
 

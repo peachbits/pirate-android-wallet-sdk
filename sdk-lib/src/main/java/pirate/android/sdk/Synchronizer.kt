@@ -1,6 +1,6 @@
 package pirate.android.sdk
 
-import pirate.android.sdk.block.CompactBlockProcessor
+import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.ConfirmedTransaction
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.ext.PirateSdk
@@ -90,7 +90,7 @@ interface Synchronizer {
      * block height, blocks downloaded and blocks scanned. Similar to the [progress] flow but with a
      * lot more detail.
      */
-    val processorInfo: Flow<CompactBlockProcessor.ProcessorInfo>
+    val processorInfo: Flow<PirateCompactBlockProcessor.ProcessorInfo>
 
     /**
      * The latest height observed on the network, which does not necessarily correspond to the

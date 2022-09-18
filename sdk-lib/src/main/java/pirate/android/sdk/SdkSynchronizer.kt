@@ -8,15 +8,15 @@ import pirate.android.sdk.Synchronizer.Status.SCANNING
 import pirate.android.sdk.Synchronizer.Status.STOPPED
 import pirate.android.sdk.Synchronizer.Status.SYNCED
 import pirate.android.sdk.Synchronizer.Status.VALIDATING
-import pirate.android.sdk.block.CompactBlockProcessor
-import pirate.android.sdk.block.CompactBlockProcessor.State.Disconnected
-import pirate.android.sdk.block.CompactBlockProcessor.State.Downloading
-import pirate.android.sdk.block.CompactBlockProcessor.State.Enhancing
-import pirate.android.sdk.block.CompactBlockProcessor.State.Initialized
-import pirate.android.sdk.block.CompactBlockProcessor.State.Scanned
-import pirate.android.sdk.block.CompactBlockProcessor.State.Scanning
-import pirate.android.sdk.block.CompactBlockProcessor.State.Stopped
-import pirate.android.sdk.block.CompactBlockProcessor.State.Validating
+import pirate.android.sdk.block.PirateCompactBlockProcessor
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Disconnected
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Downloading
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Enhancing
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Initialized
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Scanned
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Scanning
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Stopped
+import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Validating
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.db.entity.hasRawTransactionId
 import pirate.android.sdk.db.entity.isCancelled
@@ -97,7 +97,7 @@ import kotlin.coroutines.EmptyCoroutineContext
 class SdkSynchronizer internal constructor(
     private val storage: TransactionRepository,
     private val txManager: OutboundTransactionManager,
-    val processor: CompactBlockProcessor
+    val processor: PirateCompactBlockProcessor
 ) : Synchronizer {
 
     // pools
@@ -181,7 +181,7 @@ class SdkSynchronizer internal constructor(
      * Indicates the latest information about the blocks that have been processed by the SDK. This
      * is very helpful for conveying detailed progress and status to the user.
      */
-    override val processorInfo: Flow<CompactBlockProcessor.ProcessorInfo> = processor.processorInfo
+    override val processorInfo: Flow<PirateCompactBlockProcessor.ProcessorInfo> = processor.processorInfo
 
     /**
      * The latest height seen on the network while processing blocks. This may differ from the
@@ -766,7 +766,7 @@ object DefaultSynchronizerFactory {
     fun new(
         repository: TransactionRepository,
         txManager: OutboundTransactionManager,
-        processor: CompactBlockProcessor,
+        processor: PirateCompactBlockProcessor,
     ): Synchronizer {
         // call the actual constructor now that all dependencies have been injected
         // alternatively, this entire object graph can be supplied by Dagger
@@ -817,7 +817,7 @@ object DefaultSynchronizerFactory {
         initializer: Initializer,
         downloader: CompactBlockDownloader,
         repository: TransactionRepository
-    ): CompactBlockProcessor = CompactBlockProcessor(
+    ): PirateCompactBlockProcessor = PirateCompactBlockProcessor(
         downloader,
         repository,
         initializer.rustBackend,

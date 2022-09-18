@@ -14,7 +14,7 @@ import pirate.android.sdk.db.entity.CompactBlockEntity
 
 /**
  * The "Cache DB", serving as a cache of compact blocks, waiting to be processed. This will contain
- * the entire blockchain, from the birthdate of the wallet, forward. The [CompactBlockProcessor]
+ * the entire blockchain, from the birthdate of the wallet, forward. The [PirateCompactBlockProcessor]
  * will copy blocks from this database, as they are scanned. In the future, those blocks can be
  * deleted because they are no longer needed. Currently, this efficiency has not been implemented.
  */

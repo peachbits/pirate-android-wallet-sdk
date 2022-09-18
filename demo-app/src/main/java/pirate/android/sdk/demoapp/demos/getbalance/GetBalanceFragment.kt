@@ -7,7 +7,7 @@ import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
 import pirate.android.sdk.Initializer
 import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.block.CompactBlockProcessor
+import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentGetBalanceBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
@@ -103,7 +103,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         return false
     }
 
-    private fun onProcessorInfoUpdated(info: CompactBlockProcessor.ProcessorInfo) {
+    private fun onProcessorInfoUpdated(info: PirateCompactBlockProcessor.ProcessorInfo) {
         if (info.isScanning) binding.textStatus.text = "Scanning blocks...${info.scanProgress}%"
     }
 }
