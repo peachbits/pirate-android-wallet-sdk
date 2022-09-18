@@ -14,7 +14,7 @@ import pirate.android.sdk.db.entity.ConfirmedTransaction
 import pirate.android.sdk.db.entity.EncodedTransaction
 import pirate.android.sdk.db.entity.PirateReceived
 import pirate.android.sdk.db.entity.PirateSent
-import pirate.android.sdk.db.entity.TransactionEntity
+import pirate.android.sdk.db.entity.PirateTransactionEntity
 import pirate.android.sdk.db.entity.Utxo
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.type.UnifiedAddressAccount
@@ -32,7 +32,7 @@ import pirate.android.sdk.type.UnifiedAddressAccount
  */
 @Database(
     entities = [
-        TransactionEntity::class,
+        PirateTransactionEntity::class,
         PirateBlock::class,
         PirateReceived::class,
         PirateAccount::class,

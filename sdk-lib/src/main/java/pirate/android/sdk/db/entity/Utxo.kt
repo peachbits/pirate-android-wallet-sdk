@@ -9,7 +9,7 @@ import androidx.room.ForeignKey
     primaryKeys = ["id_utxo"],
     foreignKeys = [
         ForeignKey(
-            entity = TransactionEntity::class,
+            entity = PirateTransactionEntity::class,
             parentColumns = ["id_tx"],
             childColumns = ["spent_in_tx"]
         )

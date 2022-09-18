@@ -20,7 +20,7 @@ import androidx.room.PrimaryKey
         )
     ]
 )
-data class TransactionEntity(
+data class PirateTransactionEntity(
     @ColumnInfo(name = "id_tx")
     val id: Long?,
 
@@ -43,7 +43,7 @@ data class TransactionEntity(
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is TransactionEntity) return false
+        if (other !is PirateTransactionEntity) return false
 
         if (id != other.id) return false
         if (!transactionId.contentEquals(other.transactionId)) return false
