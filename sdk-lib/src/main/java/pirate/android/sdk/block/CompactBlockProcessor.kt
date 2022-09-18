@@ -29,7 +29,7 @@ import pirate.android.sdk.ext.PirateSdk.RETRIES
 import pirate.android.sdk.ext.PirateSdk.REWIND_DISTANCE
 import pirate.android.sdk.ext.PirateSdk.SCAN_BATCH_SIZE
 import pirate.android.sdk.internal.Twig
-import pirate.android.sdk.internal.block.CompactBlockDownloader
+import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.ext.retryUpTo
 import pirate.android.sdk.internal.ext.retryWithBackoff
 import pirate.android.sdk.internal.ext.toHexReversed
@@ -76,7 +76,7 @@ import kotlin.math.roundToInt
  */
 @OpenForTesting
 class PirateCompactBlockProcessor(
-    val downloader: CompactBlockDownloader,
+    val downloader: PirateCompactBlockDownloader,
     private val repository: TransactionRepository,
     private val rustBackend: RustBackendWelding,
     minimumHeight: Int = rustBackend.network.saplingActivationHeight

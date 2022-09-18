@@ -6,7 +6,7 @@ import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
 import pirate.android.sdk.exception.PirateLightWalletException.PirateChangeServerException.PirateChainInfoNotMatching
 import pirate.android.sdk.exception.PirateLightWalletException.PirateChangeServerException.PirateStatusException
-import pirate.android.sdk.internal.block.CompactBlockDownloader
+import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.block.CompactBlockStore
 import pirate.android.sdk.internal.service.LightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
@@ -42,13 +42,13 @@ class ChangeServiceTest : ScopedTest() {
     @Spy
     val service = LightWalletGrpcService(context, network)
 
-    lateinit var downloader: CompactBlockDownloader
+    lateinit var downloader: PirateCompactBlockDownloader
     lateinit var otherService: LightWalletService
 
     @Before
     fun setup() {
         initMocks()
-        downloader = CompactBlockDownloader(service, mockBlockStore)
+        downloader = PirateCompactBlockDownloader(service, mockBlockStore)
         otherService = LightWalletGrpcService(context, "lightwalletd.electriccoin.co")
     }
 

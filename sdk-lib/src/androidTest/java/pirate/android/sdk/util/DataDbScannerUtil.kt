@@ -27,7 +27,7 @@ class DataDbScannerUtil {
 //    private val mnemonics = SimpleMnemonics()
 //    private val caceDbPath = Initializer.cacheDbPath(context, alias)
 
-//    private val downloader = CompactBlockDownloader(
+//    private val downloader = PirateCompactBlockDownloader(
 //        LightWalletGrpcService(context, host, port),
 //        PirateCompactBlockDbStore(context, caceDbPath)
 //    )

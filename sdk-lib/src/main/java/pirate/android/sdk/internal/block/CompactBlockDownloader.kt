@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
  * @property lightWalletService the service used for requesting compact blocks
  * @property compactBlockStore responsible for persisting the compact blocks that are received
  */
-open class CompactBlockDownloader private constructor(val compactBlockStore: CompactBlockStore) {
+open class PirateCompactBlockDownloader private constructor(val compactBlockStore: CompactBlockStore) {
 
     lateinit var lightWalletService: LightWalletService
         private set

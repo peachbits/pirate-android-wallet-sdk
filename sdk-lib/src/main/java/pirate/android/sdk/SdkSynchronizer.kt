@@ -32,7 +32,7 @@ import pirate.android.sdk.exception.PirateSynchronizerException
 import pirate.android.sdk.ext.PirateConsensusBranchId
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.block.PirateCompactBlockDbStore
-import pirate.android.sdk.internal.block.CompactBlockDownloader
+import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.block.CompactBlockStore
 import pirate.android.sdk.internal.ext.toHexReversed
 import pirate.android.sdk.internal.ext.tryNull
@@ -804,7 +804,7 @@ object DefaultSynchronizerFactory {
     fun defaultDownloader(
         service: LightWalletService,
         blockStore: CompactBlockStore
-    ): CompactBlockDownloader = CompactBlockDownloader(service, blockStore)
+    ): PirateCompactBlockDownloader = PirateCompactBlockDownloader(service, blockStore)
 
     fun defaultTxManager(
         initializer: Initializer,
@@ -815,7 +815,7 @@ object DefaultSynchronizerFactory {
 
     fun defaultProcessor(
         initializer: Initializer,
-        downloader: CompactBlockDownloader,
+        downloader: PirateCompactBlockDownloader,
         repository: TransactionRepository
     ): PirateCompactBlockProcessor = PirateCompactBlockProcessor(
         downloader,
