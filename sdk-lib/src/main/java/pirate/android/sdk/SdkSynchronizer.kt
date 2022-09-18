@@ -28,7 +28,7 @@ import pirate.android.sdk.db.entity.isMined
 import pirate.android.sdk.db.entity.isSafeToDiscard
 import pirate.android.sdk.db.entity.isSubmitSuccess
 import pirate.android.sdk.db.entity.isSubmitted
-import pirate.android.sdk.exception.SynchronizerException
+import pirate.android.sdk.exception.PirateSynchronizerException
 import pirate.android.sdk.ext.ConsensusBranchId
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.block.PirateCompactBlockDbStore
@@ -117,7 +117,7 @@ class SdkSynchronizer internal constructor(
     var coroutineScope: CoroutineScope = CoroutineScope(EmptyCoroutineContext)
         get() {
             if (!isStarted) {
-                throw SynchronizerException.NotYetStarted
+                throw PirateSynchronizerException.NotYetStarted
             } else {
                 return field
             }
@@ -251,7 +251,7 @@ class SdkSynchronizer internal constructor(
 
     /**
      * Starts this synchronizer within the given scope. For simplicity, attempting to start an
-     * instance that has already been started will throw a [SynchronizerException.FalseStart]
+     * instance that has already been started will throw a [PirateSynchronizerException.FalseStart]
      * exception. This reduces the complexity of managing resources that must be recycled. Instead,
      * each synchronizer is designed to have a long lifespan and should be started from an activity,
      * application or session.
@@ -265,7 +265,7 @@ class SdkSynchronizer internal constructor(
      * @return an instance of this class so that this function can be used fluidly.
      */
     override fun start(parentScope: CoroutineScope?): Synchronizer {
-        if (isStarted) throw SynchronizerException.FalseStart
+        if (isStarted) throw PirateSynchronizerException.FalseStart
         // base this scope on the parent so that when the parent's job cancels, everything here
         // cancels as well also use a supervisor job so that one failure doesn't bring down the
         // whole synchronizer

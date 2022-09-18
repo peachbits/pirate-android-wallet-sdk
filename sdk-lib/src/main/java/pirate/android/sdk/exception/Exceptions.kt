@@ -46,12 +46,12 @@ sealed class PirateRepositoryException(message: String, cause: Throwable? = null
  * High-level exceptions thrown by the synchronizer, which do not fall within the umbrella of a
  * child component.
  */
-sealed class SynchronizerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    object FalseStart : SynchronizerException(
+sealed class PirateSynchronizerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+    object FalseStart : PirateSynchronizerException(
         "This synchronizer was already started. Multiple calls to start are not" +
             "allowed and once a synchronizer has stopped it cannot be restarted."
     )
-    object NotYetStarted : SynchronizerException(
+    object NotYetStarted : PirateSynchronizerException(
         "The synchronizer has not yet started. Verify that" +
             " start has been called prior to this operation and that the coroutineScope is not" +
             " being accessed before it is initialized."
