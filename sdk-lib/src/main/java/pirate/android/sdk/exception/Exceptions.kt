@@ -9,13 +9,13 @@ import io.grpc.Status.Code.UNAVAILABLE
  * Marker for all custom exceptions from the SDK. Making it an interface would result in more typing
  * so it's a supertype, instead.
  */
-open class SdkException(message: String, cause: Throwable?) : RuntimeException(message, cause)
+open class PirateSdkException(message: String, cause: Throwable?) : RuntimeException(message, cause)
 
 /**
  * Exceptions thrown in the Rust layer of the SDK. We may not always be able to surface details about this
  * exception so it's important for the SDK to provide helpful messages whenever these errors are encountered.
  */
-sealed class RustLayerException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+sealed class RustLayerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     class BalanceException(cause: Throwable) : RustLayerException(
         "Error while requesting the current balance over " +
             "JNI. This might mean that the database has been corrupted and needs to be rebuilt. Verify that " +
@@ -27,7 +27,7 @@ sealed class RustLayerException(message: String, cause: Throwable? = null) : Sdk
 /**
  * User-facing exceptions thrown by the transaction repository.
  */
-sealed class RepositoryException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+sealed class RepositoryException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     object FalseStart : RepositoryException(
         "The channel is closed. Note that once a repository has stopped it " +
             "cannot be restarted. Verify that the repository is not being restarted."
@@ -46,7 +46,7 @@ sealed class RepositoryException(message: String, cause: Throwable? = null) : Sd
  * High-level exceptions thrown by the synchronizer, which do not fall within the umbrella of a
  * child component.
  */
-sealed class SynchronizerException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+sealed class SynchronizerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     object FalseStart : SynchronizerException(
         "This synchronizer was already started. Multiple calls to start are not" +
             "allowed and once a synchronizer has stopped it cannot be restarted."
@@ -61,7 +61,7 @@ sealed class SynchronizerException(message: String, cause: Throwable? = null) : 
 /**
  * Potentially user-facing exceptions that occur while processing compact blocks.
  */
-sealed class PirateCompactBlockProcessorException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+sealed class PirateCompactBlockProcessorException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     class DataDbMissing(path: String) : PirateCompactBlockProcessorException(
         "No data db file found at path $path. Verify " +
             "that the data DB has been initialized via `rustBackend.initDataDb(path)`"
@@ -112,7 +112,7 @@ sealed class PirateCompactBlockProcessorException(message: String, cause: Throwa
 /**
  * Exceptions related to the wallet's birthday.
  */
-sealed class BirthdayException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+sealed class BirthdayException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     object UninitializedBirthdayException : BirthdayException(
         "Error the birthday cannot be" +
             " accessed before it is initialized. Verify that the new, import or open functions" +
@@ -140,7 +140,7 @@ sealed class BirthdayException(message: String, cause: Throwable? = null) : SdkE
 /**
  * Exceptions thrown by the initializer.
  */
-sealed class InitializerException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+sealed class InitializerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     class FalseStart(cause: Throwable?) : InitializerException("Failed to initialize accounts due to: $cause", cause)
     class AlreadyInitializedException(cause: Throwable, dbPath: String) : InitializerException(
         "Failed to initialize the blocks table" +
@@ -187,7 +187,7 @@ sealed class InitializerException(message: String, cause: Throwable? = null) : S
 /**
  * Exceptions thrown while interacting with lightwalletd.
  */
-sealed class LightWalletException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+sealed class LightWalletException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     object InsecureConnection : LightWalletException(
         "Error: attempted to connect to lightwalletd" +
             " with an insecure connection! Plaintext connections are only allowed when the" +
@@ -203,11 +203,11 @@ sealed class LightWalletException(message: String, cause: Throwable? = null) : S
                 " update the SDK to match lightwalletd or use a lightwalletd that matches the SDK."
         )
 
-    open class ChangeServerException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+    open class ChangeServerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
         class ChainInfoNotMatching(val propertyNames: String, val expectedInfo: Service.LightdInfo, val actualInfo: Service.LightdInfo) : ChangeServerException(
             "Server change error: the $propertyNames values did not match."
         )
-        class StatusException(val status: Status, cause: Throwable? = null) : SdkException(status.toMessage(), cause) {
+        class StatusException(val status: Status, cause: Throwable? = null) : PirateSdkException(status.toMessage(), cause) {
             companion object {
                 private fun Status.toMessage(): String {
                     return when (this.code) {
@@ -225,7 +225,7 @@ sealed class LightWalletException(message: String, cause: Throwable? = null) : S
 /**
  * Potentially user-facing exceptions thrown while encoding transactions.
  */
-sealed class TransactionEncoderException(message: String, cause: Throwable? = null) : SdkException(message, cause) {
+sealed class TransactionEncoderException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     class FetchParamsException(message: String) : TransactionEncoderException("Failed to fetch params due to: $message")
     object MissingParamsException : TransactionEncoderException(
         "Cannot send funds due to missing spend or output params and attempting to download them failed."
