@@ -25,7 +25,7 @@ import androidx.room.ForeignKey
         )
     ]
 )
-data class Received(
+data class PirateReceived(
     @ColumnInfo(name = "id_note")
     val id: Int? = 0,
 
