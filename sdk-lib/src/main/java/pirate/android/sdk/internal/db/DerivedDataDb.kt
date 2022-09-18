@@ -9,7 +9,7 @@ import androidx.room.Transaction
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import pirate.android.sdk.db.entity.PirateAccount
-import pirate.android.sdk.db.entity.Block
+import pirate.android.sdk.db.entity.PirateBlock
 import pirate.android.sdk.db.entity.ConfirmedTransaction
 import pirate.android.sdk.db.entity.EncodedTransaction
 import pirate.android.sdk.db.entity.Received
@@ -33,7 +33,7 @@ import pirate.android.sdk.type.UnifiedAddressAccount
 @Database(
     entities = [
         TransactionEntity::class,
-        Block::class,
+        PirateBlock::class,
         Received::class,
         PirateAccount::class,
         Sent::class,

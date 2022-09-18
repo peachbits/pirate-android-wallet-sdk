@@ -14,7 +14,7 @@ import androidx.room.PrimaryKey
     primaryKeys = ["id_tx"], tableName = "transactions",
     foreignKeys = [
         ForeignKey(
-            entity = Block::class,
+            entity = PirateBlock::class,
             parentColumns = ["height"],
             childColumns = ["block"]
         )

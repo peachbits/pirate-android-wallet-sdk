@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 
 @Entity(primaryKeys = ["height"], tableName = "blocks")
-data class Block(
+data class PirateBlock(
     val height: Int?,
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB, name = "hash")
     val hash: ByteArray,
@@ -14,7 +14,7 @@ data class Block(
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is Block) return false
+        if (other !is PirateBlock) return false
 
         if (height != other.height) return false
         if (!hash.contentEquals(other.hash)) return false
