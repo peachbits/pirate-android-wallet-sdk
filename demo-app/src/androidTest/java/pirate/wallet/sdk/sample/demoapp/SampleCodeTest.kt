@@ -4,7 +4,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import pirate.android.sdk.Initializer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.db.entity.isFailure
-import pirate.android.sdk.ext.convertZecToZatoshi
+import pirate.android.sdk.ext.convertArrrToZatoshi
 import pirate.android.sdk.ext.toHex
 import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
@@ -113,7 +113,7 @@ class SampleCodeTest {
 //        val encoder = WalletTransactionEncoder(rustBackend, repository)
 //        val spendingKey = DerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]
 //
-//        val amount = 0.123.convertZecToZatoshi()
+//        val amount = 0.123.convertArrrToZatoshi()
 //        val address = "ztestsapling1tklsjr0wyw0d58f3p7wufvrj2cyfv6q6caumyueadq8qvqt8lda6v6tpx474rfru9y6u75u7qnw"
 //        val memo = "Test Transaction".toByteArray()
 //
@@ -125,7 +125,7 @@ class SampleCodeTest {
     // ///////////////////////////////////////////////////
     // Create a signed transaction (with memo) and broadcast
     @Test fun submitTransaction() = runBlocking {
-        val amount = 0.123.convertZecToZatoshi()
+        val amount = 0.123.convertArrrToZatoshi()
         val address = "ztestsapling1tklsjr0wyw0d58f3p7wufvrj2cyfv6q6caumyueadq8qvqt8lda6v6tpx474rfru9y6u75u7qnw"
         val memo = "Test Transaction"
         val spendingKey = DerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]

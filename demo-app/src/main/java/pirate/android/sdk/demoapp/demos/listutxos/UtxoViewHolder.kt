@@ -5,7 +5,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.demoapp.R
-import pirate.android.sdk.ext.convertZatoshiToZecString
+import pirate.android.sdk.ext.convertZatoshiToArrrString
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -19,7 +19,7 @@ class UtxoViewHolder<T : PirateConfirmedTransaction>(itemView: View) : RecyclerV
     private val formatter = SimpleDateFormat("M/d h:mma", Locale.getDefault())
 
     fun bindTo(transaction: T?) {
-        amountText.text = transaction?.value.convertZatoshiToZecString()
+        amountText.text = transaction?.value.convertZatoshiToArrrString()
         timeText.text =
             if (transaction == null || transaction?.blockTimeInSeconds == 0L) "Pending"
             else formatter.format(transaction.blockTimeInSeconds * 1000L)

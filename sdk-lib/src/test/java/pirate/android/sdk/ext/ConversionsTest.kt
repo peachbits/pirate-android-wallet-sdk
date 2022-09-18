@@ -9,55 +9,55 @@ internal class ConversionsTest {
 
     @Test
     fun `default right padding is 6`() {
-        assertEquals(1.13.toZec(6), 113000000L.convertZatoshiToZec())
-        assertEquals(1.13.toZec(6), 1.13.toZec())
+        assertEquals(1.13.toArrr(6), 113000000L.convertZatoshiToArrr())
+        assertEquals(1.13.toArrr(6), 1.13.toArrr())
     }
 
     @Test
-    fun `toZec uses banker's rounding`() {
-        assertEquals("1.004", 1.0035.toZecString(3))
-        assertEquals("1.004", 1.0045.toZecString(3))
+    fun `toArrr uses banker's rounding`() {
+        assertEquals("1.004", 1.0035.toArrrString(3))
+        assertEquals("1.004", 1.0045.toArrrString(3))
     }
 
     @Test
-    fun `toZecString defaults to 6 digits`() {
-        assertEquals("1.123457", 112345678L.convertZatoshiToZecString())
+    fun `toArrrString defaults to 6 digits`() {
+        assertEquals("1.123457", 112345678L.convertZatoshiToArrrString())
     }
 
     @Test
-    fun `toZecString uses banker's rounding`() {
-        assertEquals("1.123456", 112345650L.convertZatoshiToZecString())
+    fun `toArrrString uses banker's rounding`() {
+        assertEquals("1.123456", 112345650L.convertZatoshiToArrrString())
     }
 
     @Test
-    fun `toZecString honors minimum digits`() {
-        assertEquals("1.1000", 1.1.toZecString(6, 4))
+    fun `toArrrString honors minimum digits`() {
+        assertEquals("1.1000", 1.1.toArrrString(6, 4))
     }
 
     @Test
-    fun `toZecString drops trailing zeros`() {
-        assertEquals("1.1", 1.10000000.toZecString(6, 0))
+    fun `toArrrString drops trailing zeros`() {
+        assertEquals("1.1", 1.10000000.toArrrString(6, 0))
     }
 
     @Test
-    fun `toZecString limits trailing zeros`() {
-        assertEquals("1.10", 1.10000000.toZecString(6, 2))
+    fun `toArrrString limits trailing zeros`() {
+        assertEquals("1.10", 1.10000000.toArrrString(6, 2))
     }
 
     @Test
-    fun `toZecString hides decimal when min is zero`() {
-        assertEquals("1", 1.0.toZecString(6, 0))
+    fun `toArrrString hides decimal when min is zero`() {
+        assertEquals("1", 1.0.toArrrString(6, 0))
     }
 
     @Test
-    fun `toZecString defaults are reasonable`() {
+    fun `toArrrString defaults are reasonable`() {
         // basically check for no extra zeros and banker's rounding
-        assertEquals("1", 1.0000000.toZecString())
-        assertEquals("0", 0.0000000.toZecString())
-        assertEquals("1.01", 1.0100000.toZecString())
-        assertEquals("1.000004", 1.0000035.toZecString())
-        assertEquals("1.000004", 1.0000045.toZecString())
-        assertEquals("1.000006", 1.0000055.toZecString())
+        assertEquals("1", 1.0000000.toArrrString())
+        assertEquals("0", 0.0000000.toArrrString())
+        assertEquals("1.01", 1.0100000.toArrrString())
+        assertEquals("1.000004", 1.0000035.toArrrString())
+        assertEquals("1.000004", 1.0000045.toArrrString())
+        assertEquals("1.000006", 1.0000055.toArrrString())
     }
 
     @Test
@@ -71,28 +71,28 @@ internal class ConversionsTest {
     }
 
     @Test
-    fun `toZecString zatoshi converts`() {
-        assertEquals("1.123456", 112345650L.convertZatoshiToZecString(6, 0))
+    fun `toArrrString zatoshi converts`() {
+        assertEquals("1.123456", 112345650L.convertZatoshiToArrrString(6, 0))
     }
 
     @Test
-    fun `toZecString big decimal formats`() {
-        assertEquals("1.123", BigDecimal(1.123456789).toZecString(3, 0))
+    fun `toArrrString big decimal formats`() {
+        assertEquals("1.123", BigDecimal(1.123456789).toArrrString(3, 0))
     }
 
     @Test
-    fun `toZec reduces precision`() {
+    fun `toArrr reduces precision`() {
         val amount = "20.37905033625433054819645404524149".safelyConvertToBigDecimal()
         val expected = "20.379050".safelyConvertToBigDecimal()
-        assertEquals(expected, amount.toZec(6))
-        assertEquals("20.37905", amount.toZecString(6))
+        assertEquals(expected, amount.toArrr(6))
+        assertEquals("20.37905", amount.toArrrString(6))
     }
 
     @Test
     fun `convert usd to zec`() {
         val price = BigDecimal("49.07", MathContext.DECIMAL128)
         val usdValue = "1000".safelyConvertToBigDecimal()
-        val zecValue = usdValue.convertUsdToZec(price)
-        assertEquals("20.379050".safelyConvertToBigDecimal(), zecValue.toZec(6))
+        val zecValue = usdValue.convertUsdToArrr(price)
+        assertEquals("20.379050".safelyConvertToBigDecimal(), zecValue.toArrr(6))
     }
 }

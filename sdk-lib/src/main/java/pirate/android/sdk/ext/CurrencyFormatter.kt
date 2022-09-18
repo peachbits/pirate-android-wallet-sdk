@@ -47,11 +47,11 @@ object Conversions {
  * @return this Zatoshi value represented as ARRR, in a string with at least [minDecimals] and at
  * most [maxDecimals]
  */
-inline fun Long?.convertZatoshiToZecString(
+inline fun Long?.convertZatoshiToArrrString(
     maxDecimals: Int = ARRR_FORMATTER.maximumFractionDigits,
     minDecimals: Int = ARRR_FORMATTER.minimumFractionDigits
 ): String {
-    return currencyFormatter(maxDecimals, minDecimals).format(this.convertZatoshiToZec(maxDecimals))
+    return currencyFormatter(maxDecimals, minDecimals).format(this.convertZatoshiToArrr(maxDecimals))
 }
 
 /**
@@ -65,16 +65,16 @@ inline fun Long?.convertZatoshiToZecString(
  * @return this Double ARRR value represented as a string with at least [minDecimals] and at most
  * [maxDecimals].
  */
-inline fun Double?.toZecString(
+inline fun Double?.toArrrString(
     maxDecimals: Int = ARRR_FORMATTER.maximumFractionDigits,
     minDecimals: Int = ARRR_FORMATTER.minimumFractionDigits
 ): String {
-    return currencyFormatter(maxDecimals, minDecimals).format(this.toZec(maxDecimals))
+    return currencyFormatter(maxDecimals, minDecimals).format(this.toArrr(maxDecimals))
 }
 
 /**
  * Format a Zatoshi value into ARRR with the given number of decimal places, represented as a string.
- * Start with ZeC -> End with ARRR.
+ * Start with ArrR -> End with ARRR.
  *
  * @param maxDecimals the number of decimal places to use in the format. Default is 6 because ARRR is
  * better than bread.
@@ -83,11 +83,11 @@ inline fun Double?.toZecString(
  * @return this BigDecimal ARRR value represented as a string with at least [minDecimals] and at most
  * [maxDecimals].
  */
-inline fun BigDecimal?.toZecString(
+inline fun BigDecimal?.toArrrString(
     maxDecimals: Int = ARRR_FORMATTER.maximumFractionDigits,
     minDecimals: Int = ARRR_FORMATTER.minimumFractionDigits
 ): String {
-    return currencyFormatter(maxDecimals, minDecimals).format(this.toZec(maxDecimals))
+    return currencyFormatter(maxDecimals, minDecimals).format(this.toArrr(maxDecimals))
 }
 
 /**
@@ -162,7 +162,7 @@ inline fun currencyFormatter(maxDecimals: Int, minDecimals: Int): NumberFormat {
  * @return this Long Zatoshi value represented as ARRR using a BigDecimal with the given scale,
  * rounded accurately out to 128 digits.
  */
-inline fun Long?.convertZatoshiToZec(scale: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
+inline fun Long?.convertZatoshiToArrr(scale: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
     return BigDecimal(this ?: 0L, MathContext.DECIMAL128).divide(
         Conversions.ONE_ARRR_IN_ZATOSHI,
         MathContext.DECIMAL128
@@ -176,7 +176,7 @@ inline fun Long?.convertZatoshiToZec(scale: Int = ARRR_FORMATTER.maximumFraction
  * @return this ARRR value represented as Zatoshi, rounded accurately out to 128 digits, in order to
  * minimize cumulative errors when applied repeatedly over a sequence of calculations.
  */
-inline fun BigDecimal?.convertZecToZatoshi(): Long {
+inline fun BigDecimal?.convertArrrToZatoshi(): Long {
     if (this == null) return 0L
     if (this < BigDecimal.ZERO) {
         throw IllegalArgumentException(
@@ -197,7 +197,7 @@ inline fun BigDecimal?.convertZecToZatoshi(): Long {
  * @return this Double ARRR value converted into a BigDecimal, with the proper rounding mode for use
  * with other formatting functions.
  */
-inline fun Double?.toZec(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
+inline fun Double?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
     return BigDecimal(this?.toString() ?: "0.0", MathContext.DECIMAL128).setScale(
         decimals,
         ARRR_FORMATTER.roundingMode
@@ -214,8 +214,8 @@ inline fun Double?.toZec(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): 
  * @return this Double ARRR value converted into Zatoshi, with proper rounding and precision by
  * leveraging an intermediate BigDecimal object.
  */
-inline fun Double?.convertZecToZatoshi(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): Long {
-    return this.toZec(decimals).convertZecToZatoshi()
+inline fun Double?.convertArrrToZatoshi(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): Long {
+    return this.toArrr(decimals).convertArrrToZatoshi()
 }
 
 /**
@@ -227,7 +227,7 @@ inline fun Double?.convertZecToZatoshi(decimals: Int = ARRR_FORMATTER.maximumFra
  *
  * @return this BigDecimal ARRR adjusted to the default scale and rounding mode.
  */
-inline fun BigDecimal?.toZec(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
+inline fun BigDecimal?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
     return (this ?: BigDecimal.ZERO).setScale(decimals, ARRR_FORMATTER.roundingMode)
 }
 
@@ -264,39 +264,39 @@ inline fun BigDecimal?.toUsd(decimals: Int = USD_FORMATTER.maximumFractionDigits
  * Convert this ARRR value to USD, using the given price per ARRR.
  * Start with ARRR -> End with USD.
  *
- * @param zecPrice the current price of ARRR represented as USD per ARRR
+ * @param arrrPrice the current price of ARRR represented as USD per ARRR
  *
  * @return this BigDecimal USD value converted into USD, with proper rounding and precision.
  */
-inline fun BigDecimal?.convertZecToUsd(zecPrice: BigDecimal): BigDecimal {
+inline fun BigDecimal?.convertArrrToUsd(arrrPrice: BigDecimal): BigDecimal {
     if (this == null) return BigDecimal.ZERO
     if (this < BigDecimal.ZERO) {
         throw IllegalArgumentException(
-            "Invalid ARRR value: ${zecPrice.toDouble()}. ARRR is" +
+            "Invalid ARRR value: ${arrrPrice.toDouble()}. ARRR is" +
                 " represented by notes and cannot be negative"
         )
     }
-    return this.multiply(zecPrice, MathContext.DECIMAL128)
+    return this.multiply(arrrPrice, MathContext.DECIMAL128)
 }
 
 /**
  * Convert this USD value to ARRR, using the given price per ARRR.
  * Start with USD -> End with ARRR.
  *
- * @param zecPrice the current price of ARRR represented as USD per ARRR.
+ * @param arrrPrice the current price of ARRR represented as USD per ARRR.
  *
  * @return this BigDecimal USD value converted into ARRR, with proper rounding and precision.
  */
-inline fun BigDecimal?.convertUsdToZec(zecPrice: BigDecimal): BigDecimal {
+inline fun BigDecimal?.convertUsdToArrr(arrrPrice: BigDecimal): BigDecimal {
     if (this == null) return BigDecimal.ZERO
     if (this < BigDecimal.ZERO) {
         throw IllegalArgumentException(
-            "Invalid USD value: ${zecPrice.toDouble()}. Converting" +
+            "Invalid USD value: ${arrrPrice.toDouble()}. Converting" +
                 " this would result in negative ARRR and ARRR is represented by notes and cannot be" +
                 " negative"
         )
     }
-    return this.divide(zecPrice, MathContext.DECIMAL128)
+    return this.divide(arrrPrice, MathContext.DECIMAL128)
 }
 
 /**
@@ -310,11 +310,11 @@ inline fun BigDecimal?.convertUsdToZec(zecPrice: BigDecimal): BigDecimal {
  * @return this BigDecimal value converted from one currency into the other, based on the given
  * price.
  */
-inline fun BigDecimal.convertCurrency(zecPrice: BigDecimal, isUsd: Boolean): BigDecimal {
+inline fun BigDecimal.convertCurrency(arrrPrice: BigDecimal, isUsd: Boolean): BigDecimal {
     return if (isUsd) {
-        this.convertUsdToZec(zecPrice)
+        this.convertUsdToArrr(arrrPrice)
     } else {
-        this.convertZecToUsd(zecPrice)
+        this.convertArrrToUsd(arrrPrice)
     }
 }
 

@@ -24,9 +24,9 @@ import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.demoapp.util.mainActivity
 import pirate.android.sdk.ext.collectWith
-import pirate.android.sdk.ext.convertZatoshiToZecString
-import pirate.android.sdk.ext.convertZecToZatoshi
-import pirate.android.sdk.ext.toZecString
+import pirate.android.sdk.ext.convertZatoshiToArrrString
+import pirate.android.sdk.ext.convertArrrToZatoshi
+import pirate.android.sdk.ext.toArrrString
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.tool.DerivationTool
@@ -102,7 +102,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
 
     private fun initSendUi() {
         amountInput = binding.inputAmount.apply {
-            setText(DemoConstants.sendAmount.toZecString())
+            setText(DemoConstants.sendAmount.toArrrString())
         }
         addressInput = binding.inputAddress.apply {
             setText(DemoConstants.toAddress)
@@ -148,15 +148,15 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
         this.balance = balance
         if (!isSyncing) {
             binding.textBalance.text = """
-                Available balance: ${balance.availableZatoshi.convertZatoshiToZecString(12)}
-                Total balance: ${balance.totalZatoshi.convertZatoshiToZecString(12)}
+                Available balance: ${balance.availableZatoshi.convertZatoshiToArrrString(12)}
+                Total balance: ${balance.totalZatoshi.convertZatoshiToArrrString(12)}
             """.trimIndent()
         }
     }
 
     private fun onSend(unused: View) {
         isSending = true
-        val amount = amountInput.text.toString().toDouble().convertZecToZatoshi()
+        val amount = amountInput.text.toString().toDouble().convertArrrToZatoshi()
         val toAddress = addressInput.text.toString().trim()
         synchronizer.sendToAddress(
             spendingKey,

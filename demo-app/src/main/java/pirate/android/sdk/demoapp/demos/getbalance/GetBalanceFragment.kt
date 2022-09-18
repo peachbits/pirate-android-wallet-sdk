@@ -13,7 +13,7 @@ import pirate.android.sdk.demoapp.databinding.FragmentGetBalanceBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.collectWith
-import pirate.android.sdk.ext.convertZatoshiToZecString
+import pirate.android.sdk.ext.convertZatoshiToArrrString
 import pirate.android.sdk.tool.DerivationTool
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
@@ -73,8 +73,8 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
 
     private fun onBalance(balance: PirateWalletBalance) {
         binding.textBalance.text = """
-                Available balance: ${balance.availableZatoshi.convertZatoshiToZecString(12)}
-                Total balance: ${balance.totalZatoshi.convertZatoshiToZecString(12)}
+                Available balance: ${balance.availableZatoshi.convertZatoshiToArrrString(12)}
+                Total balance: ${balance.totalZatoshi.convertZatoshiToArrrString(12)}
         """.trimIndent()
     }
 
