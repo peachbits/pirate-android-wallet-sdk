@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RoomDatabase
-import pirate.android.sdk.db.entity.CompactBlockEntity
+import pirate.android.sdk.db.entity.PirateCompactBlockEntity
 
 //
 // Database
@@ -19,7 +19,7 @@ import pirate.android.sdk.db.entity.CompactBlockEntity
  * deleted because they are no longer needed. Currently, this efficiency has not been implemented.
  */
 @Database(
-    entities = [CompactBlockEntity::class],
+    entities = [PirateCompactBlockEntity::class],
     version = 1,
     exportSchema = true
 )
@@ -37,10 +37,10 @@ abstract class CompactBlockDb : RoomDatabase() {
 @Dao
 interface CompactBlockDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(block: CompactBlockEntity)
+    suspend fun insert(block: PirateCompactBlockEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(block: List<CompactBlockEntity>)
+    suspend fun insert(block: List<PirateCompactBlockEntity>)
 
     @Query("DELETE FROM compactblocks WHERE height > :height")
     suspend fun rewindTo(height: Int)

@@ -3,7 +3,7 @@ package pirate.android.sdk.internal.block
 import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import pirate.android.sdk.db.entity.CompactBlockEntity
+import pirate.android.sdk.db.entity.PirateCompactBlockEntity
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.SdkExecutors
 import pirate.android.sdk.internal.db.CompactBlockDb
@@ -27,7 +27,7 @@ class PirateCompactBlockDbStore private constructor(
         cacheDao.findCompactBlock(height)?.let { CompactFormats.CompactBlock.parseFrom(it) }
 
     override suspend fun write(result: List<CompactFormats.CompactBlock>) =
-        cacheDao.insert(result.map { CompactBlockEntity(it.height.toInt(), it.toByteArray()) })
+        cacheDao.insert(result.map { PirateCompactBlockEntity(it.height.toInt(), it.toByteArray()) })
 
     override suspend fun rewindTo(height: Int) =
         cacheDao.rewindTo(height)
