@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import pirate.android.sdk.db.entity.PendingTransaction
-import pirate.android.sdk.db.entity.PendingTransactionEntity
+import pirate.android.sdk.db.entity.PiratePendingTransactionEntity
 import pirate.android.sdk.db.entity.isCancelled
 import pirate.android.sdk.db.entity.isFailedEncoding
 import pirate.android.sdk.db.entity.isSubmitted
@@ -76,7 +76,7 @@ class PersistentTransactionManager(
         fromAccountIndex: Int
     ): PendingTransaction = withContext(Dispatchers.IO) {
         twig("constructing a placeholder transaction")
-        var tx = PendingTransactionEntity(
+        var tx = PiratePendingTransactionEntity(
             value = zatoshiValue,
             toAddress = toAddress,
             memo = memo.toByteArray(),
@@ -109,7 +109,7 @@ class PersistentTransactionManager(
         pendingTx: PendingTransaction
     ): PendingTransaction = withContext(Dispatchers.IO) {
         twig("managing the creation of a transaction")
-        var tx = pendingTx as PendingTransactionEntity
+        var tx = pendingTx as PiratePendingTransactionEntity
         try {
             twig("beginning to encode transaction with : $encoder")
             val encodedTx = encoder.createTransaction(
@@ -146,7 +146,7 @@ class PersistentTransactionManager(
         pendingTx: PendingTransaction
     ): PendingTransaction {
         twig("managing the creation of a shielding transaction")
-        var tx = pendingTx as PendingTransactionEntity
+        var tx = pendingTx as PiratePendingTransactionEntity
         try {
             twig("beginning to encode shielding transaction with : $encoder")
             val encodedTx = encoder.createShieldingTransaction(
@@ -266,7 +266,7 @@ class PersistentTransactionManager(
     override suspend fun abort(existingTransaction: PendingTransaction): Int {
         return pendingTransactionDao {
             twig("[cleanup] Deleting pendingTxId: ${existingTransaction.id}")
-            delete(existingTransaction as PendingTransactionEntity)
+            delete(existingTransaction as PiratePendingTransactionEntity)
         }
     }
 

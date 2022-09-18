@@ -72,7 +72,7 @@ data class PirateTransactionEntity(
 }
 
 @Entity(tableName = "pending_transactions")
-data class PendingTransactionEntity(
+data class PiratePendingTransactionEntity(
     @PrimaryKey(autoGenerate = true)
     override val id: Long = 0,
     override val toAddress: String = "",
@@ -96,7 +96,7 @@ data class PendingTransactionEntity(
 ) : PendingTransaction {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is PendingTransactionEntity) return false
+        if (other !is PiratePendingTransactionEntity) return false
 
         if (id != other.id) return false
         if (toAddress != other.toAddress) return false

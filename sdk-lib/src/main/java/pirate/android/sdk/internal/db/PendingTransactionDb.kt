@@ -8,7 +8,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RoomDatabase
 import androidx.room.Update
-import pirate.android.sdk.db.entity.PendingTransactionEntity
+import pirate.android.sdk.db.entity.PiratePendingTransactionEntity
 import kotlinx.coroutines.flow.Flow
 
 //
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.Flow
  */
 @Database(
     entities = [
-        PendingTransactionEntity::class
+        PiratePendingTransactionEntity::class
     ],
     version = 1,
     exportSchema = true
@@ -42,25 +42,25 @@ abstract class PendingTransactionDb : RoomDatabase() {
 @Dao
 interface PendingTransactionDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun create(transaction: PendingTransactionEntity): Long
+    suspend fun create(transaction: PiratePendingTransactionEntity): Long
 
     @Update(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun update(transaction: PendingTransactionEntity)
+    suspend fun update(transaction: PiratePendingTransactionEntity)
 
     @Delete
-    suspend fun delete(transaction: PendingTransactionEntity): Int
+    suspend fun delete(transaction: PiratePendingTransactionEntity): Int
 
     @Query("UPDATE pending_transactions SET cancelled = 1 WHERE id = :id")
     suspend fun cancel(id: Long)
 
     @Query("SELECT * FROM pending_transactions WHERE id = :id")
-    suspend fun findById(id: Long): PendingTransactionEntity?
+    suspend fun findById(id: Long): PiratePendingTransactionEntity?
 
     @Query("SELECT * FROM pending_transactions ORDER BY createTime")
-    fun getAll(): Flow<List<PendingTransactionEntity>>
+    fun getAll(): Flow<List<PiratePendingTransactionEntity>>
 
     @Query("SELECT * FROM pending_transactions WHERE id = :id")
-    fun monitorById(id: Long): Flow<PendingTransactionEntity>
+    fun monitorById(id: Long): Flow<PiratePendingTransactionEntity>
 
     //
     // Update helper functions
