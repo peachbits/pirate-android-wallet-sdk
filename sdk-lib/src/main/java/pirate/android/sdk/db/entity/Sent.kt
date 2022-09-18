@@ -13,7 +13,7 @@ import androidx.room.ForeignKey
             parentColumns = ["id_tx"],
             childColumns = ["tx"]
         ), ForeignKey(
-            entity = Account::class,
+            entity = PirateAccount::class,
             parentColumns = ["account"],
             childColumns = ["from_account"]
         )

@@ -7,7 +7,7 @@ import androidx.room.Entity
     tableName = "accounts",
     primaryKeys = ["account"]
 )
-data class Account(
+data class PirateAccount(
 
     val account: Int? = 0,
 

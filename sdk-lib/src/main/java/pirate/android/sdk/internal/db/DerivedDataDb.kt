@@ -8,7 +8,7 @@ import androidx.room.RoomDatabase
 import androidx.room.Transaction
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import pirate.android.sdk.db.entity.Account
+import pirate.android.sdk.db.entity.PirateAccount
 import pirate.android.sdk.db.entity.Block
 import pirate.android.sdk.db.entity.ConfirmedTransaction
 import pirate.android.sdk.db.entity.EncodedTransaction
@@ -35,7 +35,7 @@ import pirate.android.sdk.type.UnifiedAddressAccount
         TransactionEntity::class,
         Block::class,
         Received::class,
-        Account::class,
+        PirateAccount::class,
         Sent::class,
         Utxo::class
     ],
@@ -71,7 +71,7 @@ abstract class DerivedDataDb : RoomDatabase() {
                         FOREIGN KEY (account) REFERENCES accounts(account),
                         FOREIGN KEY (spent) REFERENCES transactions(id_tx),
                         CONSTRAINT tx_output UNIQUE (tx, output_index)
-                    ); 
+                    );
                     """.trimIndent()
                 )
                 database.execSQL("INSERT INTO received_notes_new SELECT * FROM received_notes;")
@@ -102,7 +102,7 @@ abstract class DerivedDataDb : RoomDatabase() {
                         FOREIGN KEY (account) REFERENCES accounts(account),
                         FOREIGN KEY (spent) REFERENCES transactions(id_tx),
                         CONSTRAINT tx_output UNIQUE (tx, output_index)
-                    ); 
+                    );
                     """.trimIndent()
                 )
                 database.execSQL("INSERT INTO received_notes_new SELECT * FROM received_notes;")
@@ -133,7 +133,7 @@ abstract class DerivedDataDb : RoomDatabase() {
                         FOREIGN KEY (account) REFERENCES accounts(account),
                         FOREIGN KEY (spent) REFERENCES transactions(id_tx),
                         CONSTRAINT tx_output UNIQUE (tx, output_index)
-                    ); 
+                    );
                     """.trimIndent()
                 )
                 database.execSQL("INSERT INTO received_notes_new SELECT * FROM received_notes;")
@@ -149,16 +149,16 @@ abstract class DerivedDataDb : RoomDatabase() {
                     """
                     CREATE TABLE IF NOT EXISTS utxos (
                         id_utxo INTEGER PRIMARY KEY,
-                        address TEXT NOT NULL, 
-                        prevout_txid BLOB NOT NULL, 
-                        prevout_idx INTEGER NOT NULL, 
-                        script BLOB NOT NULL, 
-                        value_zat INTEGER NOT NULL, 
+                        address TEXT NOT NULL,
+                        prevout_txid BLOB NOT NULL,
+                        prevout_idx INTEGER NOT NULL,
+                        script BLOB NOT NULL,
+                        value_zat INTEGER NOT NULL,
                         height INTEGER NOT NULL,
                         spent_in_tx INTEGER,
                         FOREIGN KEY (spent_in_tx) REFERENCES transactions(id_tx),
                         CONSTRAINT tx_outpoint UNIQUE (prevout_txid, prevout_idx)
-                    ); 
+                    );
                     """.trimIndent()
                 )
             }
@@ -174,7 +174,7 @@ abstract class DerivedDataDb : RoomDatabase() {
                         extfvk TEXT NOT NULL,
                         address TEXT NOT NULL,
                         transparent_address TEXT NOT NULL
-                    ); 
+                    );
                     """.trimIndent()
                 )
                 database.execSQL("DROP TABLE accounts;")
@@ -256,7 +256,7 @@ interface TransactionDao {
 
     @Query(
         """
-        SELECT transactions.txid AS txId, 
+        SELECT transactions.txid AS txId,
                transactions.raw  AS raw,
                transactions.expiry_height AS expiryHeight
         FROM   transactions
@@ -268,9 +268,9 @@ interface TransactionDao {
     @Query(
         """
         SELECT transactions.block
-        FROM   transactions 
+        FROM   transactions
         WHERE  txid = :rawTransactionId
-        LIMIT  1 
+        LIMIT  1
         """
     )
     suspend fun findMinedHeight(rawTransactionId: ByteArray): Int?
@@ -292,7 +292,7 @@ interface TransactionDao {
                sent_notes.id_note         AS noteId,
                blocks.time                AS blockTimeInSeconds
         FROM   transactions
-               LEFT JOIN sent_notes 
+               LEFT JOIN sent_notes
                       ON transactions.id_tx = sent_notes.tx
                LEFT JOIN blocks
                       ON transactions.block = blocks.height
@@ -363,9 +363,9 @@ interface TransactionDao {
                LEFT JOIN blocks
                       ON transactions.block = blocks.height
         /* we want all received txs except those that are change and all sent transactions (even those that haven't been mined yet). Note: every entry in the 'send_notes' table has a non-null value for 'address' */
-        WHERE  ( sent_notes.address IS NULL 
-                 AND received_notes.is_change != 1 ) 
-                OR sent_notes.address IS NOT NULL   
+        WHERE  ( sent_notes.address IS NULL
+                 AND received_notes.is_change != 1 )
+                OR sent_notes.address IS NOT NULL
          ORDER  BY ( minedheight IS NOT NULL ),
                   minedheight DESC,
                   blocktimeinseconds DESC,
@@ -382,40 +382,40 @@ interface TransactionDao {
      */
     @Query(
         """
-        SELECT transactions.id_tx         AS id, 
-               transactions.block         AS minedHeight, 
-               transactions.tx_index      AS transactionIndex, 
-               transactions.txid          AS rawTransactionId, 
-               transactions.expiry_height AS expiryHeight, 
-               transactions.raw           AS raw, 
-               sent_notes.address         AS toAddress, 
-               CASE 
-                 WHEN sent_notes.value IS NOT NULL THEN sent_notes.value 
-                 ELSE received_notes.value 
-               end                        AS value, 
-               CASE 
-                 WHEN sent_notes.memo IS NOT NULL THEN sent_notes.memo 
-                 ELSE received_notes.memo 
-               end                        AS memo, 
-               CASE 
-                 WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note 
-                 ELSE received_notes.id_note 
-               end                        AS noteId, 
-               blocks.time                AS blockTimeInSeconds 
-        FROM   transactions 
-               LEFT JOIN received_notes 
-                      ON transactions.id_tx = received_notes.tx 
-               LEFT JOIN sent_notes 
-                      ON transactions.id_tx = sent_notes.tx 
-               LEFT JOIN blocks 
-                      ON transactions.block = blocks.height 
-        WHERE  :blockRangeStart <= minedheight 
-               AND minedheight <= :blockRangeEnd 
-        ORDER  BY ( minedheight IS NOT NULL ), 
-                  minedheight ASC, 
-                  blocktimeinseconds DESC, 
-                  id DESC 
-        LIMIT  :limit 
+        SELECT transactions.id_tx         AS id,
+               transactions.block         AS minedHeight,
+               transactions.tx_index      AS transactionIndex,
+               transactions.txid          AS rawTransactionId,
+               transactions.expiry_height AS expiryHeight,
+               transactions.raw           AS raw,
+               sent_notes.address         AS toAddress,
+               CASE
+                 WHEN sent_notes.value IS NOT NULL THEN sent_notes.value
+                 ELSE received_notes.value
+               end                        AS value,
+               CASE
+                 WHEN sent_notes.memo IS NOT NULL THEN sent_notes.memo
+                 ELSE received_notes.memo
+               end                        AS memo,
+               CASE
+                 WHEN sent_notes.id_note IS NOT NULL THEN sent_notes.id_note
+                 ELSE received_notes.id_note
+               end                        AS noteId,
+               blocks.time                AS blockTimeInSeconds
+        FROM   transactions
+               LEFT JOIN received_notes
+                      ON transactions.id_tx = received_notes.tx
+               LEFT JOIN sent_notes
+                      ON transactions.id_tx = sent_notes.tx
+               LEFT JOIN blocks
+                      ON transactions.block = blocks.height
+        WHERE  :blockRangeStart <= minedheight
+               AND minedheight <= :blockRangeEnd
+        ORDER  BY ( minedheight IS NOT NULL ),
+                  minedheight ASC,
+                  blocktimeinseconds DESC,
+                  id DESC
+        LIMIT  :limit
         """
     )
     suspend fun findAllTransactionsByRange(blockRangeStart: Int, blockRangeEnd: Int = blockRangeStart, limit: Int = Int.MAX_VALUE): List<ConfirmedTransaction>
@@ -489,7 +489,7 @@ interface TransactionDao {
     @Query(
         """
         SELECT transactions.id_tx AS id
-        FROM   transactions 
+        FROM   transactions
         WHERE  txid = :rawTransactionId
                AND block IS NULL
         """
@@ -499,7 +499,7 @@ interface TransactionDao {
     @Query(
         """
         SELECT transactions.id_tx AS id
-        FROM   transactions 
+        FROM   transactions
         WHERE  txid = :rawTransactionId
         LIMIT 1
         """
@@ -509,8 +509,8 @@ interface TransactionDao {
     @Query(
         """
         SELECT sent_notes.id_note AS id
-        FROM   sent_notes 
-        WHERE  tx = :transactionId 
+        FROM   sent_notes
+        WHERE  tx = :transactionId
         """
     )
     suspend fun findSentNoteIds(transactionId: Long): List<Int>?
