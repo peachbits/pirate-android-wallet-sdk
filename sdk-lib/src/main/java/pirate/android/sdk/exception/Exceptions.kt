@@ -27,12 +27,12 @@ sealed class RustLayerException(message: String, cause: Throwable? = null) : Pir
 /**
  * User-facing exceptions thrown by the transaction repository.
  */
-sealed class RepositoryException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    object FalseStart : RepositoryException(
+sealed class PirateRepositoryException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+    object FalseStart : PirateRepositoryException(
         "The channel is closed. Note that once a repository has stopped it " +
             "cannot be restarted. Verify that the repository is not being restarted."
     )
-    object Unprepared : RepositoryException(
+    object Unprepared : PirateRepositoryException(
         "Unprepared repository: Data cannot be accessed before the repository is prepared." +
             " Ensure that things have been properly initialized. If you see this error it most" +
             " likely means that you are accessing transactions or other data before starting the" +
