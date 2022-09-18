@@ -19,7 +19,7 @@ import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateM
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateMismatchedNetwork
 import pirate.android.sdk.exception.PirateInitializerException
 import pirate.android.sdk.exception.PirateRustLayerException
-import pirate.android.sdk.ext.BatchMetrics
+import pirate.android.sdk.ext.PirateBatchMetrics
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.PirateSdk.DOWNLOAD_BATCH_SIZE
 import pirate.android.sdk.ext.PirateSdk.MAX_BACKOFF_INTERVAL
@@ -114,7 +114,7 @@ class PirateCompactBlockProcessor(
      *
      * The Boolean param (isComplete) is true when this event represents the completion of a scan
      */
-    var onScanMetricCompleteListener: ((BatchMetrics, Boolean) -> Unit)? = null
+    var onScanMetricCompleteListener: ((PirateBatchMetrics, Boolean) -> Unit)? = null
 
     private val consecutiveChainErrors = AtomicInteger(0)
     private val lowerBoundHeight: Int = max(rustBackend.network.saplingActivationHeight, minimumHeight - MAX_REORG_SIZE)
@@ -555,7 +555,7 @@ class PirateCompactBlockProcessor(
             Twig.sprout("scanning")
             twig("scanning blocks for range $range in batches")
             var result = false
-            var metrics = BatchMetrics(range, SCAN_BATCH_SIZE, onScanMetricCompleteListener)
+            var metrics = PirateBatchMetrics(range, SCAN_BATCH_SIZE, onScanMetricCompleteListener)
             // Attempt to scan a few times to work around any concurrent modification errors, then
             // rethrow as an official processorError which is handled by [start.retryWithBackoff]
             retryUpTo(3, { PirateCompactBlockProcessorException.PirateFailedScan(it) }) { failedAttempts ->

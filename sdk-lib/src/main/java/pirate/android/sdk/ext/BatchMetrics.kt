@@ -3,7 +3,7 @@ package pirate.android.sdk.ext
 import kotlin.math.max
 import kotlin.math.min
 
-class BatchMetrics(val range: IntRange, val batchSize: Int, private val onMetricComplete: ((BatchMetrics, Boolean) -> Unit)? = null) {
+class PirateBatchMetrics(val range: IntRange, val batchSize: Int, private val onMetricComplete: ((PirateBatchMetrics, Boolean) -> Unit)? = null) {
     private var completedBatches = 0
     private var rangeStartTime = 0L
     private var batchStartTime = 0L
