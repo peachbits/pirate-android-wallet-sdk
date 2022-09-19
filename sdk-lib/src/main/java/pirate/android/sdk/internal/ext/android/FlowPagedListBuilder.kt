@@ -46,7 +46,7 @@ class FlowPagedListBuilder<Key, Value>(
      */
     @SuppressLint("RestrictedApi")
     fun build(): Flow<List<Value>> {
-        return object : ComputableFlow<List<Value>>(fetchContext) {
+        return object : PirateComputableFlow<List<Value>>(fetchContext) {
             private lateinit var dataSource: DataSource<Key, Value>
             private lateinit var list: PagedList<Value>
             private val callback = DataSource.InvalidatedCallback { invalidate() }

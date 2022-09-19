@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 /* Adapted from ComputableLiveData */
-abstract class ComputableFlow<T>(dispatcher: CoroutineDispatcher = Dispatchers.IO) {
+abstract class PirateComputableFlow<T>(dispatcher: CoroutineDispatcher = Dispatchers.IO) {
     private val computationScope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     private val computationChannel: ConflatedBroadcastChannel<T> = ConflatedBroadcastChannel()
     internal val flow = computationChannel.asFlow().flowOn(dispatcher).onStart {
