@@ -66,10 +66,10 @@ inline fun <Key, Value> DataSource.Factory<Key, Value>.toFlowPagedList(
  * there is more than one process updating the database. So the other process must invalidate the
  * data after an update in order to trigger refreshes all the way up the stack.
  */
-fun <Key, Value> DataSource.Factory<Key, Value>.toRefreshable(): RefreshableDataSourceFactory<Key, Value> =
-    RefreshableDataSourceFactory(this)
+fun <Key, Value> DataSource.Factory<Key, Value>.toRefreshable(): PirateRefreshableDataSourceFactory<Key, Value> =
+    PirateRefreshableDataSourceFactory(this)
 
-class RefreshableDataSourceFactory<Key, Value>(private val delegate: DataSource.Factory<Key, Value>) :
+class PirateRefreshableDataSourceFactory<Key, Value>(private val delegate: DataSource.Factory<Key, Value>) :
     DataSource.Factory<Key, Value>() {
     private var lastDataSource: DataSource<Key, Value>? = null
     override fun create(): DataSource<Key, Value> {
