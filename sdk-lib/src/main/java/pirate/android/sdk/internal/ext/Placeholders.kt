@@ -51,7 +51,7 @@ class PirateSimpleProvider<T>(var value: T) : ReadWriteProperty<Any?, T> {
 }
 
 @Deprecated(message = InsecureWarning.message)
-class BlockingProvider<T>(var value: T, val delay: Long = 5000L) : ReadWriteProperty<Any?, T> {
+class PirateBlockingProvider<T>(var value: T, val delay: Long = 5000L) : ReadWriteProperty<Any?, T> {
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
         Thread.sleep(delay)
         return value
