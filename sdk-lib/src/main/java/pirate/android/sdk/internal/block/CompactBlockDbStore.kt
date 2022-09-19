@@ -6,7 +6,7 @@ import androidx.room.RoomDatabase
 import pirate.android.sdk.db.entity.PirateCompactBlockEntity
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.SdkExecutors
-import pirate.android.sdk.internal.db.CompactBlockDb
+import pirate.android.sdk.internal.db.PirateCompactBlockDb
 import cash.z.wallet.sdk.rpc.CompactFormats
 import kotlinx.coroutines.withContext
 import kotlin.math.max
@@ -16,7 +16,7 @@ import kotlin.math.max
  * path. This represents the "cache db" or local cache of compact blocks waiting to be scanned.
  */
 class PirateCompactBlockDbStore private constructor(
-    private val cacheDb: CompactBlockDb
+    private val cacheDb: PirateCompactBlockDb
 ) : CompactBlockStore {
 
     private val cacheDao = cacheDb.compactBlockDao()
@@ -52,8 +52,8 @@ class PirateCompactBlockDbStore private constructor(
         private fun createCompactBlockCacheDb(
             appContext: Context,
             dbPath: String
-        ): CompactBlockDb {
-            return Room.databaseBuilder(appContext, CompactBlockDb::class.java, dbPath)
+        ): PirateCompactBlockDb {
+            return Room.databaseBuilder(appContext, PirateCompactBlockDb::class.java, dbPath)
                 .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
                 // this is a simple cache of blocks. destroying the db should be benign
                 .fallbackToDestructiveMigration()

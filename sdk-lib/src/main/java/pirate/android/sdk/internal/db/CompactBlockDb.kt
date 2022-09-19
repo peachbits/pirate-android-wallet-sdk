@@ -23,7 +23,7 @@ import pirate.android.sdk.db.entity.PirateCompactBlockEntity
     version = 1,
     exportSchema = true
 )
-abstract class CompactBlockDb : RoomDatabase() {
+abstract class PirateCompactBlockDb : RoomDatabase() {
     abstract fun compactBlockDao(): CompactBlockDao
 }
 
