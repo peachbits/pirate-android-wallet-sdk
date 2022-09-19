@@ -31,7 +31,7 @@ class PirateSampleSeedProvider(val seed: ByteArray) : ReadOnlyProperty<Any?, Byt
 }
 
 @Deprecated(message = InsecureWarning.message)
-class BlockingSeedProvider(val seed: ByteArray, val delay: Long = 5000L) : ReadOnlyProperty<Any?, ByteArray> {
+class PirateBlockingSeedProvider(val seed: ByteArray, val delay: Long = 5000L) : ReadOnlyProperty<Any?, ByteArray> {
     constructor(seedValue: String, delayMillis: Long = 5000L) : this(seedValue.toByteArray(), delayMillis)
     override fun getValue(thisRef: Any?, property: KProperty<*>): ByteArray {
         Thread.sleep(delay)
