@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Constructs a `Flow<PagedList>`, from this `DataSource.Factory`, convenience for
- * [FlowPagedListBuilder].
+ * [PirateFlowPagedListBuilder].
  *
  * No work (such as loading) is done immediately, the creation of the first PagedList is
  * deferred until the Flow is collected.
@@ -32,12 +32,12 @@ fun <Key, Value> DataSource.Factory<Key, Value>.toFlowPagedList(
     boundaryCallback: PagedList.BoundaryCallback<Value>? = null,
     fetchContext: CoroutineDispatcher = Dispatchers.IO
 ): Flow<List<Value>> =
-    FlowPagedListBuilder(this, config, initialLoadKey, boundaryCallback, fetchContext)
+    PirateFlowPagedListBuilder(this, config, initialLoadKey, boundaryCallback, fetchContext)
         .build()
 
 /**
  * Constructs a `Flow<PagedList>`, from this `DataSource.Factory`, convenience for
- * [FlowPagedListBuilder].
+ * [PirateFlowPagedListBuilder].
  *
  * No work (such as loading) is done immediately, the creation of the first PagedList is
  * deferred until the Flow is collected.
@@ -47,7 +47,7 @@ fun <Key, Value> DataSource.Factory<Key, Value>.toFlowPagedList(
  * @param boundaryCallback The boundary callback for listening to PagedList load state.
  * @param fetchExecutor Executor for fetching data from DataSources.
  *
- * @see FlowPagedListBuilder
+ * @see PirateFlowPagedListBuilder
  */
 @SuppressLint("RestrictedApi")
 inline fun <Key, Value> DataSource.Factory<Key, Value>.toFlowPagedList(
@@ -56,7 +56,7 @@ inline fun <Key, Value> DataSource.Factory<Key, Value>.toFlowPagedList(
     boundaryCallback: PagedList.BoundaryCallback<Value>? = null,
     fetchContext: CoroutineDispatcher = Dispatchers.IO
 ): Flow<List<Value>> =
-    FlowPagedListBuilder(this, Config(pageSize), initialLoadKey, boundaryCallback, fetchContext)
+    PirateFlowPagedListBuilder(this, Config(pageSize), initialLoadKey, boundaryCallback, fetchContext)
         .build()
 
 /**

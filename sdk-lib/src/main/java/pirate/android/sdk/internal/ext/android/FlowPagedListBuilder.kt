@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.Flow
 import java.util.concurrent.Executor
 
 /* Adapted from LivePagedListBuilder */
-class FlowPagedListBuilder<Key, Value>(
+class PirateFlowPagedListBuilder<Key, Value>(
     private val dataSourceFactory: DataSource.Factory<Key, Value>,
     private val config: PagedList.Config,
     private var initialLoadKey: Key? = null,
@@ -26,7 +26,7 @@ class FlowPagedListBuilder<Key, Value>(
 ) {
 
     /**
-     * Creates a FlowPagedListBuilder with required parameters.
+     * Creates a PirateFlowPagedListBuilder with required parameters.
      *
      * @param dataSourceFactory DataSource factory providing DataSource generations.
      * @param config Paging configuration.
