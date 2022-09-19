@@ -42,7 +42,7 @@ import pirate.android.sdk.type.UnifiedAddressAccount
     version = 7,
     exportSchema = true
 )
-abstract class DerivedDataDb : RoomDatabase() {
+abstract class PirateDerivedDataDb : RoomDatabase() {
     abstract fun transactionDao(): TransactionDao
     abstract fun blockDao(): BlockDao
     abstract fun receivedDao(): ReceivedDao

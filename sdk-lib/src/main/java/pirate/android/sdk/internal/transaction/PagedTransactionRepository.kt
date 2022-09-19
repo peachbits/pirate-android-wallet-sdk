@@ -8,7 +8,7 @@ import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.SdkExecutors
-import pirate.android.sdk.internal.db.DerivedDataDb
+import pirate.android.sdk.internal.db.PirateDerivedDataDb
 import pirate.android.sdk.internal.ext.android.toFlowPagedList
 import pirate.android.sdk.internal.ext.android.toRefreshable
 import pirate.android.sdk.internal.ext.tryWarn
@@ -29,7 +29,7 @@ import kotlinx.coroutines.withContext
  * @param pageSize transactions per page. This influences pre-fetch and memory configuration.
  */
 class PagedTransactionRepository private constructor(
-    private val db: DerivedDataDb,
+    private val db: PirateDerivedDataDb,
     private val pageSize: Int
 ) : TransactionRepository {
 
@@ -128,17 +128,17 @@ class PagedTransactionRepository private constructor(
         /**
          * Build the database and apply migrations.
          */
-        private suspend fun buildDatabase(context: Context, databasePath: String): DerivedDataDb {
+        private suspend fun buildDatabase(context: Context, databasePath: String): PirateDerivedDataDb {
             twig("Building dataDb and applying migrations")
-            return Room.databaseBuilder(context, DerivedDataDb::class.java, databasePath)
+            return Room.databaseBuilder(context, PirateDerivedDataDb::class.java, databasePath)
                 .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
                 .setQueryExecutor(SdkExecutors.DATABASE_IO)
                 .setTransactionExecutor(SdkExecutors.DATABASE_IO)
-                .addMigrations(DerivedDataDb.MIGRATION_3_4)
-                .addMigrations(DerivedDataDb.MIGRATION_4_3)
-                .addMigrations(DerivedDataDb.MIGRATION_4_5)
-                .addMigrations(DerivedDataDb.MIGRATION_5_6)
-                .addMigrations(DerivedDataDb.MIGRATION_6_7)
+                .addMigrations(PirateDerivedDataDb.MIGRATION_3_4)
+                .addMigrations(PirateDerivedDataDb.MIGRATION_4_3)
+                .addMigrations(PirateDerivedDataDb.MIGRATION_4_5)
+                .addMigrations(PirateDerivedDataDb.MIGRATION_5_6)
+                .addMigrations(PirateDerivedDataDb.MIGRATION_6_7)
                 .build().also {
                     // TODO: document why we do this. My guess is to catch database issues early or to trigger migrations--I forget why it was added but there was a good reason?
                     withContext(SdkDispatchers.DATABASE_IO) {
