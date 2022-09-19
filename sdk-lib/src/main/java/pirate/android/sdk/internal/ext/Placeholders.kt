@@ -9,7 +9,7 @@ import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 @Deprecated(message = InsecureWarning.message)
-class SampleSpendingKeyProvider(private val seedValue: String) : ReadWriteProperty<Any?, String> {
+class PirateSampleSpendingKeyProvider(private val seedValue: String) : ReadWriteProperty<Any?, String> {
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
     }
 
