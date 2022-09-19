@@ -86,12 +86,12 @@ class PirateFlowPagedListBuilder<Key, Value>(
     private fun CoroutineDispatcher.toExecutor(): Executor {
         return when (this) {
             is ExecutorCoroutineDispatcher -> executor
-            is MainCoroutineDispatcher -> MainThreadExecutor()
+            is MainCoroutineDispatcher -> PirateMainThreadExecutor()
             else -> throw IllegalStateException("Unable to create executor based on dispatcher: $this")
         }
     }
 
-    class MainThreadExecutor : Executor {
+    class PirateMainThreadExecutor : Executor {
         private val handler = Handler(Looper.getMainLooper())
         override fun execute(runnable: Runnable) {
             handler.post(runnable)
