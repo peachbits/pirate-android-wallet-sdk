@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.Flow
     version = 1,
     exportSchema = true
 )
-abstract class PendingTransactionDb : RoomDatabase() {
+abstract class PiratePendingTransactionDb : RoomDatabase() {
     abstract fun pendingTransactionDao(): PendingTransactionDao
 }
 

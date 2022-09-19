@@ -9,7 +9,7 @@ import pirate.android.sdk.db.entity.isCancelled
 import pirate.android.sdk.db.entity.isFailedEncoding
 import pirate.android.sdk.db.entity.isSubmitted
 import pirate.android.sdk.internal.db.PendingTransactionDao
-import pirate.android.sdk.internal.db.PendingTransactionDb
+import pirate.android.sdk.internal.db.PiratePendingTransactionDb
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,7 @@ import kotlin.math.max
  * @property service the lightwallet service used to submit transactions.
  */
 class PersistentTransactionManager(
-    db: PendingTransactionDb,
+    db: PiratePendingTransactionDb,
     internal val encoder: TransactionEncoder,
     private val service: LightWalletService
 ) : OutboundTransactionManager {
@@ -58,7 +58,7 @@ class PersistentTransactionManager(
     ) : this(
         Room.databaseBuilder(
             appContext,
-            PendingTransactionDb::class.java,
+            PiratePendingTransactionDb::class.java,
             dataDbName
         ).setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build(),
         encoder,
