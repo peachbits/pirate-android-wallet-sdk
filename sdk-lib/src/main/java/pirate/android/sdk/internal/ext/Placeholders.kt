@@ -40,7 +40,7 @@ class PirateBlockingSeedProvider(val seed: ByteArray, val delay: Long = 5000L) :
 }
 
 @Deprecated(message = InsecureWarning.message)
-class SimpleProvider<T>(var value: T) : ReadWriteProperty<Any?, T> {
+class PirateSimpleProvider<T>(var value: T) : ReadWriteProperty<Any?, T> {
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
         return value
     }
