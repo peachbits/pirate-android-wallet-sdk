@@ -81,7 +81,7 @@ class PirateBlockingProvider<T>(var value: T, val delay: Long = 5000L) : ReadWri
  */
 @SuppressLint("HardwareIds")
 @Deprecated(message = InsecureWarning.message)
-class SeedGenerator {
+class PirateSeedGenerator {
     companion object {
         @Deprecated(message = InsecureWarning.message)
         fun getDeviceId(appContext: Context): String {
