@@ -23,7 +23,7 @@ class PirateSampleSpendingKeyProvider(private val seedValue: String) : ReadWrite
 }
 
 @Deprecated(message = InsecureWarning.message)
-class SampleSeedProvider(val seed: ByteArray) : ReadOnlyProperty<Any?, ByteArray> {
+class PirateSampleSeedProvider(val seed: ByteArray) : ReadOnlyProperty<Any?, ByteArray> {
     constructor(seedValue: String) : this(seedValue.toByteArray())
     override fun getValue(thisRef: Any?, property: KProperty<*>): ByteArray {
         return seed

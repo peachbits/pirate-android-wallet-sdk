@@ -155,7 +155,7 @@ class BalancePrinterUtil {
 //        return Wallet(
 //            context,
 //            rustBackend,
-//            SampleSeedProvider(seed),
+//            PirateSampleSeedProvider(seed),
 //            spendingKeyProvider,
 //            Wallet.loadBirthdayFromAssets(context, birthday)
 //        ).apply {
