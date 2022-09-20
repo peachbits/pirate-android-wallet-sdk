@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
-class SaplingParamToolTest {
+class PirateSaplingParamToolTest {
 
     val context: Context = InstrumentationRegistry.getInstrumentation().context
 
@@ -22,17 +22,17 @@ class SaplingParamToolTest {
     @Before
     fun setup() {
         // clear the param files
-        runBlocking { SaplingParamTool.clear(cacheDir) }
+        runBlocking { PirateSaplingParamTool.clear(cacheDir) }
     }
 
     @Test
     @Ignore("This test is broken")
     fun testFilesExists() = runBlocking {
         // Given
-        SaplingParamTool.fetchParams(cacheDir)
+        PirateSaplingParamTool.fetchParams(cacheDir)
 
         // When
-        val result = SaplingParamTool.validate(cacheDir)
+        val result = PirateSaplingParamTool.validate(cacheDir)
 
         // Then
         Assert.assertFalse(result)
@@ -41,11 +41,11 @@ class SaplingParamToolTest {
     @Test
     fun testOnlySpendFileExits() = runBlocking {
         // Given
-        SaplingParamTool.fetchParams(cacheDir)
+        PirateSaplingParamTool.fetchParams(cacheDir)
         File("$cacheDir/${PirateSdk.OUTPUT_PARAM_FILE_NAME}").delete()
 
         // When
-        val result = SaplingParamTool.validate(cacheDir)
+        val result = PirateSaplingParamTool.validate(cacheDir)
 
         // Then
         Assert.assertFalse("Validation should fail when the spend params are missing", result)
@@ -54,11 +54,11 @@ class SaplingParamToolTest {
     @Test
     fun testOnlyOutputOFileExits() = runBlocking {
         // Given
-        SaplingParamTool.fetchParams(cacheDir)
+        PirateSaplingParamTool.fetchParams(cacheDir)
         File("$cacheDir/${PirateSdk.SPEND_PARAM_FILE_NAME}").delete()
 
         // When
-        val result = SaplingParamTool.validate(cacheDir)
+        val result = PirateSaplingParamTool.validate(cacheDir)
 
         // Then
         Assert.assertFalse("Validation should fail when the spend params are missing", result)
@@ -67,14 +67,14 @@ class SaplingParamToolTest {
     @Test
     fun testInsufficientDeviceStorage() = runBlocking {
         // Given
-        SaplingParamTool.fetchParams(cacheDir)
+        PirateSaplingParamTool.fetchParams(cacheDir)
 
         Assert.assertFalse("insufficient storage", false)
     }
 
     @Test
     fun testSufficientDeviceStorageForOnlyOneFile() = runBlocking {
-        SaplingParamTool.fetchParams(cacheDir)
+        PirateSaplingParamTool.fetchParams(cacheDir)
 
         Assert.assertFalse("insufficient storage", false)
     }

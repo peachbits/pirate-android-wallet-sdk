@@ -10,7 +10,7 @@ import okio.buffer
 import okio.sink
 import java.io.File
 
-class SaplingParamTool {
+class PirateSaplingParamTool {
 
     companion object {
         /**

@@ -3,7 +3,7 @@ package pirate.android.sdk.internal.transaction
 import pirate.android.sdk.db.entity.PirateEncodedTransaction
 import pirate.android.sdk.exception.PirateTransactionEncoderException
 import pirate.android.sdk.ext.masked
-import pirate.android.sdk.internal.SaplingParamTool
+import pirate.android.sdk.internal.PirateSaplingParamTool
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.jni.RustBackend
@@ -113,7 +113,7 @@ class PirateWalletTransactionEncoder(
         ) {
             try {
                 val branchId = getConsensusBranchId()
-                SaplingParamTool.ensureParams((rustBackend as RustBackend).pathParamsDir)
+                PirateSaplingParamTool.ensureParams((rustBackend as RustBackend).pathParamsDir)
                 twig("params exist! attempting to send with consensus branchId $branchId...")
                 rustBackend.createToAddress(
                     branchId,
@@ -139,7 +139,7 @@ class PirateWalletTransactionEncoder(
     ): Long {
         return twigTask("creating transaction to shield all UTXOs") {
             try {
-                SaplingParamTool.ensureParams((rustBackend as RustBackend).pathParamsDir)
+                PirateSaplingParamTool.ensureParams((rustBackend as RustBackend).pathParamsDir)
                 twig("params exist! attempting to shield...")
                 rustBackend.shieldToAddress(
                     spendingKey,
