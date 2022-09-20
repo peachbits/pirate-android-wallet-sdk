@@ -64,7 +64,7 @@ data class PirateUnifiedViewingKey(
     val extpub: String = ""
 )
 
-data class UnifiedAddressAccount(
+data class PirateUnifiedAddressAccount(
     val accountId: Int = -1,
     override val rawShieldedAddress: String = "",
     override val rawTransparentAddress: String = ""

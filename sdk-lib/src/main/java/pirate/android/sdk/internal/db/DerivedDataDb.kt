@@ -17,7 +17,7 @@ import pirate.android.sdk.db.entity.PirateSent
 import pirate.android.sdk.db.entity.PirateTransactionEntity
 import pirate.android.sdk.db.entity.PirateUtxo
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.type.UnifiedAddressAccount
+import pirate.android.sdk.type.PirateUnifiedAddressAccount
 
 //
 // Database
@@ -239,7 +239,7 @@ interface AccountDao {
         WHERE account = :id
         """
     )
-    suspend fun findAccountById(id: Int): UnifiedAddressAccount?
+    suspend fun findAccountById(id: Int): PirateUnifiedAddressAccount?
 }
 
 /**

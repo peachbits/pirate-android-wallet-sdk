@@ -2,7 +2,7 @@ package pirate.android.sdk.internal.transaction
 
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.db.entity.PirateEncodedTransaction
-import pirate.android.sdk.type.UnifiedAddressAccount
+import pirate.android.sdk.type.PirateUnifiedAddressAccount
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -83,7 +83,7 @@ interface TransactionRepository {
 
     suspend fun count(): Int
 
-    suspend fun getAccount(accountId: Int): UnifiedAddressAccount?
+    suspend fun getAccount(accountId: Int): PirateUnifiedAddressAccount?
 
     suspend fun getAccountCount(): Int
 
