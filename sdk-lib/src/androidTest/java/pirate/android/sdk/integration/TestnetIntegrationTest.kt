@@ -14,7 +14,7 @@ import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.test.ScopedTest
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.tool.WalletBirthdayTool
+import pirate.android.sdk.tool.PirateWalletBirthdayTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
@@ -47,7 +47,7 @@ class TestnetIntegrationTest : ScopedTest() {
     @Test
     fun testLoadBirthday() {
         val (height, hash, time, tree) = runBlocking {
-            WalletBirthdayTool.loadNearest(
+            PirateWalletBirthdayTool.loadNearest(
                 context,
                 synchronizer.network,
                 saplingActivation + 1

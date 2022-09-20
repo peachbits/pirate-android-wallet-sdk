@@ -9,7 +9,7 @@ import pirate.android.sdk.internal.ext.getDatabasePathSuspend
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.tool.WalletBirthdayTool
+import pirate.android.sdk.tool.PirateWalletBirthdayTool
 import pirate.android.sdk.type.UnifiedViewingKey
 import pirate.android.sdk.type.WalletBirthday
 import pirate.android.sdk.type.PirateNetwork
@@ -331,7 +331,7 @@ class Initializer private constructor(
             val heightToUse = config.birthdayHeight
                 ?: (if (config.defaultToOldestHeight == true) config.network.saplingActivationHeight else null)
             val loadedBirthday =
-                WalletBirthdayTool.loadNearest(context, config.network, heightToUse)
+                PirateWalletBirthdayTool.loadNearest(context, config.network, heightToUse)
 
             val rustBackend = initPirateRustBackend(context, config.network, config.alias, loadedBirthday)
 

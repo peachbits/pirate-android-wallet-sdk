@@ -4,18 +4,18 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import pirate.android.sdk.tool.WalletBirthdayTool.IS_FALLBACK_ON_FAILURE
+import pirate.android.sdk.tool.PirateWalletBirthdayTool.IS_FALLBACK_ON_FAILURE
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class WalletBirthdayToolTest {
+class PirateWalletBirthdayToolTest {
     @Test
     @SmallTest
     fun birthday_height_from_filename() {
-        assertEquals(123, WalletBirthdayTool.birthdayHeight("123.json"))
+        assertEquals(123, PirateWalletBirthdayTool.birthdayHeight("123.json"))
     }
 
     @Test
@@ -27,7 +27,7 @@ class WalletBirthdayToolTest {
 
         val context = ApplicationProvider.getApplicationContext<Context>()
         val birthday = runBlocking {
-            WalletBirthdayTool.getFirstValidWalletBirthday(
+            PirateWalletBirthdayTool.getFirstValidWalletBirthday(
                 context,
                 directory,
                 listOf("1300000.json", "1290000.json")
@@ -46,7 +46,7 @@ class WalletBirthdayToolTest {
         val directory = "saplingtree/badnet"
         val context = ApplicationProvider.getApplicationContext<Context>()
         val birthday = runBlocking {
-            WalletBirthdayTool.getFirstValidWalletBirthday(
+            PirateWalletBirthdayTool.getFirstValidWalletBirthday(
                 context,
                 directory,
                 listOf("1300000.json", "1290000.json")
