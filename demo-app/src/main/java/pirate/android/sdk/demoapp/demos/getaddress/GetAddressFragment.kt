@@ -10,7 +10,7 @@ import pirate.android.sdk.demoapp.databinding.FragmentGetAddressBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.UnifiedViewingKey
+import pirate.android.sdk.type.PirateUnifiedViewingKey
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -21,7 +21,7 @@ import kotlinx.coroutines.runBlocking
  */
 class GetAddressFragment : BaseDemoFragment<FragmentGetAddressBinding>() {
 
-    private lateinit var viewingKey: UnifiedViewingKey
+    private lateinit var viewingKey: PirateUnifiedViewingKey
     private lateinit var seed: ByteArray
 
     /**
@@ -37,7 +37,7 @@ class GetAddressFragment : BaseDemoFragment<FragmentGetAddressBinding>() {
         seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
         // the derivation tool can be used for generating keys and addresses
-        viewingKey = runBlocking { PirateDerivationTool.deriveUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
+        viewingKey = runBlocking { PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
     }
 
     private fun displayAddress() {

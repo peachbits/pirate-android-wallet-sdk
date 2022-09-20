@@ -1,6 +1,6 @@
 package pirate.android.sdk.jni
 
-import pirate.android.sdk.type.UnifiedViewingKey
+import pirate.android.sdk.type.PirateUnifiedViewingKey
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 
@@ -31,9 +31,9 @@ interface PirateRustBackendWelding {
 
     suspend fun decryptAndStoreTransaction(tx: ByteArray)
 
-    suspend fun initAccountsTable(seed: ByteArray, numberOfAccounts: Int): Array<UnifiedViewingKey>
+    suspend fun initAccountsTable(seed: ByteArray, numberOfAccounts: Int): Array<PirateUnifiedViewingKey>
 
-    suspend fun initAccountsTable(vararg keys: UnifiedViewingKey): Boolean
+    suspend fun initAccountsTable(vararg keys: PirateUnifiedViewingKey): Boolean
 
     suspend fun initBlocksTable(height: Int, hash: String, time: Long, saplingTree: String): Boolean
 
@@ -128,10 +128,10 @@ interface PirateRustBackendWelding {
             network: PirateNetwork
         ): String
 
-        suspend fun deriveUnifiedViewingKeys(
+        suspend fun derivePirateUnifiedViewingKeys(
             seed: ByteArray,
             network: PirateNetwork,
             numberOfAccounts: Int = 1,
-        ): Array<UnifiedViewingKey>
+        ): Array<PirateUnifiedViewingKey>
     }
 }

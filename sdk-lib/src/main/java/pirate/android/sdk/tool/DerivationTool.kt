@@ -2,7 +2,7 @@ package pirate.android.sdk.tool
 
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
-import pirate.android.sdk.type.UnifiedViewingKey
+import pirate.android.sdk.type.PirateUnifiedViewingKey
 import pirate.android.sdk.type.PirateNetwork
 
 class PirateDerivationTool {
@@ -18,10 +18,10 @@ class PirateDerivationTool {
          *
          * @return the viewing keys that correspond to the seed, formatted as Strings.
          */
-        override suspend fun deriveUnifiedViewingKeys(seed: ByteArray, network: PirateNetwork, numberOfAccounts: Int): Array<UnifiedViewingKey> =
+        override suspend fun derivePirateUnifiedViewingKeys(seed: ByteArray, network: PirateNetwork, numberOfAccounts: Int): Array<PirateUnifiedViewingKey> =
             withPirateRustBackendLoaded {
-                deriveUnifiedViewingKeysFromSeed(seed, numberOfAccounts, networkId = network.id).map {
-                    UnifiedViewingKey(it[0], it[1])
+                derivePirateUnifiedViewingKeysFromSeed(seed, numberOfAccounts, networkId = network.id).map {
+                    PirateUnifiedViewingKey(it[0], it[1])
                 }.toTypedArray()
             }
 
@@ -95,7 +95,7 @@ class PirateDerivationTool {
             deriveTransparentSecretKeyFromSeed(seed, account, index, networkId = network.id)
         }
 
-        fun validateUnifiedViewingKey(viewingKey: UnifiedViewingKey, networkId: Int = PirateNetwork.Mainnet.id) {
+        fun validatePirateUnifiedViewingKey(viewingKey: PirateUnifiedViewingKey, networkId: Int = PirateNetwork.Mainnet.id) {
             // TODO
         }
 
@@ -121,7 +121,7 @@ class PirateDerivationTool {
         ): Array<String>
 
         @JvmStatic
-        private external fun deriveUnifiedViewingKeysFromSeed(
+        private external fun derivePirateUnifiedViewingKeysFromSeed(
             seed: ByteArray,
             numberOfAccounts: Int,
             networkId: Int,

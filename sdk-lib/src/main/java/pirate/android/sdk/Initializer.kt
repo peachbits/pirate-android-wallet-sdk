@@ -10,7 +10,7 @@ import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.tool.PirateWalletBirthdayTool
-import pirate.android.sdk.type.UnifiedViewingKey
+import pirate.android.sdk.type.PirateUnifiedViewingKey
 import pirate.android.sdk.type.PirateWalletBirthday
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
@@ -27,7 +27,7 @@ class Initializer private constructor(
     val alias: String,
     val host: String,
     val port: Int,
-    val viewingKeys: List<UnifiedViewingKey>,
+    val viewingKeys: List<PirateUnifiedViewingKey>,
     val overwriteVks: Boolean,
     val birthday: PirateWalletBirthday
 ) {
@@ -35,7 +35,7 @@ class Initializer private constructor(
     suspend fun erase() = erase(context, network, alias)
 
     class Config private constructor(
-        val viewingKeys: MutableList<UnifiedViewingKey> = mutableListOf(),
+        val viewingKeys: MutableList<PirateUnifiedViewingKey> = mutableListOf(),
         var alias: String = PirateSdk.DEFAULT_ALIAS,
     ) {
         var birthdayHeight: Int? = null
@@ -120,7 +120,7 @@ class Initializer private constructor(
          * probably has serious bugs.
          */
         fun setViewingKeys(
-            vararg unifiedViewingKeys: UnifiedViewingKey,
+            vararg unifiedViewingKeys: PirateUnifiedViewingKey,
             overwrite: Boolean = false
         ): Config = apply {
             overwriteVks = overwrite
@@ -139,7 +139,7 @@ class Initializer private constructor(
          * is not currently well supported. Consider it an alpha-preview feature that might work but
          * probably has serious bugs.
          */
-        fun addViewingKey(unifiedFullViewingKey: UnifiedViewingKey): Config = apply {
+        fun addViewingKey(unifiedFullViewingKey: PirateUnifiedViewingKey): Config = apply {
             viewingKeys.add(unifiedFullViewingKey)
         }
 
@@ -179,7 +179,7 @@ class Initializer private constructor(
             alias: String = PirateSdk.DEFAULT_ALIAS
         ): Config =
             importWallet(
-                PirateDerivationTool.deriveUnifiedViewingKeys(seed, network = network)[0],
+                PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network = network)[0],
                 birthdayHeight,
                 network,
                 host,
@@ -191,7 +191,7 @@ class Initializer private constructor(
          * Default function for importing a wallet.
          */
         fun importWallet(
-            viewingKey: UnifiedViewingKey,
+            viewingKey: PirateUnifiedViewingKey,
             birthdayHeight: Int? = null,
             network: PirateNetwork,
             host: String = network.defaultHost,
@@ -214,7 +214,7 @@ class Initializer private constructor(
             port: Int = network.defaultPort,
             alias: String = PirateSdk.DEFAULT_ALIAS
         ): Config = newWallet(
-            PirateDerivationTool.deriveUnifiedViewingKeys(seed, network)[0],
+            PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network)[0],
             network,
             host,
             port,
@@ -225,7 +225,7 @@ class Initializer private constructor(
          * Default function for creating a new wallet.
          */
         fun newWallet(
-            viewingKey: UnifiedViewingKey,
+            viewingKey: PirateUnifiedViewingKey,
             network: PirateNetwork,
             host: String = network.defaultHost,
             port: Int = network.defaultPort,
@@ -248,7 +248,7 @@ class Initializer private constructor(
         ): Config =
             apply {
                 setViewingKeys(
-                    *PirateDerivationTool.deriveUnifiedViewingKeys(
+                    *PirateDerivationTool.derivePirateUnifiedViewingKeys(
                         seed,
                         network,
                         numberOfAccounts
@@ -297,7 +297,7 @@ class Initializer private constructor(
                     " have been set on this Initializer."
             }
             viewingKeys.forEach {
-                PirateDerivationTool.validateUnifiedViewingKey(it)
+                PirateDerivationTool.validatePirateUnifiedViewingKey(it)
             }
         }
 

@@ -38,8 +38,8 @@ class TransparentTest(val expected: Expected, val network: PirateNetwork) {
     }
 
     @Test
-    fun deriveUnifiedViewingKeysFromSeedTest() = runBlocking {
-        val uvks = PirateDerivationTool.deriveUnifiedViewingKeys(SEED, network = network)
+    fun derivePirateUnifiedViewingKeysFromSeedTest() = runBlocking {
+        val uvks = PirateDerivationTool.derivePirateUnifiedViewingKeys(SEED, network = network)
         assertEquals(1, uvks.size)
         val uvk = uvks.first()
         assertEquals(expected.zAddr, PirateDerivationTool.deriveShieldedAddress(uvk.extfvk, network = network))

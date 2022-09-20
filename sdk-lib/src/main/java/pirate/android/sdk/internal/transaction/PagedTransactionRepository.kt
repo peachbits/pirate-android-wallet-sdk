@@ -14,7 +14,7 @@ import pirate.android.sdk.internal.ext.android.toRefreshable
 import pirate.android.sdk.internal.ext.tryWarn
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
-import pirate.android.sdk.type.UnifiedViewingKey
+import pirate.android.sdk.type.PirateUnifiedViewingKey
 import pirate.android.sdk.type.PirateWalletBirthday
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
@@ -114,7 +114,7 @@ class PiratePagedTransactionRepository private constructor(
             pageSize: Int = 10,
             rustBackend: PirateRustBackend,
             birthday: PirateWalletBirthday,
-            viewingKeys: List<UnifiedViewingKey>,
+            viewingKeys: List<PirateUnifiedViewingKey>,
             overwriteVks: Boolean = false,
         ): PiratePagedTransactionRepository {
             initMissingDatabases(rustBackend, birthday, viewingKeys)
@@ -156,7 +156,7 @@ class PiratePagedTransactionRepository private constructor(
         private suspend fun initMissingDatabases(
             rustBackend: PirateRustBackend,
             birthday: PirateWalletBirthday,
-            viewingKeys: List<UnifiedViewingKey>,
+            viewingKeys: List<PirateUnifiedViewingKey>,
         ) {
             maybeCreateDataDb(rustBackend)
             maybeInitBlocksTable(rustBackend, birthday)
@@ -201,7 +201,7 @@ class PiratePagedTransactionRepository private constructor(
          */
         private suspend fun maybeInitAccountsTable(
             rustBackend: PirateRustBackend,
-            viewingKeys: List<UnifiedViewingKey>
+            viewingKeys: List<PirateUnifiedViewingKey>
         ) {
             // TODO: consider converting these to typed exceptions in the welding layer
             tryWarn(
@@ -216,7 +216,7 @@ class PiratePagedTransactionRepository private constructor(
         private suspend fun applyKeyMigrations(
             rustBackend: PirateRustBackend,
             overwriteVks: Boolean,
-            viewingKeys: List<UnifiedViewingKey>
+            viewingKeys: List<PirateUnifiedViewingKey>
         ) {
             if (overwriteVks) {
                 twig("applying key migrations . . .")

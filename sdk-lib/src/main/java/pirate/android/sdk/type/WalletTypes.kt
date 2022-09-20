@@ -59,7 +59,7 @@ data class PirateWalletBirthday(
  * @param extpub the extended public key which provides the ability to see transparent
  * transactions. It can also be used to derive a t-addr.
  */
-data class UnifiedViewingKey(
+data class PirateUnifiedViewingKey(
     val extfvk: String = "",
     val extpub: String = ""
 )

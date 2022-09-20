@@ -210,7 +210,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriv
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveUnifiedViewingKeysFromSeed(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_derivePirateUnifiedViewingKeysFromSeed(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     seed: jbyteArray,

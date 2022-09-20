@@ -44,7 +44,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         val seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
         // converting seed into viewingKey
-        val viewingKey = runBlocking { PirateDerivationTool.deriveUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
+        val viewingKey = runBlocking { PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
 
         // using the ViewingKey to initialize
         runBlocking {

@@ -78,7 +78,7 @@ class GetPrivateKeyFragment : BaseDemoFragment<FragmentGetPrivateKeyBinding>() {
     override fun onActionButtonClicked() {
         lifecycleScope.launch {
             copyToClipboard(
-                PirateDerivationTool.deriveUnifiedViewingKeys(
+                PirateDerivationTool.derivePirateUnifiedViewingKeys(
                     seed,
                     PirateNetwork.fromResources(requireApplicationContext())
                 ).first().extpub,

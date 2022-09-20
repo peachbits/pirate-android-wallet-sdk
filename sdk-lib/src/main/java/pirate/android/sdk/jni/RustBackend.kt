@@ -7,7 +7,7 @@ import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.UnifiedViewingKey
+import pirate.android.sdk.type.PirateUnifiedViewingKey
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.withContext
@@ -56,7 +56,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         )
     }
 
-    override suspend fun initAccountsTable(vararg keys: UnifiedViewingKey): Boolean {
+    override suspend fun initAccountsTable(vararg keys: PirateUnifiedViewingKey): Boolean {
         val extfvks = Array(keys.size) { "" }
         val extpubs = Array(keys.size) { "" }
         keys.forEachIndexed { i, key ->
@@ -76,8 +76,8 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
     override suspend fun initAccountsTable(
         seed: ByteArray,
         numberOfAccounts: Int
-    ): Array<UnifiedViewingKey> {
-        return PirateDerivationTool.deriveUnifiedViewingKeys(seed, network, numberOfAccounts).apply {
+    ): Array<PirateUnifiedViewingKey> {
+        return PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network, numberOfAccounts).apply {
             initAccountsTable(*this)
         }
     }
