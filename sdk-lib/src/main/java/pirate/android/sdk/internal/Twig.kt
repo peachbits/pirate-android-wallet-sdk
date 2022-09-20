@@ -35,7 +35,7 @@ interface Twig {
          * most useful to enable developer logging at the right time.
          */
         fun enabled(isEnabled: Boolean) {
-            if (isEnabled) plant(TroubleshootingTwig()) else plant(SilentTwig())
+            if (isEnabled) plant(TroubleshootingTwig()) else plant(PirateSilentTwig())
         }
 
         /**
@@ -75,7 +75,7 @@ interface Twig {
  * @see [Twig.clip]
  */
 object Bush {
-    var trunk: Twig = SilentTwig()
+    var trunk: Twig = PirateSilentTwig()
     val leaves: MutableSet<Leaf> = CopyOnWriteArraySet<Leaf>()
 }
 
@@ -104,7 +104,7 @@ inline fun <R> twigTask(logMessage: String, priority: Int = 0, block: () -> R): 
 /**
  * A tiny log that does nothing. No one hears this twig fall in the woods.
  */
-class SilentTwig : Twig {
+class PirateSilentTwig : Twig {
 
     /**
      * Shh.
@@ -127,7 +127,7 @@ open class TroubleshootingTwig(
 ) : Twig {
 
     /**
-     * Actually print and format the log message, unlike the SilentTwig, which does nothing.
+     * Actually print and format the log message, unlike the PirateSilentTwig, which does nothing.
      */
     override fun twig(logMessage: String, priority: Int) {
         if (priority >= minPriority) printer(formatter(logMessage))
