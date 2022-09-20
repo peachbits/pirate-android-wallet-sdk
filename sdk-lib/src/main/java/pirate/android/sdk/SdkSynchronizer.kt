@@ -50,7 +50,7 @@ import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateAddressType
 import pirate.android.sdk.type.PirateAddressType.Shielded
 import pirate.android.sdk.type.PirateAddressType.Transparent
-import pirate.android.sdk.type.ConsensusMatchType
+import pirate.android.sdk.type.PirateConsensusMatchType
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import cash.z.wallet.sdk.rpc.Service
@@ -725,12 +725,12 @@ class SdkSynchronizer internal constructor(
         }
     }
 
-    override suspend fun validateConsensusBranch(): ConsensusMatchType {
+    override suspend fun validateConsensusBranch(): PirateConsensusMatchType {
         val serverBranchId = tryNull { processor.downloader.getServerInfo().consensusBranchId }
         val sdkBranchId = tryNull {
             (txManager as PiratePersistentTransactionManager).encoder.getConsensusBranchId()
         }
-        return ConsensusMatchType(
+        return PirateConsensusMatchType(
             sdkBranchId?.let { PirateConsensusBranchId.fromId(it) },
             serverBranchId?.let { PirateConsensusBranchId.fromHex(it) }
         )

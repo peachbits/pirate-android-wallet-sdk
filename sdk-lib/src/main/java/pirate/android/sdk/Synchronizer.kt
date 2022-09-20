@@ -5,7 +5,7 @@ import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.type.PirateAddressType
-import pirate.android.sdk.type.ConsensusMatchType
+import pirate.android.sdk.type.PirateConsensusMatchType
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import cash.z.wallet.sdk.rpc.Service
@@ -247,10 +247,10 @@ interface Synchronizer {
      * function compares the server's branch id to this SDK's and returns information that helps
      * determine whether they match.
      *
-     * @return an instance of [ConsensusMatchType] that is essentially a wrapper for both branch ids
+     * @return an instance of [PirateConsensusMatchType] that is essentially a wrapper for both branch ids
      * and provides helper functions for communicating detailed errors to the user.
      */
-    suspend fun validateConsensusBranch(): ConsensusMatchType
+    suspend fun validateConsensusBranch(): PirateConsensusMatchType
 
     /**
      * Validates the given address, returning information about why it is invalid. This is a

@@ -8,7 +8,7 @@ import pirate.android.sdk.ext.PirateConsensusBranchId
  * functions for communicating detailed error information to the end-user. Used in conjunction with
  * [pirate.android.sdk.Synchronizer.validateConsensusBranch].
  */
-class ConsensusMatchType(val sdkBranch: PirateConsensusBranchId?, val serverBranch: PirateConsensusBranchId?) {
+class PirateConsensusMatchType(val sdkBranch: PirateConsensusBranchId?, val serverBranch: PirateConsensusBranchId?) {
     val hasServerBranch = serverBranch != null
     val hasSdkBranch = sdkBranch != null
     val isValid = hasServerBranch && sdkBranch == serverBranch
