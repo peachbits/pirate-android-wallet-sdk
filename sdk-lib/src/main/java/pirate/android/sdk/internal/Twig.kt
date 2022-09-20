@@ -21,7 +21,7 @@ interface Twig {
      */
     operator fun plus(twig: Twig): Twig {
         // if the other twig is a composite twig, let it handle the addition
-        return if (twig is CompositeTwig) twig.plus(this) else CompositeTwig(mutableListOf(this, twig))
+        return if (twig is PirateCompositeTwig) twig.plus(this) else PirateCompositeTwig(mutableListOf(this, twig))
     }
     companion object {
 
@@ -156,10 +156,10 @@ open class TroubleshootingTwig(
  * Since there can only ever be one trunk on the bush of twigs, this class lets
  * you cheat and make that trunk be a bundle of twigs.
  */
-open class CompositeTwig(open val twigBundle: MutableList<Twig>) :
+open class PirateCompositeTwig(open val twigBundle: MutableList<Twig>) :
     Twig {
     override operator fun plus(twig: Twig): Twig {
-        if (twig is CompositeTwig) twigBundle.addAll(twig.twigBundle) else twigBundle.add(twig)
+        if (twig is PirateCompositeTwig) twigBundle.addAll(twig.twigBundle) else twigBundle.add(twig)
         return this
     }
 
