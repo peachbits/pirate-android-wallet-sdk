@@ -25,7 +25,7 @@ sealed class PirateAddressType {
      *
      * @param reason a description of why the address was invalid.
      */
-    class Invalid(val reason: String = "Invalid") : PirateAddressType()
+    class PirateInvalid(val reason: String = "Invalid") : PirateAddressType()
 
     /**
      * A convenience method that returns true when an instance of this class is invalid.

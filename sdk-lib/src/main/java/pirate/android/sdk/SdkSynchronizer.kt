@@ -715,7 +715,7 @@ class PirateSdkSynchronizer internal constructor(
             try {
                 if (isValidTransparentAddr(address)) Transparent else Shielded
             } catch (tError: Throwable) {
-                PirateAddressType.Invalid(
+                PirateAddressType.PirateInvalid(
                     if (message != tError.message) "$message and ${tError.message}" else (
                         message
                             ?: "Invalid"
