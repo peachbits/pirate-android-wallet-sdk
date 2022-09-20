@@ -8,7 +8,7 @@ import pirate.android.sdk.internal.ext.getCacheDirSuspend
 import pirate.android.sdk.internal.ext.getDatabasePathSuspend
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.tool.WalletBirthdayTool
 import pirate.android.sdk.type.UnifiedViewingKey
 import pirate.android.sdk.type.WalletBirthday
@@ -179,7 +179,7 @@ class Initializer private constructor(
             alias: String = PirateSdk.DEFAULT_ALIAS
         ): Config =
             importWallet(
-                DerivationTool.deriveUnifiedViewingKeys(seed, network = network)[0],
+                PirateDerivationTool.deriveUnifiedViewingKeys(seed, network = network)[0],
                 birthdayHeight,
                 network,
                 host,
@@ -214,7 +214,7 @@ class Initializer private constructor(
             port: Int = network.defaultPort,
             alias: String = PirateSdk.DEFAULT_ALIAS
         ): Config = newWallet(
-            DerivationTool.deriveUnifiedViewingKeys(seed, network)[0],
+            PirateDerivationTool.deriveUnifiedViewingKeys(seed, network)[0],
             network,
             host,
             port,
@@ -248,7 +248,7 @@ class Initializer private constructor(
         ): Config =
             apply {
                 setViewingKeys(
-                    *DerivationTool.deriveUnifiedViewingKeys(
+                    *PirateDerivationTool.deriveUnifiedViewingKeys(
                         seed,
                         network,
                         numberOfAccounts
@@ -297,7 +297,7 @@ class Initializer private constructor(
                     " have been set on this Initializer."
             }
             viewingKeys.forEach {
-                DerivationTool.validateUnifiedViewingKey(it)
+                PirateDerivationTool.validateUnifiedViewingKey(it)
             }
         }
 

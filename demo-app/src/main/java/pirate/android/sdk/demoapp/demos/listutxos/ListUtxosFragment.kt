@@ -20,7 +20,7 @@ import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.demoapp.util.mainActivity
 import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -158,7 +158,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
         resetInBackground()
         val seed = Mnemonics.MnemonicCode(sharedViewModel.seedPhrase.value).toSeed()
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            binding.inputAddress.setText(DerivationTool.deriveTransparentAddress(seed, PirateNetwork.fromResources(requireApplicationContext())))
+            binding.inputAddress.setText(PirateDerivationTool.deriveTransparentAddress(seed, PirateNetwork.fromResources(requireApplicationContext())))
         }
     }
 

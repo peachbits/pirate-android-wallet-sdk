@@ -10,7 +10,7 @@ import pirate.android.sdk.db.entity.isPending
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.CoroutineScope
@@ -59,9 +59,9 @@ class TestWallet(
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val seed: ByteArray = Mnemonics.MnemonicCode(seedPhrase).toSeed()
     private val shieldedSpendingKey =
-        runBlocking { DerivationTool.deriveSpendingKeys(seed, network = network)[0] }
+        runBlocking { PirateDerivationTool.deriveSpendingKeys(seed, network = network)[0] }
     private val transparentSecretKey =
-        runBlocking { DerivationTool.deriveTransparentSecretKey(seed, network = network) }
+        runBlocking { PirateDerivationTool.deriveTransparentSecretKey(seed, network = network) }
     val initializer = runBlocking {
         Initializer.new(context) { config ->
             runBlocking { config.importWallet(seed, startHeight, network, host, alias = alias) }
@@ -72,9 +72,9 @@ class TestWallet(
 
     val available get() = synchronizer.saplingBalances.value.availableZatoshi
     val shieldedAddress =
-        runBlocking { DerivationTool.deriveShieldedAddress(seed, network = network) }
+        runBlocking { PirateDerivationTool.deriveShieldedAddress(seed, network = network) }
     val transparentAddress =
-        runBlocking { DerivationTool.deriveTransparentAddress(seed, network = network) }
+        runBlocking { PirateDerivationTool.deriveTransparentAddress(seed, network = network) }
     val birthdayHeight get() = synchronizer.latestBirthdayHeight
     val networkName get() = synchronizer.network.networkName
     val connectionInfo get() = service.connectionInfo.toString()

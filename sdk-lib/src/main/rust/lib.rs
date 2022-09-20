@@ -173,7 +173,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_initAccou
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveExtendedSpendingKeys(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveExtendedSpendingKeys(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     seed: jbyteArray,
@@ -210,7 +210,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveExten
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveUnifiedViewingKeysFromSeed(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveUnifiedViewingKeysFromSeed(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     seed: jbyteArray,
@@ -259,7 +259,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveUnifi
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveShieldedAddressFromSeed(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveShieldedAddressFromSeed(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     seed: jbyteArray,
@@ -289,7 +289,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveShiel
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveShieldedAddressFromViewingKey(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveShieldedAddressFromViewingKey(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     extfvk_string: JString<'_>,
@@ -325,7 +325,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveShiel
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveExtendedFullViewingKey(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveExtendedFullViewingKey(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     extsk_string: JString<'_>,
@@ -878,7 +878,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_scanBlock
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveTransparentSecretKeyFromSeed(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveTransparentSecretKeyFromSeed(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     seed: jbyteArray,
@@ -910,7 +910,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveTrans
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveTransparentAddressFromSeed(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveTransparentAddressFromSeed(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     seed: jbyteArray,
@@ -943,7 +943,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveTrans
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveTransparentAddressFromPrivKey(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveTransparentAddressFromPrivKey(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     secret_key: JString<'_>,
@@ -963,7 +963,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveTrans
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveTransparentAddressFromPubKey(
+pub unsafe extern "C" fn Java_pirate_android_sdk_tool_PirateDerivationTool_deriveTransparentAddressFromPubKey(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     public_key: JString<'_>,

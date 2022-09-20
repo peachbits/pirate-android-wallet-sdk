@@ -5,7 +5,7 @@ import pirate.android.sdk.jni.PirateRustBackendWelding
 import pirate.android.sdk.type.UnifiedViewingKey
 import pirate.android.sdk.type.PirateNetwork
 
-class DerivationTool {
+class PirateDerivationTool {
 
     companion object : PirateRustBackendWelding.Derivation {
 

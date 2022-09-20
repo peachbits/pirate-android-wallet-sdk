@@ -10,7 +10,7 @@ import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
@@ -53,7 +53,7 @@ class SampleCodeTest {
     // Derive Extended Spending Key
     @Test fun deriveSpendingKey() {
         val spendingKeys = runBlocking {
-            DerivationTool.deriveSpendingKeys(
+            PirateDerivationTool.deriveSpendingKeys(
                 seed,
                 PirateNetwork.Mainnet
             )
@@ -111,7 +111,7 @@ class SampleCodeTest {
 //        val rustBackend = PirateRustBackend.init(context)
 //        val repository = PiratePagedTransactionRepository(context)
 //        val encoder = PirateWalletTransactionEncoder(rustBackend, repository)
-//        val spendingKey = DerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]
+//        val spendingKey = PirateDerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]
 //
 //        val amount = 0.123.convertArrrToZatoshi()
 //        val address = "ztestsapling1tklsjr0wyw0d58f3p7wufvrj2cyfv6q6caumyueadq8qvqt8lda6v6tpx474rfru9y6u75u7qnw"
@@ -128,7 +128,7 @@ class SampleCodeTest {
         val amount = 0.123.convertArrrToZatoshi()
         val address = "ztestsapling1tklsjr0wyw0d58f3p7wufvrj2cyfv6q6caumyueadq8qvqt8lda6v6tpx474rfru9y6u75u7qnw"
         val memo = "Test Transaction"
-        val spendingKey = DerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]
+        val spendingKey = PirateDerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]
         val transactionFlow = synchronizer.sendToAddress(spendingKey, amount, address, memo)
         transactionFlow.collect {
             log("pending transaction updated $it")

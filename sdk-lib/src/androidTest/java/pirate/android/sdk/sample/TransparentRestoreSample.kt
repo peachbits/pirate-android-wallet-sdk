@@ -30,7 +30,7 @@ class TransparentRestoreSample {
 //    val walletSandbox = SimpleWallet(SEED_PHRASE, "WalletC")
 //    val walletZ2T = SimpleWallet(SEED_PHRASE, "WalletZ2T")
 //    val externalTransparentAddress =
-//        DerivationTool.deriveTransparentAddress(Mnemonics.MnemonicCode(RANDOM_PHRASE).toSeed(), Testnet)
+//        PirateDerivationTool.deriveTransparentAddress(Mnemonics.MnemonicCode(RANDOM_PHRASE).toSeed(), Testnet)
 
     //    @Test
     fun sendZ2Texternal() = runBlocking {
@@ -143,8 +143,8 @@ class TransparentRestoreSample {
 //        )
 //        private val context = InstrumentationRegistry.getInstrumentation().context
 //        private val seed: ByteArray = Mnemonics.MnemonicCode(seedPhrase).toSeed()
-//        private val shieldedSpendingKey = DerivationTool.deriveSpendingKeys(seed, Testnet)[0]
-//        private val transparentSecretKey = DerivationTool.deriveTransparentSecretKey(seed, Testnet)
+//        private val shieldedSpendingKey = PirateDerivationTool.deriveSpendingKeys(seed, Testnet)[0]
+//        private val transparentSecretKey = PirateDerivationTool.deriveTransparentSecretKey(seed, Testnet)
 //        private val host = "lightwalletd.testnet.electriccoin.co"
 //        private val initializer = Initializer(context) { config ->
 //            config.importWallet(seed, startHeight)
@@ -154,8 +154,8 @@ class TransparentRestoreSample {
 //
 //        val synchronizer = Synchronizer(initializer)
 //        val available get() = synchronizer.latestBalance.availableZatoshi
-//        val shieldedAddress = DerivationTool.deriveShieldedAddress(seed, Testnet)
-//        val transparentAddress = DerivationTool.deriveTransparentAddress(seed, Testnet)
+//        val shieldedAddress = PirateDerivationTool.deriveShieldedAddress(seed, Testnet)
+//        val transparentAddress = PirateDerivationTool.deriveTransparentAddress(seed, Testnet)
 //        val birthdayHeight get() = synchronizer.latestBirthdayHeight
 //
 //        suspend fun transparentBalance(): PirateWalletBalance {

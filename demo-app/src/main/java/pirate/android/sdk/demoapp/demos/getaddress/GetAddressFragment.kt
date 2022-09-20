@@ -9,7 +9,7 @@ import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentGetAddressBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.UnifiedViewingKey
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.launch
@@ -37,14 +37,14 @@ class GetAddressFragment : BaseDemoFragment<FragmentGetAddressBinding>() {
         seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
         // the derivation tool can be used for generating keys and addresses
-        viewingKey = runBlocking { DerivationTool.deriveUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
+        viewingKey = runBlocking { PirateDerivationTool.deriveUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
     }
 
     private fun displayAddress() {
         // a full fledged app would just get the address from the synchronizer
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            val zaddress = DerivationTool.deriveShieldedAddress(seed, PirateNetwork.fromResources(requireApplicationContext()))
-            val taddress = DerivationTool.deriveTransparentAddress(seed, PirateNetwork.fromResources(requireApplicationContext()))
+            val zaddress = PirateDerivationTool.deriveShieldedAddress(seed, PirateNetwork.fromResources(requireApplicationContext()))
+            val taddress = PirateDerivationTool.deriveTransparentAddress(seed, PirateNetwork.fromResources(requireApplicationContext()))
             binding.textInfo.text = "z-addr:\n$zaddress\n\n\nt-addr:\n$taddress"
         }
     }
@@ -72,7 +72,7 @@ class GetAddressFragment : BaseDemoFragment<FragmentGetAddressBinding>() {
     override fun onActionButtonClicked() {
         viewLifecycleOwner.lifecycleScope.launch {
             copyToClipboard(
-                DerivationTool.deriveShieldedAddress(
+                PirateDerivationTool.deriveShieldedAddress(
                     viewingKey.extfvk,
                     PirateNetwork.fromResources(requireApplicationContext())
                 ),

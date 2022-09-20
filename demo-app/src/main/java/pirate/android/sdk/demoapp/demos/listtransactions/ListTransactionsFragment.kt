@@ -17,7 +17,7 @@ import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 
@@ -55,7 +55,7 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
             }
         }
         address = runBlocking {
-            DerivationTool.deriveShieldedAddress(
+            PirateDerivationTool.deriveShieldedAddress(
                 seed,
                 PirateNetwork.fromResources(requireApplicationContext())
             )

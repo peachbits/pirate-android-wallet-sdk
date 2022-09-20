@@ -6,7 +6,7 @@ import pirate.android.sdk.ext.PirateSdk.SPEND_PARAM_FILE_NAME
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.UnifiedViewingKey
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
@@ -77,7 +77,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         seed: ByteArray,
         numberOfAccounts: Int
     ): Array<UnifiedViewingKey> {
-        return DerivationTool.deriveUnifiedViewingKeys(seed, network, numberOfAccounts).apply {
+        return PirateDerivationTool.deriveUnifiedViewingKeys(seed, network, numberOfAccounts).apply {
             initAccountsTable(*this)
         }
     }
@@ -109,7 +109,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
     }
 
     override suspend fun getTransparentAddress(account: Int, index: Int): String {
-        throw NotImplementedError("TODO: implement this at the zcash_client_sqlite level. But for now, use DerivationTool, instead to derive addresses from seeds")
+        throw NotImplementedError("TODO: implement this at the zcash_client_sqlite level. But for now, use PirateDerivationTool, instead to derive addresses from seeds")
     }
 
     override suspend fun getBalance(account: Int) = withContext(SdkDispatchers.DATABASE_IO) {

@@ -13,7 +13,7 @@ import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.test.ScopedTest
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.tool.WalletBirthdayTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.delay
@@ -94,7 +94,7 @@ class TestnetIntegrationTest : ScopedTest() {
     }
 
     private suspend fun sendFunds(): Boolean {
-        val spendingKey = DerivationTool.deriveSpendingKeys(seed, synchronizer.network)[0]
+        val spendingKey = PirateDerivationTool.deriveSpendingKeys(seed, synchronizer.network)[0]
         log("sending to address")
         synchronizer.sendToAddress(
             spendingKey,

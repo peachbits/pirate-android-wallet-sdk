@@ -46,7 +46,7 @@ import pirate.android.sdk.internal.transaction.TransactionRepository
 import pirate.android.sdk.internal.transaction.PirateWalletTransactionEncoder
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.AddressType
 import pirate.android.sdk.type.AddressType.Shielded
 import pirate.android.sdk.type.AddressType.Transparent
@@ -670,7 +670,7 @@ class SdkSynchronizer internal constructor(
     ): Flow<PendingTransaction> = flow {
         twig("Initializing shielding transaction")
         val tAddr =
-            DerivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey, network)
+            PirateDerivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey, network)
         val tBalance = processor.getUtxoCacheBalance(tAddr)
         val zAddr = getAddress(0)
 

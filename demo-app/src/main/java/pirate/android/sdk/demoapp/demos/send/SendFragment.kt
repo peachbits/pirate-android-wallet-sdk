@@ -29,7 +29,7 @@ import pirate.android.sdk.ext.convertArrrToZatoshi
 import pirate.android.sdk.ext.toArrrString
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
@@ -72,7 +72,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
         }.let { initializer ->
             synchronizer = Synchronizer.newBlocking(initializer)
         }
-        spendingKey = runBlocking { DerivationTool.deriveSpendingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
+        spendingKey = runBlocking { PirateDerivationTool.deriveSpendingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
     }
 
     //

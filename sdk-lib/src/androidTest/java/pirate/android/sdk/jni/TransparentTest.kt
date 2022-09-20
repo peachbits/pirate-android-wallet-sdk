@@ -7,7 +7,7 @@ import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
 import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -23,27 +23,27 @@ class TransparentTest(val expected: Expected, val network: PirateNetwork) {
 
     @Test
     fun deriveTransparentSecretKeyTest() = runBlocking {
-        assertEquals(expected.tskCompressed, DerivationTool.deriveTransparentSecretKey(SEED, network = network))
+        assertEquals(expected.tskCompressed, PirateDerivationTool.deriveTransparentSecretKey(SEED, network = network))
     }
 
     @Test
     fun deriveTransparentAddressTest() = runBlocking {
-        assertEquals(expected.tAddr, DerivationTool.deriveTransparentAddress(SEED, network = network))
+        assertEquals(expected.tAddr, PirateDerivationTool.deriveTransparentAddress(SEED, network = network))
     }
 
     @Test
     fun deriveTransparentAddressFromSecretKeyTest() = runBlocking {
-        val pk = DerivationTool.deriveTransparentSecretKey(SEED, network = network)
-        assertEquals(expected.tAddr, DerivationTool.deriveTransparentAddressFromPrivateKey(pk, network = network))
+        val pk = PirateDerivationTool.deriveTransparentSecretKey(SEED, network = network)
+        assertEquals(expected.tAddr, PirateDerivationTool.deriveTransparentAddressFromPrivateKey(pk, network = network))
     }
 
     @Test
     fun deriveUnifiedViewingKeysFromSeedTest() = runBlocking {
-        val uvks = DerivationTool.deriveUnifiedViewingKeys(SEED, network = network)
+        val uvks = PirateDerivationTool.deriveUnifiedViewingKeys(SEED, network = network)
         assertEquals(1, uvks.size)
         val uvk = uvks.first()
-        assertEquals(expected.zAddr, DerivationTool.deriveShieldedAddress(uvk.extfvk, network = network))
-        assertEquals(expected.tAddr, DerivationTool.deriveTransparentAddressFromPublicKey(uvk.extpub, network = network))
+        assertEquals(expected.zAddr, PirateDerivationTool.deriveShieldedAddress(uvk.extfvk, network = network))
+        assertEquals(expected.tAddr, PirateDerivationTool.deriveTransparentAddressFromPublicKey(uvk.extpub, network = network))
     }
 
     companion object {

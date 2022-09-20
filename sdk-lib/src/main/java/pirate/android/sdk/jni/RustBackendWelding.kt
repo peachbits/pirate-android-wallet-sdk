@@ -80,7 +80,7 @@ interface PirateRustBackendWelding {
 
     suspend fun getDownloadedUtxoBalance(address: String): PirateWalletBalance
 
-    // Implemented by `DerivationTool`
+    // Implemented by `PirateDerivationTool`
     interface Derivation {
         suspend fun deriveShieldedAddress(
             viewingKey: String,

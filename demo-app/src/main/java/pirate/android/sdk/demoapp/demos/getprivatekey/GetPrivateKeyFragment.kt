@@ -9,7 +9,7 @@ import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentGetPrivateKeyBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.launch
 
@@ -40,14 +40,14 @@ class GetPrivateKeyFragment : BaseDemoFragment<FragmentGetPrivateKeyBinding>() {
         // derive the keys from the seed:
         // demonstrate deriving spending keys for five accounts but only take the first one
         lifecycleScope.launchWhenStarted {
-            val spendingKey = DerivationTool.deriveSpendingKeys(
+            val spendingKey = PirateDerivationTool.deriveSpendingKeys(
                 seed,
                 PirateNetwork.fromResources(requireApplicationContext()),
                 5
             ).first()
 
             // derive the key that allows you to view but not spend transactions
-            val viewingKey = DerivationTool.deriveViewingKey(
+            val viewingKey = PirateDerivationTool.deriveViewingKey(
                 spendingKey,
                 PirateNetwork.fromResources(requireApplicationContext())
             )
@@ -78,7 +78,7 @@ class GetPrivateKeyFragment : BaseDemoFragment<FragmentGetPrivateKeyBinding>() {
     override fun onActionButtonClicked() {
         lifecycleScope.launch {
             copyToClipboard(
-                DerivationTool.deriveUnifiedViewingKeys(
+                PirateDerivationTool.deriveUnifiedViewingKeys(
                     seed,
                     PirateNetwork.fromResources(requireApplicationContext())
                 ).first().extpub,

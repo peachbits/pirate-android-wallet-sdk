@@ -14,7 +14,7 @@ import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.ext.convertZatoshiToArrrString
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
@@ -44,7 +44,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         val seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
         // converting seed into viewingKey
-        val viewingKey = runBlocking { DerivationTool.deriveUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
+        val viewingKey = runBlocking { PirateDerivationTool.deriveUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
 
         // using the ViewingKey to initialize
         runBlocking {
