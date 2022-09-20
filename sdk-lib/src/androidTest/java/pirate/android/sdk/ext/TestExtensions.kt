@@ -1,6 +1,6 @@
 package pirate.android.sdk.ext
 
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.type.PirateNetwork
 import pirate.android.sdk.util.SimpleMnemonics
 import kotlinx.coroutines.runBlocking
@@ -9,7 +9,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import ru.gildor.coroutines.okhttp.await
 
-fun Initializer.Config.seedPhrase(seedPhrase: String, network: PirateNetwork) {
+fun PirateInitializer.Config.seedPhrase(seedPhrase: String, network: PirateNetwork) {
     runBlocking { setSeed(SimpleMnemonics().toSeed(seedPhrase.toCharArray()), network) }
 }
 

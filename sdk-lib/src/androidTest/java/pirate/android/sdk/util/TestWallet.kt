@@ -3,7 +3,7 @@ package pirate.android.sdk.util
 import androidx.test.platform.app.InstrumentationRegistry
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.SdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.db.entity.isPending
@@ -63,7 +63,7 @@ class TestWallet(
     private val transparentSecretKey =
         runBlocking { PirateDerivationTool.deriveTransparentSecretKey(seed, network = network) }
     val initializer = runBlocking {
-        Initializer.new(context) { config ->
+        PirateInitializer.new(context) { config ->
             runBlocking { config.importWallet(seed, startHeight, network, host, alias = alias) }
         }
     }

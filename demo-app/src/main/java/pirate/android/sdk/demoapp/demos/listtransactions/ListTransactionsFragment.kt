@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
@@ -29,7 +29,7 @@ import kotlinx.coroutines.runBlocking
  * database in a paged format that works natively with RecyclerViews.
  */
 class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBinding>() {
-    private lateinit var initializer: Initializer
+    private lateinit var initializer: PirateInitializer
     private lateinit var synchronizer: Synchronizer
     private lateinit var adapter: TransactionAdapter<PirateConfirmedTransaction>
     private lateinit var address: String
@@ -49,7 +49,7 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
         val seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
         initializer = runBlocking {
-            Initializer.new(requireApplicationContext()) {
+            PirateInitializer.new(requireApplicationContext()) {
                 runBlocking { it.importWallet(seed, network = PirateNetwork.fromResources(requireApplicationContext())) }
                 it.setNetwork(PirateNetwork.fromResources(requireApplicationContext()))
             }

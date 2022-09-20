@@ -1,8 +1,8 @@
 package pirate.android.sdk
 
-class InitializerTest {
+class PirateInitializerTest {
 
-//    lateinit var initializer: Initializer
+//    lateinit var initializer: PirateInitializer
 //
 //    @After
 //    fun cleanUp() {
@@ -14,7 +14,7 @@ class InitializerTest {
 //    fun testInit() {
 //        val height = 980000
 //
-//        initializer = Initializer(context) { config ->
+//        initializer = PirateInitializer(context) { config ->
 //            config.importedWalletBirthday(height)
 //            config.setViewingKeys(
 //                "zxviews1qvn6j50dqqqqpqxqkvqgx2sp63jccr4k5t8zefadpzsu0yy73vczfznwc794xz6lvy3yp5ucv43lww48zz95ey5vhrsq83dqh0ky9junq0cww2wjp9c3cd45n5l5x8l2g9atnx27e9jgyy8zasjy26gugjtefphan9al3tx208m8ekev5kkx3ug6pd0qk4gq4j4wfuxajn388pfpq54wklwktqkyjz9e6gam0n09xjc35ncd3yah5aa9ezj55lk4u7v7hn0v86vz7ygq4qj2v",
@@ -29,7 +29,7 @@ class InitializerTest {
 //    @Test
 //    fun testErase() {
 //        val alias = "VkInitTest2"
-//        initializer = Initializer(context) { config ->
+//        initializer = PirateInitializer(context) { config ->
 //            config.importedWalletBirthday(1_419_900)
 //            config.setViewingKeys(
 //                "zxviews1qvn6j50dqqqqpqxqkvqgx2sp63jccr4k5t8zefadpzsu0yy73vczfznwc794xz6lvy3yp5ucv43lww48zz95ey5vhrsq83dqh0ky9junq0cww2wjp9c3cd45n5l5x8l2g9atnx27e9jgyy8zasjy26gugjtefphan9al3tx208m8ekev5kkx3ug6pd0qk4gq4j4wfuxajn388pfpq54wklwktqkyjz9e6gam0n09xjc35ncd3yah5aa9ezj55lk4u7v7hn0v86vz7ygq4qj2v",
@@ -38,13 +38,13 @@ class InitializerTest {
 //            config.alias = alias
 //        }
 //
-//        assertTrue("Failed to erase initializer", Initializer.erase(context, alias))
-//        assertFalse("Expected false when erasing nothing.", Initializer.erase(context))
+//        assertTrue("Failed to erase initializer", PirateInitializer.erase(context, alias))
+//        assertFalse("Expected false when erasing nothing.", PirateInitializer.erase(context))
 //    }
 //
 //    @Test(expected = PirateInitializerException.PirateMissingDefaultBirthdayException::class)
 //    fun testMissingBirthday() {
-//        val config = Initializer.Config { config ->
+//        val config = PirateInitializer.Config { config ->
 //            config.setViewingKeys("vk1")
 //        }
 //        config.validate()
@@ -52,7 +52,7 @@ class InitializerTest {
 //
 //    @Test(expected = PirateInitializerException.PirateInvalidBirthdayHeightException::class)
 //    fun testOutOfBoundsBirthday() {
-//        val config = Initializer.Config { config ->
+//        val config = PirateInitializer.Config { config ->
 //            config.setViewingKeys("vk1")
 //            config.setBirthdayHeight(PirateSdk.SAPLING_ACTIVATION_HEIGHT - 1)
 //        }
@@ -61,7 +61,7 @@ class InitializerTest {
 //
 //    @Test
 //    fun testImportedWalletUsesSaplingActivation() {
-//        initializer = Initializer(context) { config ->
+//        initializer = PirateInitializer(context) { config ->
 //            config.setViewingKeys("vk1")
 //            config.importWallet(ByteArray(32))
 //        }
@@ -70,7 +70,7 @@ class InitializerTest {
 //
 //    @Test
 //    fun testDefaultToOldestHeight_true() {
-//        initializer = Initializer(context) { config ->
+//        initializer = PirateInitializer(context) { config ->
 //            config.setViewingKeys("vk1")
 //            config.setBirthdayHeight(null, true)
 //        }
@@ -80,7 +80,7 @@ class InitializerTest {
 //    @Test
 //    fun testDefaultToOldestHeight_false() {
 //        val initialHeight = 750_000
-//        initializer = Initializer(context) { config ->
+//        initializer = PirateInitializer(context) { config ->
 //            config.setViewingKeys("vk1")
 //            config.setBirthdayHeight(initialHeight, false)
 //        }

@@ -440,7 +440,7 @@ interface Synchronizer {
          * the rust backend.
          */
         suspend fun new(
-            initializer: Initializer
+            initializer: PirateInitializer
         ): Synchronizer {
             val repository = DefaultSynchronizerFactory.defaultTransactionRepository(initializer)
             val blockStore = DefaultSynchronizerFactory.defaultBlockStore(initializer)
@@ -466,6 +466,6 @@ interface Synchronizer {
          * This is a blocking call, so it should not be called from the main thread.
          */
         @JvmStatic
-        fun newBlocking(initializer: Initializer): Synchronizer = runBlocking { new(initializer) }
+        fun newBlocking(initializer: PirateInitializer): Synchronizer = runBlocking { new(initializer) }
     }
 }

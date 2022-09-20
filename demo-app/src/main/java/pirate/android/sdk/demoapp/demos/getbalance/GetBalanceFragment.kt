@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import androidx.lifecycle.lifecycleScope
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.demoapp.BaseDemoFragment
@@ -48,7 +48,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
 
         // using the ViewingKey to initialize
         runBlocking {
-            Initializer.new(requireApplicationContext(), null) {
+            PirateInitializer.new(requireApplicationContext(), null) {
                 it.setNetwork(PirateNetwork.fromResources(requireApplicationContext()))
                 it.importWallet(viewingKey, network = PirateNetwork.fromResources(requireApplicationContext()))
             }

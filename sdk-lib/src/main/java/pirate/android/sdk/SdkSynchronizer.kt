@@ -780,7 +780,7 @@ object DefaultSynchronizerFactory {
 
     // TODO [#242]: Don't hard code page size.  It is a workaround for Uncaught Exception: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views. and is probably related to FlowPagedList
     private const val DEFAULT_PAGE_SIZE = 1000
-    suspend fun defaultTransactionRepository(initializer: Initializer): TransactionRepository =
+    suspend fun defaultTransactionRepository(initializer: PirateInitializer): TransactionRepository =
         PiratePagedTransactionRepository.new(
             initializer.context,
             DEFAULT_PAGE_SIZE,
@@ -790,14 +790,14 @@ object DefaultSynchronizerFactory {
             initializer.overwriteVks
         )
 
-    fun defaultBlockStore(initializer: Initializer): CompactBlockStore =
+    fun defaultBlockStore(initializer: PirateInitializer): CompactBlockStore =
         PirateCompactBlockDbStore.new(initializer.context, initializer.rustBackend.pathCacheDb)
 
-    fun defaultService(initializer: Initializer): LightWalletService =
+    fun defaultService(initializer: PirateInitializer): LightWalletService =
         PirateLightWalletGrpcService(initializer.context, initializer.host, initializer.port)
 
     fun defaultEncoder(
-        initializer: Initializer,
+        initializer: PirateInitializer,
         repository: TransactionRepository
     ): TransactionEncoder = PirateWalletTransactionEncoder(initializer.rustBackend, repository)
 
@@ -807,14 +807,14 @@ object DefaultSynchronizerFactory {
     ): PirateCompactBlockDownloader = PirateCompactBlockDownloader(service, blockStore)
 
     fun defaultTxManager(
-        initializer: Initializer,
+        initializer: PirateInitializer,
         encoder: TransactionEncoder,
         service: LightWalletService
     ): OutboundTransactionManager =
         PiratePersistentTransactionManager(initializer.context, encoder, service)
 
     fun defaultProcessor(
-        initializer: Initializer,
+        initializer: PirateInitializer,
         downloader: PirateCompactBlockDownloader,
         repository: TransactionRepository
     ): PirateCompactBlockProcessor = PirateCompactBlockProcessor(

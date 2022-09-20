@@ -7,7 +7,7 @@ import android.widget.TextView
 import androidx.lifecycle.lifecycleScope
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.PendingTransaction
@@ -65,7 +65,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
         val seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
         runBlocking {
-            Initializer.new(requireApplicationContext()) {
+            PirateInitializer.new(requireApplicationContext()) {
                 runBlocking { it.importWallet(seed, network = PirateNetwork.fromResources(requireApplicationContext())) }
                 it.setNetwork(PirateNetwork.fromResources(requireApplicationContext()))
             }

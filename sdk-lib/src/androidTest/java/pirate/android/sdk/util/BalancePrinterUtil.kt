@@ -1,7 +1,7 @@
 package pirate.android.sdk.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
@@ -35,7 +35,7 @@ class BalancePrinterUtil {
     private val mnemonics = SimpleMnemonics()
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val alias = "BalanceUtil"
-//    private val caceDbPath = Initializer.cacheDbPath(context, alias)
+//    private val caceDbPath = PirateInitializer.cacheDbPath(context, alias)
 //
 //    private val downloader = PirateCompactBlockDownloader(
 //        PirateLightWalletGrpcService(context, host, port),
@@ -80,7 +80,7 @@ class BalancePrinterUtil {
                 mnemonics.toSeed(seedPhrase.toCharArray())
             }.collect { seed ->
                 // TODO: clear the dataDb but leave the cacheDb
-                val initializer = Initializer.new(context) { config ->
+                val initializer = PirateInitializer.new(context) { config ->
                     runBlocking { config.importWallet(seed, birthdayHeight, network) }
                     config.setNetwork(network)
                     config.alias = alias

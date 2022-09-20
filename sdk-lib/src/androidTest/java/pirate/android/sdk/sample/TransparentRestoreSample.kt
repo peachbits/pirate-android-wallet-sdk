@@ -146,7 +146,7 @@ class TransparentRestoreSample {
 //        private val shieldedSpendingKey = PirateDerivationTool.deriveSpendingKeys(seed, Testnet)[0]
 //        private val transparentSecretKey = PirateDerivationTool.deriveTransparentSecretKey(seed, Testnet)
 //        private val host = "lightwalletd.testnet.electriccoin.co"
-//        private val initializer = Initializer(context) { config ->
+//        private val initializer = PirateInitializer(context) { config ->
 //            config.importWallet(seed, startHeight)
 //            config.setNetwork(Testnet, host)
 //            config.alias = alias

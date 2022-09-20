@@ -1,7 +1,7 @@
 package pirate.android.sdk.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.SdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.internal.TroubleshootingTwig
@@ -25,7 +25,7 @@ class DataDbScannerUtil {
     private val alias = "ScannerUtil"
 
 //    private val mnemonics = SimpleMnemonics()
-//    private val caceDbPath = Initializer.cacheDbPath(context, alias)
+//    private val caceDbPath = PirateInitializer.cacheDbPath(context, alias)
 
 //    private val downloader = PirateCompactBlockDownloader(
 //        PirateLightWalletGrpcService(context, host, port),
@@ -65,7 +65,7 @@ class DataDbScannerUtil {
     fun scanExistingDb() {
         synchronizer = run {
             val initializer = runBlocking {
-                Initializer.new(context) {
+                PirateInitializer.new(context) {
                     it.setBirthdayHeight(
                         birthdayHeight
                     )

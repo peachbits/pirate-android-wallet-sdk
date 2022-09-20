@@ -7,7 +7,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.SdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
@@ -42,7 +42,7 @@ import kotlinx.coroutines.withContext
  */
 class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
     private lateinit var seed: ByteArray
-    private lateinit var initializer: Initializer
+    private lateinit var initializer: PirateInitializer
     private lateinit var synchronizer: Synchronizer
     private lateinit var adapter: UtxoAdapter<PirateConfirmedTransaction>
     private val address: String = "t1RwbKka1CnktvAJ1cSqdn7c6PXWG4tZqgd"
@@ -62,7 +62,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
         // have the seed stored
         seed = Mnemonics.MnemonicCode(sharedViewModel.seedPhrase.value).toSeed()
         initializer = runBlocking {
-            Initializer.new(requireApplicationContext()) {
+            PirateInitializer.new(requireApplicationContext()) {
                 runBlocking { it.importWallet(seed, network = PirateNetwork.fromResources(requireApplicationContext())) }
                 it.alias = "Demo_Utxos"
             }

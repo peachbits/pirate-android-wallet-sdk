@@ -1,7 +1,7 @@
 package pirate.wallet.sdk.sample.demoapp
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.Initializer
+import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.db.entity.isFailure
 import pirate.android.sdk.ext.convertArrrToZatoshi
@@ -146,7 +146,7 @@ class SampleCodeTest {
 
         private val context = InstrumentationRegistry.getInstrumentation().targetContext
         private val synchronizer: Synchronizer = run {
-            val initializer = runBlocking { Initializer.new(context) {} }
+            val initializer = runBlocking { PirateInitializer.new(context) {} }
             Synchronizer.newBlocking(initializer)
         }
 

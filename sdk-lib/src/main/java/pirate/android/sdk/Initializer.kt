@@ -18,9 +18,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
- * Simplified Initializer focused on starting from a ViewingKey.
+ * Simplified PirateInitializer focused on starting from a ViewingKey.
  */
-class Initializer private constructor(
+class PirateInitializer private constructor(
     val context: Context,
     val rustBackend: PirateRustBackend,
     val network: PirateNetwork,
@@ -294,7 +294,7 @@ class Initializer private constructor(
         private fun validateViewingKeys() {
             require(viewingKeys.isNotEmpty()) {
                 "Unified Viewing keys are required. Ensure that the unified viewing keys or seed" +
-                    " have been set on this Initializer."
+                    " have been set on this PirateInitializer."
             }
             viewingKeys.forEach {
                 PirateDerivationTool.validatePirateUnifiedViewingKey(it)
@@ -326,7 +326,7 @@ class Initializer private constructor(
             context: Context,
             onCriticalErrorHandler: ((Throwable?) -> Boolean)?,
             config: Config
-        ): Initializer {
+        ): PirateInitializer {
             config.validate()
             val heightToUse = config.birthdayHeight
                 ?: (if (config.defaultToOldestHeight == true) config.network.saplingActivationHeight else null)
@@ -335,7 +335,7 @@ class Initializer private constructor(
 
             val rustBackend = initPirateRustBackend(context, config.network, config.alias, loadedBirthday)
 
-            return Initializer(
+            return PirateInitializer(
                 context.applicationContext,
                 rustBackend,
                 config.network,
@@ -358,11 +358,11 @@ class Initializer private constructor(
 
             if (onCriticalErrorHandler == null) {
                 twig(
-                    "WARNING: a critical error occurred on the Initializer but no callback is " +
+                    "WARNING: a critical error occurred on the PirateInitializer but no callback is " +
                         "registered to be notified of critical errors! THIS IS PROBABLY A MISTAKE. To " +
                         "respond to these errors (perhaps to update the UI or alert the user) set " +
                         "initializer.onCriticalErrorHandler to a non-null value or use the secondary " +
-                        "constructor: Initializer(context, handler) { ... }. Note that the synchronizer " +
+                        "constructor: PirateInitializer(context, handler) { ... }. Note that the synchronizer " +
                         "and initializer BOTH have error handlers and since the initializer exists " +
                         "before the synchronizer, it needs its error handler set separately."
                 )
