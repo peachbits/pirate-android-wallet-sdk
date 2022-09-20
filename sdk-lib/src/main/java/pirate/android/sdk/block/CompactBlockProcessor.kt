@@ -37,8 +37,8 @@ import pirate.android.sdk.internal.transaction.PiratePagedTransactionRepository
 import pirate.android.sdk.internal.transaction.TransactionRepository
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
-import pirate.android.sdk.jni.RustBackend
-import pirate.android.sdk.jni.RustBackendWelding
+import pirate.android.sdk.jni.PirateRustBackend
+import pirate.android.sdk.jni.PirateRustBackendWelding
 import pirate.android.sdk.type.PirateWalletBalance
 import cash.z.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
@@ -78,7 +78,7 @@ import kotlin.math.roundToInt
 class PirateCompactBlockProcessor(
     val downloader: PirateCompactBlockDownloader,
     private val repository: TransactionRepository,
-    private val rustBackend: RustBackendWelding,
+    private val rustBackend: PirateRustBackendWelding,
     minimumHeight: Int = rustBackend.network.saplingActivationHeight
 ) {
     /**
@@ -532,7 +532,7 @@ class PirateCompactBlockProcessor(
             return ERROR_CODE_NONE
         }
         Twig.sprout("validating")
-        twig("validating blocks in range $range in db: ${(rustBackend as RustBackend).pathCacheDb}")
+        twig("validating blocks in range $range in db: ${(rustBackend as PirateRustBackend).pathCacheDb}")
         val result = rustBackend.validateCombinedChain()
         Twig.clip("validating")
         return result

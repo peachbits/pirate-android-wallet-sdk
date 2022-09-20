@@ -34,7 +34,7 @@ class DataDbScannerUtil {
 
 //    private val processor = PirateCompactBlockProcessor(downloader)
 
-//    private val rustBackend = RustBackend.init(context, cacheDbName, dataDbName)
+//    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
 
     private val birthdayHeight = 600_000
     private lateinit var synchronizer: Synchronizer

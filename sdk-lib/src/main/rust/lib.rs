@@ -88,7 +88,7 @@ fn block_db(env: &JNIEnv<'_>, db_data: JString<'_>) -> Result<BlockDb, failure::
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_initLogs(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_initLogs(
     _env: JNIEnv<'_>,
     _: JClass<'_>,
 ) {
@@ -105,7 +105,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_initLogs(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_initDataDb(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_initDataDb(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -123,7 +123,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_initDataDb(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_initAccountsTableWithKeys(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_initAccountsTableWithKeys(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -363,7 +363,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveExten
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_initBlocksTable(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_initBlocksTable(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -399,7 +399,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_initBlocksTable
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getShieldedAddress(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_getShieldedAddress(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -431,7 +431,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getShieldedAddr
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_isValidShieldedAddress(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_isValidShieldedAddress(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     addr: JString<'_>,
@@ -453,7 +453,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_isValidShielded
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_isValidTransparentAddress(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_isValidTransparentAddress(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     addr: JString<'_>,
@@ -475,7 +475,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_isValidTranspar
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getBalance(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_getBalance(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -506,7 +506,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getBalance(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getVerifiedTransparentBalance(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_getVerifiedTransparentBalance(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -543,7 +543,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getVerifiedTran
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getTotalTransparentBalance(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_getTotalTransparentBalance(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -580,7 +580,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getTotalTranspa
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getVerifiedBalance(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_getVerifiedBalance(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -612,7 +612,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getVerifiedBala
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getReceivedMemoAsUtf8(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_getReceivedMemoAsUtf8(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -639,7 +639,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getReceivedMemo
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getSentMemoAsUtf8(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_getSentMemoAsUtf8(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -667,7 +667,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getSentMemoAsUt
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_validateCombinedChain(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_validateCombinedChain(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_cache: JString<'_>,
@@ -703,7 +703,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_validateCombine
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getNearestRewindHeight(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_getNearestRewindHeight(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -738,7 +738,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_getNearestRewin
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_rewindToHeight(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_rewindToHeight(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -759,7 +759,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_rewindToHeight(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_scanBlocks(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_scanBlocks(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_cache: JString<'_>,
@@ -781,7 +781,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_scanBlocks(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_putUtxo(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_putUtxo(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -825,7 +825,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_putUtxo(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_clearUtxos(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_clearUtxos(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -855,7 +855,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_clearUtxos(
 
 // ADDED BY ANDROID
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_scanBlockBatch(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_scanBlockBatch(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_cache: JString<'_>,
@@ -983,7 +983,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_tool_DerivationTool_deriveTrans
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_decryptAndStoreTransaction(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_decryptAndStoreTransaction(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -1007,7 +1007,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_decryptAndStore
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_createToAddress(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_createToAddress(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -1090,7 +1090,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_createToAddress
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_shieldToAddress(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_shieldToAddress(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     db_data: JString<'_>,
@@ -1150,7 +1150,7 @@ pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_shieldToAddress
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Java_pirate_android_sdk_jni_RustBackend_branchIdForHeight(
+pub unsafe extern "C" fn Java_pirate_android_sdk_jni_PirateRustBackend_branchIdForHeight(
     env: JNIEnv<'_>,
     _: JClass<'_>,
     height: jint,

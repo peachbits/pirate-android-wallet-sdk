@@ -69,7 +69,7 @@ sealed class PirateCompactBlockProcessorException(message: String, cause: Throwa
     open class PirateConfigurationException(message: String, cause: Throwable?) : PirateCompactBlockProcessorException(message, cause)
     class PirateFileInsteadOfPath(fileName: String) : PirateConfigurationException(
         "Invalid Path: the given path appears to be a" +
-            " file name instead of a path: $fileName. The RustBackend expects the absolutePath to the database rather" +
+            " file name instead of a path: $fileName. The PirateRustBackend expects the absolutePath to the database rather" +
             " than just the database filename because Rust does not access the app Context." +
             " So pass in context.getDatabasePath(dbFileName).absolutePath instead of just dbFileName alone.",
         null

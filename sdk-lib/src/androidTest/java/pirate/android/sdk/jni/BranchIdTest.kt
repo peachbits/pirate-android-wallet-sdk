@@ -19,7 +19,7 @@ class BranchIdTest(
     private val height: Int,
     private val branchId: Long,
     private val branchHex: String,
-    private val rustBackend: RustBackendWelding
+    private val rustBackend: PirateRustBackendWelding
 ) {
 
     @Test
@@ -44,8 +44,8 @@ class BranchIdTest(
             // is an abnormal use of the SDK because this really should run at the rust level
             // However, due to quirks on certain devices, we created this test at the Android level,
             // as a sanity check
-            val testnetBackend = runBlocking { RustBackend.init("", "", "", PirateNetwork.Testnet) }
-            val mainnetBackend = runBlocking { RustBackend.init("", "", "", PirateNetwork.Mainnet) }
+            val testnetBackend = runBlocking { PirateRustBackend.init("", "", "", PirateNetwork.Testnet) }
+            val mainnetBackend = runBlocking { PirateRustBackend.init("", "", "", PirateNetwork.Mainnet) }
             return listOf(
                 // Mainnet Cases
                 arrayOf("Sapling", 419_200, 1991772603L, "76b809bb", mainnetBackend),

@@ -44,7 +44,7 @@ class BalancePrinterUtil {
 
 //    private val processor = PirateCompactBlockProcessor(downloader)
 
-//    private val rustBackend = RustBackend.init(context, cacheDbName, dataDbName)
+//    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
 
     private lateinit var birthday: WalletBirthday
     private var synchronizer: Synchronizer? = null

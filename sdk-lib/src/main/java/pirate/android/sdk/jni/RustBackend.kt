@@ -18,7 +18,7 @@ import java.io.File
  * not be called directly by code outside of the SDK. Instead, one of the higher-level components
  * should be used such as Wallet.kt or PirateCompactBlockProcessor.kt.
  */
-class RustBackend private constructor() : RustBackendWelding {
+class PirateRustBackend private constructor() : PirateRustBackendWelding {
 
     // Paths
     lateinit var pathDataDb: String
@@ -328,10 +328,10 @@ class RustBackend private constructor() : RustBackendWelding {
             paramsPath: String,
             zcashNetwork: PirateNetwork,
             birthdayHeight: Int? = null
-        ): RustBackend {
+        ): PirateRustBackend {
             rustLibraryLoader.load()
 
-            return RustBackend().apply {
+            return PirateRustBackend().apply {
                 pathCacheDb = cacheDbPath
                 pathDataDb = dataDbPath
                 pathParamsDir = paramsPath

@@ -6,20 +6,20 @@ import pirate.android.sdk.ext.masked
 import pirate.android.sdk.internal.PirateSaplingParamTool
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
-import pirate.android.sdk.jni.RustBackend
-import pirate.android.sdk.jni.RustBackendWelding
+import pirate.android.sdk.jni.PirateRustBackend
+import pirate.android.sdk.jni.PirateRustBackendWelding
 
 /**
  * Class responsible for encoding a transaction in a consistent way. This bridges the gap by
  * behaving like a stateless API so that callers can request [createTransaction] and receive a
  * result, even though there are intermediate database interactions.
  *
- * @property rustBackend the instance of RustBackendWelding to use for creating and validating.
+ * @property rustBackend the instance of PirateRustBackendWelding to use for creating and validating.
  * @property repository the repository that stores information about the transactions being created
  * such as the raw bytes and raw txId.
  */
 class PirateWalletTransactionEncoder(
-    private val rustBackend: RustBackendWelding,
+    private val rustBackend: PirateRustBackendWelding,
     private val repository: TransactionRepository
 ) : TransactionEncoder {
 
@@ -113,7 +113,7 @@ class PirateWalletTransactionEncoder(
         ) {
             try {
                 val branchId = getConsensusBranchId()
-                PirateSaplingParamTool.ensureParams((rustBackend as RustBackend).pathParamsDir)
+                PirateSaplingParamTool.ensureParams((rustBackend as PirateRustBackend).pathParamsDir)
                 twig("params exist! attempting to send with consensus branchId $branchId...")
                 rustBackend.createToAddress(
                     branchId,
@@ -139,7 +139,7 @@ class PirateWalletTransactionEncoder(
     ): Long {
         return twigTask("creating transaction to shield all UTXOs") {
             try {
-                PirateSaplingParamTool.ensureParams((rustBackend as RustBackend).pathParamsDir)
+                PirateSaplingParamTool.ensureParams((rustBackend as PirateRustBackend).pathParamsDir)
                 twig("params exist! attempting to shield...")
                 rustBackend.shieldToAddress(
                     spendingKey,

@@ -13,7 +13,7 @@ import pirate.android.sdk.internal.ext.android.toFlowPagedList
 import pirate.android.sdk.internal.ext.android.toRefreshable
 import pirate.android.sdk.internal.ext.tryWarn
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.jni.RustBackend
+import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.type.UnifiedViewingKey
 import pirate.android.sdk.type.WalletBirthday
 import kotlinx.coroutines.flow.emitAll
@@ -112,7 +112,7 @@ class PiratePagedTransactionRepository private constructor(
         suspend fun new(
             appContext: Context,
             pageSize: Int = 10,
-            rustBackend: RustBackend,
+            rustBackend: PirateRustBackend,
             birthday: WalletBirthday,
             viewingKeys: List<UnifiedViewingKey>,
             overwriteVks: Boolean = false,
@@ -154,7 +154,7 @@ class PiratePagedTransactionRepository private constructor(
          * it has been more clear that Kotlin should own the data and just let Rust use it.
          */
         private suspend fun initMissingDatabases(
-            rustBackend: RustBackend,
+            rustBackend: PirateRustBackend,
             birthday: WalletBirthday,
             viewingKeys: List<UnifiedViewingKey>,
         ) {
@@ -166,7 +166,7 @@ class PiratePagedTransactionRepository private constructor(
         /**
          * Create the dataDb and its table, if it doesn't exist.
          */
-        private suspend fun maybeCreateDataDb(rustBackend: RustBackend) {
+        private suspend fun maybeCreateDataDb(rustBackend: PirateRustBackend) {
             tryWarn("Warning: did not create dataDb. It probably already exists.") {
                 rustBackend.initDataDb()
                 twig("Initialized wallet for first run file: ${rustBackend.pathDataDb}")
@@ -177,7 +177,7 @@ class PiratePagedTransactionRepository private constructor(
          * Initialize the blocks table with the given birthday, if needed.
          */
         private suspend fun maybeInitBlocksTable(
-            rustBackend: RustBackend,
+            rustBackend: PirateRustBackend,
             birthday: WalletBirthday
         ) {
             // TODO: consider converting these to typed exceptions in the welding layer
@@ -200,7 +200,7 @@ class PiratePagedTransactionRepository private constructor(
          * Initialize the accounts table with the given viewing keys.
          */
         private suspend fun maybeInitAccountsTable(
-            rustBackend: RustBackend,
+            rustBackend: PirateRustBackend,
             viewingKeys: List<UnifiedViewingKey>
         ) {
             // TODO: consider converting these to typed exceptions in the welding layer
@@ -214,7 +214,7 @@ class PiratePagedTransactionRepository private constructor(
         }
 
         private suspend fun applyKeyMigrations(
-            rustBackend: RustBackend,
+            rustBackend: PirateRustBackend,
             overwriteVks: Boolean,
             viewingKeys: List<UnifiedViewingKey>
         ) {

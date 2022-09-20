@@ -1,13 +1,13 @@
 package pirate.android.sdk.tool
 
-import pirate.android.sdk.jni.RustBackend
-import pirate.android.sdk.jni.RustBackendWelding
+import pirate.android.sdk.jni.PirateRustBackend
+import pirate.android.sdk.jni.PirateRustBackendWelding
 import pirate.android.sdk.type.UnifiedViewingKey
 import pirate.android.sdk.type.PirateNetwork
 
 class DerivationTool {
 
-    companion object : RustBackendWelding.Derivation {
+    companion object : PirateRustBackendWelding.Derivation {
 
         /**
          * Given a seed and a number of accounts, return the associated viewing keys.
@@ -19,7 +19,7 @@ class DerivationTool {
          * @return the viewing keys that correspond to the seed, formatted as Strings.
          */
         override suspend fun deriveUnifiedViewingKeys(seed: ByteArray, network: PirateNetwork, numberOfAccounts: Int): Array<UnifiedViewingKey> =
-            withRustBackendLoaded {
+            withPirateRustBackendLoaded {
                 deriveUnifiedViewingKeysFromSeed(seed, numberOfAccounts, networkId = network.id).map {
                     UnifiedViewingKey(it[0], it[1])
                 }.toTypedArray()
@@ -32,7 +32,7 @@ class DerivationTool {
          *
          * @return the viewing key that corresponds to the spending key.
          */
-        override suspend fun deriveViewingKey(spendingKey: String, network: PirateNetwork): String = withRustBackendLoaded {
+        override suspend fun deriveViewingKey(spendingKey: String, network: PirateNetwork): String = withPirateRustBackendLoaded {
             deriveExtendedFullViewingKey(spendingKey, networkId = network.id)
         }
 
@@ -46,7 +46,7 @@ class DerivationTool {
          * @return the spending keys that correspond to the seed, formatted as Strings.
          */
         override suspend fun deriveSpendingKeys(seed: ByteArray, network: PirateNetwork, numberOfAccounts: Int): Array<String> =
-            withRustBackendLoaded {
+            withPirateRustBackendLoaded {
                 deriveExtendedSpendingKeys(seed, numberOfAccounts, networkId = network.id)
             }
 
@@ -60,7 +60,7 @@ class DerivationTool {
          * @return the address that corresponds to the seed and account index.
          */
         override suspend fun deriveShieldedAddress(seed: ByteArray, network: PirateNetwork, accountIndex: Int): String =
-            withRustBackendLoaded {
+            withPirateRustBackendLoaded {
                 deriveShieldedAddressFromSeed(seed, accountIndex, networkId = network.id)
             }
 
@@ -72,26 +72,26 @@ class DerivationTool {
          *
          * @return the address that corresponds to the viewing key.
          */
-        override suspend fun deriveShieldedAddress(viewingKey: String, network: PirateNetwork): String = withRustBackendLoaded {
+        override suspend fun deriveShieldedAddress(viewingKey: String, network: PirateNetwork): String = withPirateRustBackendLoaded {
             deriveShieldedAddressFromViewingKey(viewingKey, networkId = network.id)
         }
 
         // WIP probably shouldn't be used just yet. Why?
         //  - because we need the private key associated with this seed and this function doesn't return it.
         //  - the underlying implementation needs to be split out into a few lower-level calls
-        override suspend fun deriveTransparentAddress(seed: ByteArray, network: PirateNetwork, account: Int, index: Int): String = withRustBackendLoaded {
+        override suspend fun deriveTransparentAddress(seed: ByteArray, network: PirateNetwork, account: Int, index: Int): String = withPirateRustBackendLoaded {
             deriveTransparentAddressFromSeed(seed, account, index, networkId = network.id)
         }
 
-        override suspend fun deriveTransparentAddressFromPublicKey(transparentPublicKey: String, network: PirateNetwork): String = withRustBackendLoaded {
+        override suspend fun deriveTransparentAddressFromPublicKey(transparentPublicKey: String, network: PirateNetwork): String = withPirateRustBackendLoaded {
             deriveTransparentAddressFromPubKey(transparentPublicKey, networkId = network.id)
         }
 
-        override suspend fun deriveTransparentAddressFromPrivateKey(transparentPrivateKey: String, network: PirateNetwork): String = withRustBackendLoaded {
+        override suspend fun deriveTransparentAddressFromPrivateKey(transparentPrivateKey: String, network: PirateNetwork): String = withPirateRustBackendLoaded {
             deriveTransparentAddressFromPrivKey(transparentPrivateKey, networkId = network.id)
         }
 
-        override suspend fun deriveTransparentSecretKey(seed: ByteArray, network: PirateNetwork, account: Int, index: Int): String = withRustBackendLoaded {
+        override suspend fun deriveTransparentSecretKey(seed: ByteArray, network: PirateNetwork, account: Int, index: Int): String = withPirateRustBackendLoaded {
             deriveTransparentSecretKeyFromSeed(seed, account, index, networkId = network.id)
         }
 
@@ -104,8 +104,8 @@ class DerivationTool {
          * class attempts to interact with it, indirectly, by invoking JNI functions. It would be
          * nice to have an annotation like @UsesSystemLibrary for this
          */
-        private suspend fun <T> withRustBackendLoaded(block: () -> T): T {
-            RustBackend.rustLibraryLoader.load()
+        private suspend fun <T> withPirateRustBackendLoaded(block: () -> T): T {
+            PirateRustBackend.rustLibraryLoader.load()
             return block()
         }
 

@@ -7,7 +7,7 @@ import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.ext.getCacheDirSuspend
 import pirate.android.sdk.internal.ext.getDatabasePathSuspend
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.jni.RustBackend
+import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.tool.DerivationTool
 import pirate.android.sdk.tool.WalletBirthdayTool
 import pirate.android.sdk.type.UnifiedViewingKey
@@ -22,7 +22,7 @@ import java.io.File
  */
 class Initializer private constructor(
     val context: Context,
-    val rustBackend: RustBackend,
+    val rustBackend: PirateRustBackend,
     val network: PirateNetwork,
     val alias: String,
     val host: String,
@@ -333,7 +333,7 @@ class Initializer private constructor(
             val loadedBirthday =
                 WalletBirthdayTool.loadNearest(context, config.network, heightToUse)
 
-            val rustBackend = initRustBackend(context, config.network, config.alias, loadedBirthday)
+            val rustBackend = initPirateRustBackend(context, config.network, config.alias, loadedBirthday)
 
             return Initializer(
                 context.applicationContext,
@@ -371,13 +371,13 @@ class Initializer private constructor(
             onCriticalErrorHandler?.invoke(error)
         }
 
-        private suspend fun initRustBackend(
+        private suspend fun initPirateRustBackend(
             context: Context,
             network: PirateNetwork,
             alias: String,
             birthday: WalletBirthday
-        ): RustBackend {
-            return RustBackend.init(
+        ): PirateRustBackend {
+            return PirateRustBackend.init(
                 cacheDbPath(context, network, alias),
                 dataDbPath(context, network, alias),
                 File(context.getCacheDirSuspend(), "params").absolutePath,
