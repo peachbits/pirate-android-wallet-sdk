@@ -13,7 +13,7 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Disconne
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Downloading
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Enhancing
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Initialized
-import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanned
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.PirateScanned
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanning
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Stopped
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Validating
@@ -399,7 +399,7 @@ class PirateSdkSynchronizer internal constructor(
         processor.onChainErrorListener = ::onChainError
         processor.state.onEach {
             when (it) {
-                is Scanned -> {
+                is PirateScanned -> {
                     val now = System.currentTimeMillis()
                     // do a bit of housekeeping and then report synced status
                     onScanComplete(it.scannedRange, now - lastScanTime)

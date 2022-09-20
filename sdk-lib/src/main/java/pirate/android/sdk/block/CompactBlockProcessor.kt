@@ -7,7 +7,7 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Disconne
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Downloading
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Enhancing
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Initialized
-import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanned
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.PirateScanned
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanning
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Stopped
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Validating
@@ -253,7 +253,7 @@ class PirateCompactBlockProcessor(
             downloader.lightWalletService.reconnect()
             ERROR_CODE_RECONNECT
         } else if (currentInfo.lastDownloadRange.isEmpty() && currentInfo.lastScanRange.isEmpty()) {
-            setState(Scanned(currentInfo.lastScanRange))
+            setState(PirateScanned(currentInfo.lastScanRange))
             ERROR_CODE_NONE
         } else {
             downloadNewBlocks(currentInfo.lastDownloadRange)
@@ -320,7 +320,7 @@ class PirateCompactBlockProcessor(
             val success = scanNewBlocks(lastScanRange)
             if (!success) throw PirateCompactBlockProcessorException.PirateFailedScan()
             else {
-                setState(Scanned(lastScanRange))
+                setState(PirateScanned(lastScanRange))
             }
             ERROR_CODE_NONE
         } else {
@@ -864,7 +864,7 @@ class PirateCompactBlockProcessor(
         /**
          * [PirateState] for when we are done decrypting blocks, for now.
          */
-        class Scanned(val scannedRange: IntRange) : Connected, Syncing, PirateState()
+        class PirateScanned(val scannedRange: IntRange) : Connected, Syncing, PirateState()
 
         /**
          * [PirateState] for when transaction details are being retrieved. This typically means the wallet
