@@ -34,7 +34,7 @@ class PirateInitializer private constructor(
 
     suspend fun erase() = erase(context, network, alias)
 
-    class Config private constructor(
+    class PirateConfig private constructor(
         val viewingKeys: MutableList<PirateUnifiedViewingKey> = mutableListOf(),
         var alias: String = PirateSdk.DEFAULT_ALIAS,
     ) {
@@ -65,7 +65,7 @@ class PirateInitializer private constructor(
         var overwriteVks: Boolean = false
             private set
 
-        constructor(block: (Config) -> Unit) : this() {
+        constructor(block: (PirateConfig) -> Unit) : this() {
             block(this)
         }
 
@@ -86,7 +86,7 @@ class PirateInitializer private constructor(
          * transactions. Again, this value is only considered when [height] is null.
          *
          */
-        fun setBirthdayHeight(height: Int?, defaultToOldestHeight: Boolean = false): Config =
+        fun setBirthdayHeight(height: Int?, defaultToOldestHeight: Boolean = false): PirateConfig =
             apply {
                 this.birthdayHeight = height
                 this.defaultToOldestHeight = defaultToOldestHeight
@@ -95,7 +95,7 @@ class PirateInitializer private constructor(
         /**
          * Load the most recent checkpoint available. This is useful for new wallets.
          */
-        fun newWalletBirthday(): Config = apply {
+        fun newWalletBirthday(): PirateConfig = apply {
             birthdayHeight = null
             defaultToOldestHeight = false
         }
@@ -105,7 +105,7 @@ class PirateInitializer private constructor(
          * importing a pre-existing wallet. It is the same as calling
          * `birthdayHeight = importedHeight`.
          */
-        fun importedWalletBirthday(importedHeight: Int?): Config = apply {
+        fun importedWalletBirthday(importedHeight: Int?): PirateConfig = apply {
             birthdayHeight = importedHeight
             defaultToOldestHeight = true
         }
@@ -122,7 +122,7 @@ class PirateInitializer private constructor(
         fun setViewingKeys(
             vararg unifiedViewingKeys: PirateUnifiedViewingKey,
             overwrite: Boolean = false
-        ): Config = apply {
+        ): PirateConfig = apply {
             overwriteVks = overwrite
             viewingKeys.apply {
                 clear()
@@ -139,7 +139,7 @@ class PirateInitializer private constructor(
          * is not currently well supported. Consider it an alpha-preview feature that might work but
          * probably has serious bugs.
          */
-        fun addViewingKey(unifiedFullViewingKey: PirateUnifiedViewingKey): Config = apply {
+        fun addViewingKey(unifiedFullViewingKey: PirateUnifiedViewingKey): PirateConfig = apply {
             viewingKeys.add(unifiedFullViewingKey)
         }
 
@@ -161,7 +161,7 @@ class PirateInitializer private constructor(
             network: PirateNetwork,
             host: String = network.defaultHost,
             port: Int = network.defaultPort
-        ): Config = apply {
+        ): PirateConfig = apply {
             this.network = network
             this.host = host
             this.port = port
@@ -177,7 +177,7 @@ class PirateInitializer private constructor(
             host: String = network.defaultHost,
             port: Int = network.defaultPort,
             alias: String = PirateSdk.DEFAULT_ALIAS
-        ): Config =
+        ): PirateConfig =
             importWallet(
                 PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network = network)[0],
                 birthdayHeight,
@@ -197,7 +197,7 @@ class PirateInitializer private constructor(
             host: String = network.defaultHost,
             port: Int = network.defaultPort,
             alias: String = PirateSdk.DEFAULT_ALIAS
-        ): Config = apply {
+        ): PirateConfig = apply {
             setViewingKeys(viewingKey)
             setNetwork(network, host, port)
             importedWalletBirthday(birthdayHeight)
@@ -213,7 +213,7 @@ class PirateInitializer private constructor(
             host: String = network.defaultHost,
             port: Int = network.defaultPort,
             alias: String = PirateSdk.DEFAULT_ALIAS
-        ): Config = newWallet(
+        ): PirateConfig = newWallet(
             PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network)[0],
             network,
             host,
@@ -230,7 +230,7 @@ class PirateInitializer private constructor(
             host: String = network.defaultHost,
             port: Int = network.defaultPort,
             alias: String = PirateSdk.DEFAULT_ALIAS
-        ): Config = apply {
+        ): PirateConfig = apply {
             setViewingKeys(viewingKey)
             setNetwork(network, host, port)
             newWalletBirthday()
@@ -245,7 +245,7 @@ class PirateInitializer private constructor(
             seed: ByteArray,
             network: PirateNetwork,
             numberOfAccounts: Int = 1
-        ): Config =
+        ): PirateConfig =
             apply {
                 setViewingKeys(
                     *PirateDerivationTool.derivePirateUnifiedViewingKeys(
@@ -262,7 +262,7 @@ class PirateInitializer private constructor(
          * @param networkId the ID of the network corresponding to the [PirateNetwork] enum.
          * Typically, it is 0 for testnet and 1 for mainnet.
          */
-        fun setNetworkId(networkId: Int): Config = apply {
+        fun setNetworkId(networkId: Int): PirateConfig = apply {
             network = PirateNetwork.from(networkId)
         }
 
@@ -270,7 +270,7 @@ class PirateInitializer private constructor(
         // Validation helpers
         //
 
-        fun validate(): Config = apply {
+        fun validate(): PirateConfig = apply {
             validateAlias(alias)
             validateViewingKeys()
             validateBirthday()
@@ -306,9 +306,9 @@ class PirateInitializer private constructor(
 
     companion object : SdkSynchronizer.Erasable {
 
-        suspend fun new(appContext: Context, config: Config) = new(appContext, null, config)
+        suspend fun new(appContext: Context, config: PirateConfig) = new(appContext, null, config)
 
-        fun newBlocking(appContext: Context, config: Config) = runBlocking {
+        fun newBlocking(appContext: Context, config: PirateConfig) = runBlocking {
             new(
                 appContext,
                 null,
@@ -319,13 +319,13 @@ class PirateInitializer private constructor(
         suspend fun new(
             appContext: Context,
             onCriticalErrorHandler: ((Throwable?) -> Boolean)? = null,
-            block: (Config) -> Unit
-        ) = new(appContext, onCriticalErrorHandler, Config(block))
+            block: (PirateConfig) -> Unit
+        ) = new(appContext, onCriticalErrorHandler, PirateConfig(block))
 
         suspend fun new(
             context: Context,
             onCriticalErrorHandler: ((Throwable?) -> Boolean)?,
-            config: Config
+            config: PirateConfig
         ): PirateInitializer {
             config.validate()
             val heightToUse = config.birthdayHeight

@@ -44,7 +44,7 @@ class PirateInitializerTest {
 //
 //    @Test(expected = PirateInitializerException.PirateMissingDefaultBirthdayException::class)
 //    fun testMissingBirthday() {
-//        val config = PirateInitializer.Config { config ->
+//        val config = PirateInitializer.PirateConfig { config ->
 //            config.setViewingKeys("vk1")
 //        }
 //        config.validate()
@@ -52,7 +52,7 @@ class PirateInitializerTest {
 //
 //    @Test(expected = PirateInitializerException.PirateInvalidBirthdayHeightException::class)
 //    fun testOutOfBoundsBirthday() {
-//        val config = PirateInitializer.Config { config ->
+//        val config = PirateInitializer.PirateConfig { config ->
 //            config.setViewingKeys("vk1")
 //            config.setBirthdayHeight(PirateSdk.SAPLING_ACTIVATION_HEIGHT - 1)
 //        }

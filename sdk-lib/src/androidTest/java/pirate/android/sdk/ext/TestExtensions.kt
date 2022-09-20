@@ -9,7 +9,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import ru.gildor.coroutines.okhttp.await
 
-fun PirateInitializer.Config.seedPhrase(seedPhrase: String, network: PirateNetwork) {
+fun PirateInitializer.PirateConfig.seedPhrase(seedPhrase: String, network: PirateNetwork) {
     runBlocking { setSeed(SimpleMnemonics().toSeed(seedPhrase.toCharArray()), network) }
 }
 
