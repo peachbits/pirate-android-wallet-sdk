@@ -228,7 +228,7 @@ class TransparentRestoreSample {
 //
 //        companion object {
 //            init {
-//                Twig.plant(TroubleshootingTwig())
+//                Twig.plant(PirateTroubleshootingTwig())
 //            }
 //        }
 //    }

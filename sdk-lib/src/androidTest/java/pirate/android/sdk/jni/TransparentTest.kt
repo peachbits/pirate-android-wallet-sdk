@@ -5,7 +5,7 @@ import cash.z.ecc.android.bip39.Mnemonics.MnemonicCode
 import cash.z.ecc.android.bip39.toSeed
 import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateNetwork
@@ -68,7 +68,7 @@ class TransparentTest(val expected: Expected, val network: PirateNetwork) {
         @BeforeClass
         @JvmStatic
         fun startup() {
-            Twig.plant(TroubleshootingTwig(formatter = { "@TWIG $it" }))
+            Twig.plant(PirateTroubleshootingTwig(formatter = { "@TWIG $it" }))
         }
 
         @JvmStatic

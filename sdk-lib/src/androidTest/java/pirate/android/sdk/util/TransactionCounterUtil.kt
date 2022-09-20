@@ -1,7 +1,7 @@
 package pirate.android.sdk.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
@@ -16,7 +16,7 @@ class TransactionCounterUtil {
     private val service = PirateLightWalletGrpcService(context, network)
 
     init {
-        Twig.plant(TroubleshootingTwig())
+        Twig.plant(PirateTroubleshootingTwig())
     }
 
     @Test

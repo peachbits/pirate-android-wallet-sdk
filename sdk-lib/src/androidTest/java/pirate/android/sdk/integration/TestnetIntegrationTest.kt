@@ -8,7 +8,7 @@ import pirate.android.sdk.Synchronizer.PirateStatus.SYNCED
 import pirate.android.sdk.db.entity.isSubmitSuccess
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.onFirst
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
@@ -113,7 +113,7 @@ class TestnetIntegrationTest : ScopedTest() {
     }
 
     companion object {
-        init { Twig.plant(TroubleshootingTwig()) }
+        init { Twig.plant(PirateTroubleshootingTwig()) }
 
         const val host = "lightwalletd.testnet.z.cash"
         private const val birthdayHeight = 963150

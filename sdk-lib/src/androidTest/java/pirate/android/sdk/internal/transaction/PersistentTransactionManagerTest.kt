@@ -7,7 +7,7 @@ import pirate.android.sdk.annotation.TestPurpose
 import pirate.android.sdk.db.entity.PirateEncodedTransaction
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.db.entity.isCancelled
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
@@ -114,7 +114,7 @@ class PiratePersistentTransactionManagerTest : ScopedTest() {
     companion object {
         @BeforeClass
         fun init() {
-            Twig.plant(TroubleshootingTwig())
+            Twig.plant(PirateTroubleshootingTwig())
         }
     }
 }

@@ -2,7 +2,7 @@ package pirate.android.sdk.test
 
 import android.content.Context
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.twig
 import kotlinx.coroutines.CoroutineScope
@@ -51,7 +51,7 @@ open class ScopedTest(val defaultTimeout: Long = 2000L) {
         lateinit var classScope: CoroutineScope
 
         init {
-            Twig.plant(TroubleshootingTwig())
+            Twig.plant(PirateTroubleshootingTwig())
             twig("================================================================ INIT")
         }
 

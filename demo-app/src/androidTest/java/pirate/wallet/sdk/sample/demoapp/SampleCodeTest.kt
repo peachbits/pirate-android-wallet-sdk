@@ -6,7 +6,7 @@ import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.db.entity.isFailure
 import pirate.android.sdk.ext.convertArrrToZatoshi
 import pirate.android.sdk.ext.toHex
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
@@ -153,7 +153,7 @@ class SampleCodeTest {
         @BeforeClass
         @JvmStatic
         fun init() {
-            Twig.plant(TroubleshootingTwig())
+            Twig.plant(PirateTroubleshootingTwig())
         }
 
         fun log(message: String?) = twig(message ?: "null")

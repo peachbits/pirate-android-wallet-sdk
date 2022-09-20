@@ -92,7 +92,7 @@ class PirateInitializerTest {
 //    companion object {
 //        private val context = InstrumentationRegistry.getInstrumentation().context
 //        init {
-//            Twig.plant(TroubleshootingTwig())
+//            Twig.plant(PirateTroubleshootingTwig())
 //        }
 //    }
 }

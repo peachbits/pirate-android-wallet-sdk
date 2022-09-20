@@ -1,7 +1,7 @@
 package pirate.android.sdk.demoapp
 
 import android.app.Application
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 
 class App : Application() {
@@ -13,6 +13,6 @@ class App : Application() {
             StrictModeHelper.enableStrictMode()
         }
 
-        Twig.plant(TroubleshootingTwig())
+        Twig.plant(PirateTroubleshootingTwig())
     }
 }

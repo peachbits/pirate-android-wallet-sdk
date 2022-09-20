@@ -3,7 +3,7 @@ package pirate.android.sdk.util
 import androidx.test.platform.app.InstrumentationRegistry
 import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.twig
@@ -51,7 +51,7 @@ class BalancePrinterUtil {
 
     @Before
     fun setup() {
-        Twig.plant(TroubleshootingTwig())
+        Twig.plant(PirateTroubleshootingTwig())
         cacheBlocks()
         birthday = runBlocking { PirateWalletBirthdayTool.loadNearest(context, network, birthdayHeight) }
     }

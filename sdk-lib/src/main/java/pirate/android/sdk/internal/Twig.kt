@@ -35,7 +35,7 @@ interface Twig {
          * most useful to enable developer logging at the right time.
          */
         fun enabled(isEnabled: Boolean) {
-            if (isEnabled) plant(TroubleshootingTwig()) else plant(PirateSilentTwig())
+            if (isEnabled) plant(PirateTroubleshootingTwig()) else plant(PirateSilentTwig())
         }
 
         /**
@@ -120,7 +120,7 @@ class PirateSilentTwig : Twig {
  * @param formatter a formatter for the twigs. The default one is pretty spiffy.
  * @param printer a printer for the twigs. The default is System.err.println.
  */
-open class TroubleshootingTwig(
+open class PirateTroubleshootingTwig(
     val formatter: (String) -> String = spiffy(6),
     val printer: (String) -> Any = System.err::println,
     val minPriority: Int = 0

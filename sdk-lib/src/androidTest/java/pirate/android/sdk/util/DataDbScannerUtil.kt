@@ -4,7 +4,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.PirateSdkSynchronizer
 import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.internal.TroubleshootingTwig
+import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -41,7 +41,7 @@ class DataDbScannerUtil {
 
     @Before
     fun setup() {
-        Twig.plant(TroubleshootingTwig())
+        Twig.plant(PirateTroubleshootingTwig())
 //        cacheBlocks()
     }
 
