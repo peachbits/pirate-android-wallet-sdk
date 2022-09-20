@@ -99,7 +99,7 @@ class TestWallet(
         }
 
         // block until synced
-        synchronizer.status.first { it == Synchronizer.Status.SYNCED }
+        synchronizer.status.first { it == Synchronizer.PirateStatus.SYNCED }
         killSwitch.cancel()
         twig("Synced!")
         return this
@@ -151,7 +151,7 @@ class TestWallet(
                 synchronizer.stop()
             }
         }
-        synchronizer.status.first { it == Synchronizer.Status.STOPPED }
+        synchronizer.status.first { it == Synchronizer.PirateStatus.STOPPED }
         twig("Stopped!")
         return this
     }

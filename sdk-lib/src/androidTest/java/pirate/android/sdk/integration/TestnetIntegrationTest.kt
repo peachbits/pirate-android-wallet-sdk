@@ -4,7 +4,7 @@ import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
 import pirate.android.sdk.PirateInitializer
 import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.Synchronizer.Status.SYNCED
+import pirate.android.sdk.Synchronizer.PirateStatus.SYNCED
 import pirate.android.sdk.db.entity.isSubmitSuccess
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.onFirst

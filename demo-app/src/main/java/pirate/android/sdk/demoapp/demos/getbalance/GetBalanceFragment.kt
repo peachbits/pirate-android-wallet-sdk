@@ -78,7 +78,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         """.trimIndent()
     }
 
-    private fun onStatus(status: Synchronizer.Status) {
+    private fun onStatus(status: Synchronizer.PirateStatus) {
         binding.textStatus.text = "Status: $status"
         if (PirateWalletBalance().none()) {
             binding.textBalance.text = "Calculating balance..."

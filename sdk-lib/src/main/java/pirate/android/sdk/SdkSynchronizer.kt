@@ -1,13 +1,13 @@
 package pirate.android.sdk
 
 import android.content.Context
-import pirate.android.sdk.Synchronizer.Status.DISCONNECTED
-import pirate.android.sdk.Synchronizer.Status.DOWNLOADING
-import pirate.android.sdk.Synchronizer.Status.ENHANCING
-import pirate.android.sdk.Synchronizer.Status.SCANNING
-import pirate.android.sdk.Synchronizer.Status.STOPPED
-import pirate.android.sdk.Synchronizer.Status.SYNCED
-import pirate.android.sdk.Synchronizer.Status.VALIDATING
+import pirate.android.sdk.Synchronizer.PirateStatus.DISCONNECTED
+import pirate.android.sdk.Synchronizer.PirateStatus.DOWNLOADING
+import pirate.android.sdk.Synchronizer.PirateStatus.ENHANCING
+import pirate.android.sdk.Synchronizer.PirateStatus.SCANNING
+import pirate.android.sdk.Synchronizer.PirateStatus.STOPPED
+import pirate.android.sdk.Synchronizer.PirateStatus.SYNCED
+import pirate.android.sdk.Synchronizer.PirateStatus.VALIDATING
 import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Disconnected
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Downloading
@@ -105,7 +105,7 @@ class PirateSdkSynchronizer internal constructor(
     private val _saplingBalances = MutableStateFlow(PirateWalletBalance())
     private val _transparentBalances = MutableStateFlow(PirateWalletBalance())
 
-    private val _status = ConflatedBroadcastChannel<Synchronizer.Status>(DISCONNECTED)
+    private val _status = ConflatedBroadcastChannel<Synchronizer.PirateStatus>(DISCONNECTED)
 
     /**
      * The lifespan of this Synchronizer. This scope is initialized once the Synchronizer starts
@@ -156,7 +156,7 @@ class PirateSdkSynchronizer internal constructor(
     override val receivedTransactions get() = storage.receivedTransactions
 
     //
-    // Status
+    // PirateStatus
     //
 
     override val network: PirateNetwork get() = processor.network

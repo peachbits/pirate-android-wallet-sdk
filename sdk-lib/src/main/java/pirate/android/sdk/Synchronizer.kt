@@ -65,7 +65,7 @@ interface Synchronizer {
     // Flows
     //
 
-    /* Status */
+    /* PirateStatus */
 
     /**
      * The network to which this synchronizer is connected and from which it is processing blocks.
@@ -73,10 +73,10 @@ interface Synchronizer {
     val network: PirateNetwork
 
     /**
-     * A flow of values representing the [Status] of this Synchronizer. As the status changes, a new
+     * A flow of values representing the [PirateStatus] of this Synchronizer. As the status changes, a new
      * value will be emitted by this flow.
      */
-    val status: Flow<Status>
+    val status: Flow<PirateStatus>
 
     /**
      * A flow of progress values, typically corresponding to this Synchronizer downloading blocks.
@@ -376,7 +376,7 @@ interface Synchronizer {
     /**
      * Represents the status of this Synchronizer, which is useful for communicating to the user.
      */
-    enum class Status {
+    enum class PirateStatus {
         /**
          * Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
          */

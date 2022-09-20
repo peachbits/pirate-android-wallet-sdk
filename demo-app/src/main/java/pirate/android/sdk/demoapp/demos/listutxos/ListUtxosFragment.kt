@@ -46,9 +46,9 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
     private lateinit var synchronizer: Synchronizer
     private lateinit var adapter: UtxoAdapter<PirateConfirmedTransaction>
     private val address: String = "t1RwbKka1CnktvAJ1cSqdn7c6PXWG4tZqgd"
-    private var status: Synchronizer.Status? = null
+    private var status: Synchronizer.PirateStatus? = null
 
-    private val isSynced get() = status == Synchronizer.Status.SYNCED
+    private val isSynced get() = status == Synchronizer.PirateStatus.SYNCED
 
     override fun inflateBinding(layoutInflater: LayoutInflater): FragmentListUtxosBinding =
         FragmentListUtxosBinding.inflate(layoutInflater)
@@ -222,7 +222,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
         if (i < 100) binding.textStatus.text = "Downloading blocks...$i%"
     }
 
-    private fun onStatus(status: Synchronizer.Status) {
+    private fun onStatus(status: Synchronizer.PirateStatus) {
         this.status = status
         binding.textStatus.text = "Status: $status"
         if (isSynced) onSyncComplete()

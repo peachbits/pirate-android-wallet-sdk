@@ -221,7 +221,7 @@ class TransparentRestoreSample {
 //                    synchronizer.stop()
 //                }
 //            }
-//            synchronizer.status.first { it == Synchronizer.Status.STOPPED }
+//            synchronizer.status.first { it == Synchronizer.PirateStatus.STOPPED }
 //            twig("Stopped!")
 //            return this
 //        }

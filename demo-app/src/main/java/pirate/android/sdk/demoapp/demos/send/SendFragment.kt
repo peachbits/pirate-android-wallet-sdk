@@ -121,10 +121,10 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
     // Change listeners
     //
 
-    private fun onStatus(status: Synchronizer.Status) {
+    private fun onStatus(status: Synchronizer.PirateStatus) {
         binding.textStatus.text = "Status: $status"
-        isSyncing = status != Synchronizer.Status.SYNCED
-        if (status == Synchronizer.Status.SCANNING) {
+        isSyncing = status != Synchronizer.PirateStatus.SYNCED
+        if (status == Synchronizer.PirateStatus.SCANNING) {
             binding.textBalance.text = "Calculating balance..."
         } else {
             if (!isSyncing) onBalance(balance)

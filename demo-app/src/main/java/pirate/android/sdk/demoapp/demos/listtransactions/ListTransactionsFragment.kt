@@ -33,8 +33,8 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
     private lateinit var synchronizer: Synchronizer
     private lateinit var adapter: TransactionAdapter<PirateConfirmedTransaction>
     private lateinit var address: String
-    private var status: Synchronizer.Status? = null
-    private val isSynced get() = status == Synchronizer.Status.SYNCED
+    private var status: Synchronizer.PirateStatus? = null
+    private val isSynced get() = status == Synchronizer.PirateStatus.SYNCED
 
     /**
      * Initialize the required values that would normally live outside the demo but are repeated
@@ -90,7 +90,7 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
         if (i < 100) binding.textInfo.text = "Downloading blocks...$i%"
     }
 
-    private fun onStatus(status: Synchronizer.Status) {
+    private fun onStatus(status: Synchronizer.PirateStatus) {
         this.status = status
         binding.textStatus.text = "Status: $status"
         if (isSynced) onSyncComplete()
