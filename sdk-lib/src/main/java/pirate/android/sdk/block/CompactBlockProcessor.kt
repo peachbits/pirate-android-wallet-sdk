@@ -3,14 +3,14 @@ package pirate.android.sdk.block
 import androidx.annotation.VisibleForTesting
 import pirate.android.sdk.BuildConfig
 import pirate.android.sdk.annotation.PirateOpenForTesting
-import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Disconnected
-import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Downloading
-import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Enhancing
-import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Initialized
-import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Scanned
-import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Scanning
-import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Stopped
-import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Validating
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Disconnected
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Downloading
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Enhancing
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Initialized
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanned
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanning
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Stopped
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Validating
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateEnhanceTransactionError.PirateEnhanceTxDecryptError
@@ -119,7 +119,7 @@ class PirateCompactBlockProcessor(
     private val consecutiveChainErrors = AtomicInteger(0)
     private val lowerBoundHeight: Int = max(rustBackend.network.saplingActivationHeight, minimumHeight - MAX_REORG_SIZE)
 
-    private val _state: ConflatedBroadcastChannel<State> = ConflatedBroadcastChannel(Initialized)
+    private val _state: ConflatedBroadcastChannel<PirateState> = ConflatedBroadcastChannel(Initialized)
     private val _progress = ConflatedBroadcastChannel(0)
     private val _processorInfo = ConflatedBroadcastChannel(ProcessorInfo())
     private val _networkHeight = MutableStateFlow(-1)
@@ -824,72 +824,72 @@ class PirateCompactBlockProcessor(
     /**
      * Transmits the given state for this processor.
      */
-    private suspend fun setState(newState: State) {
+    private suspend fun setState(newState: PirateState) {
         _state.send(newState)
     }
 
     /**
      * Sealed class representing the various states of this processor.
      */
-    sealed class State {
+    sealed class PirateState {
         /**
-         * Marker interface for [State] instances that represent when the wallet is connected.
+         * Marker interface for [PirateState] instances that represent when the wallet is connected.
          */
         interface Connected
 
         /**
-         * Marker interface for [State] instances that represent when the wallet is syncing.
+         * Marker interface for [PirateState] instances that represent when the wallet is syncing.
          */
         interface Syncing
 
         /**
-         * [State] for when the wallet is actively downloading compact blocks because the latest
+         * [PirateState] for when the wallet is actively downloading compact blocks because the latest
          * block height available from the server is greater than what we have locally. We move out
          * of this state once our local height matches the server.
          */
-        object Downloading : Connected, Syncing, State()
+        object Downloading : Connected, Syncing, PirateState()
 
         /**
          * [State] for when the blocks that have been downloaded are actively being validated to
          * ensure that there are no gaps and that every block is chain-sequential to the previous
          * block, which determines whether a reorg has happened on our watch.
          */
-        object Validating : Connected, Syncing, State()
+        object Validating : Connected, Syncing, PirateState()
 
         /**
-         * [State] for when the blocks that have been downloaded are actively being decrypted.
+         * [PirateState] for when the blocks that have been downloaded are actively being decrypted.
          */
-        object Scanning : Connected, Syncing, State()
+        object Scanning : Connected, Syncing, PirateState()
 
         /**
-         * [State] for when we are done decrypting blocks, for now.
+         * [PirateState] for when we are done decrypting blocks, for now.
          */
-        class Scanned(val scannedRange: IntRange) : Connected, Syncing, State()
+        class Scanned(val scannedRange: IntRange) : Connected, Syncing, PirateState()
 
         /**
-         * [State] for when transaction details are being retrieved. This typically means the wallet
+         * [PirateState] for when transaction details are being retrieved. This typically means the wallet
          * has downloaded and scanned blocks and is now processing any transactions that were
          * discovered. Once a transaction is discovered, followup network requests are needed in
          * order to retrieve memos or outbound transaction information, like the recipient address.
          * The existing information we have about transactions is enhanced by the new information.
          */
-        object Enhancing : Connected, Syncing, State()
+        object Enhancing : Connected, Syncing, PirateState()
 
         /**
-         * [State] for when we have no connection to lightwalletd.
+         * [PirateState] for when we have no connection to lightwalletd.
          */
-        object Disconnected : State()
+        object Disconnected : PirateState()
 
         /**
-         * [State] for when [stop] has been called. For simplicity, processors should not be
+         * [PirateState] for when [stop] has been called. For simplicity, processors should not be
          * restarted but they are not prevented from this behavior.
          */
-        object Stopped : State()
+        object Stopped : PirateState()
 
         /**
-         * [State] the initial state of the processor, once it is constructed.
+         * [PirateState] the initial state of the processor, once it is constructed.
          */
-        object Initialized : State()
+        object Initialized : PirateState()
     }
 
     /**
