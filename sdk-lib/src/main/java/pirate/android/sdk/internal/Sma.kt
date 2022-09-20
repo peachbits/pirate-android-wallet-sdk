@@ -3,7 +3,7 @@ package pirate.android.sdk.internal
 /**
  * Simple implementation of Simple moving average.
  */
-class Sma(val window: Int = 3) {
+class PirateSma(val window: Int = 3) {
     private val values = Array(window) { 0.0 }
     var average = 0.0
         private set
