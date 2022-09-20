@@ -8,7 +8,7 @@ import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.tool.PirateWalletBirthdayTool
-import pirate.android.sdk.type.WalletBirthday
+import pirate.android.sdk.type.PirateWalletBirthday
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -46,7 +46,7 @@ class BalancePrinterUtil {
 
 //    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
 
-    private lateinit var birthday: WalletBirthday
+    private lateinit var birthday: PirateWalletBirthday
     private var synchronizer: Synchronizer? = null
 
     @Before

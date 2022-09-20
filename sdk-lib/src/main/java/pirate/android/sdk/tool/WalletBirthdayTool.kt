@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import pirate.android.sdk.exception.PirateBirthdayException
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.type.WalletBirthday
+import pirate.android.sdk.type.PirateWalletBirthday
 import pirate.android.sdk.type.PirateNetwork
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
@@ -33,7 +33,7 @@ object PirateWalletBirthdayTool {
         context: Context,
         network: PirateNetwork,
         birthdayHeight: Int? = null
-    ): WalletBirthday {
+    ): PirateWalletBirthday {
         // TODO: potentially pull from shared preferences first
         return loadBirthdayFromAssets(context, network, birthdayHeight)
     }
@@ -78,14 +78,14 @@ object PirateWalletBirthdayTool {
      * @param context the context from which to load assets.
      * @param birthdayHeight the height file to look for among the file names.
      *
-     * @return a WalletBirthday that reflects the contents of the file or an exception when
+     * @return a PirateWalletBirthday that reflects the contents of the file or an exception when
      * parsing fails.
      */
     private suspend fun loadBirthdayFromAssets(
         context: Context,
         network: PirateNetwork,
         birthdayHeight: Int? = null
-    ): WalletBirthday {
+    ): PirateWalletBirthday {
         twig("loading birthday from assets: $birthdayHeight")
         val directory = birthdayDirectory(network)
         val treeFiles = getFilteredFileNames(context, directory, birthdayHeight)
@@ -129,7 +129,7 @@ object PirateWalletBirthdayTool {
         context: Context,
         directory: String,
         treeFiles: List<String>
-    ): WalletBirthday {
+    ): PirateWalletBirthday {
         var lastException: Exception? = null
         treeFiles.forEach { treefile ->
             try {
@@ -137,7 +137,7 @@ object PirateWalletBirthdayTool {
                     context.assets.open("$directory/$treefile").use { inputStream ->
                         InputStreamReader(inputStream).use { inputStreamReader ->
                             JsonReader(inputStreamReader).use { jsonReader ->
-                                Gson().fromJson(jsonReader, WalletBirthday::class.java)
+                                Gson().fromJson(jsonReader, PirateWalletBirthday::class.java)
                             }
                         }
                     }

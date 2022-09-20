@@ -11,7 +11,7 @@ import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.tool.PirateWalletBirthdayTool
 import pirate.android.sdk.type.UnifiedViewingKey
-import pirate.android.sdk.type.WalletBirthday
+import pirate.android.sdk.type.PirateWalletBirthday
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -29,7 +29,7 @@ class Initializer private constructor(
     val port: Int,
     val viewingKeys: List<UnifiedViewingKey>,
     val overwriteVks: Boolean,
-    val birthday: WalletBirthday
+    val birthday: PirateWalletBirthday
 ) {
 
     suspend fun erase() = erase(context, network, alias)
@@ -375,7 +375,7 @@ class Initializer private constructor(
             context: Context,
             network: PirateNetwork,
             alias: String,
-            birthday: WalletBirthday
+            birthday: PirateWalletBirthday
         ): PirateRustBackend {
             return PirateRustBackend.init(
                 cacheDbPath(context, network, alias),

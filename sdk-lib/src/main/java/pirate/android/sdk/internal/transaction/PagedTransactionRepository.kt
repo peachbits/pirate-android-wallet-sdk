@@ -15,7 +15,7 @@ import pirate.android.sdk.internal.ext.tryWarn
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.type.UnifiedViewingKey
-import pirate.android.sdk.type.WalletBirthday
+import pirate.android.sdk.type.PirateWalletBirthday
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -113,7 +113,7 @@ class PiratePagedTransactionRepository private constructor(
             appContext: Context,
             pageSize: Int = 10,
             rustBackend: PirateRustBackend,
-            birthday: WalletBirthday,
+            birthday: PirateWalletBirthday,
             viewingKeys: List<UnifiedViewingKey>,
             overwriteVks: Boolean = false,
         ): PiratePagedTransactionRepository {
@@ -155,7 +155,7 @@ class PiratePagedTransactionRepository private constructor(
          */
         private suspend fun initMissingDatabases(
             rustBackend: PirateRustBackend,
-            birthday: WalletBirthday,
+            birthday: PirateWalletBirthday,
             viewingKeys: List<UnifiedViewingKey>,
         ) {
             maybeCreateDataDb(rustBackend)
@@ -178,7 +178,7 @@ class PiratePagedTransactionRepository private constructor(
          */
         private suspend fun maybeInitBlocksTable(
             rustBackend: PirateRustBackend,
-            birthday: WalletBirthday
+            birthday: PirateWalletBirthday
         ) {
             // TODO: consider converting these to typed exceptions in the welding layer
             tryWarn(

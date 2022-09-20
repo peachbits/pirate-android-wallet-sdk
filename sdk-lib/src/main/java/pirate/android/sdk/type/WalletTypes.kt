@@ -42,7 +42,7 @@ data class PirateWalletBalance(
  * @param time the block time at the height. Represented as seconds since the Unix epoch.
  * @param tree the sapling tree corresponding to the height.
  */
-data class WalletBirthday(
+data class PirateWalletBirthday(
     val height: Int = -1,
     val hash: String = "",
     val time: Long = -1,
