@@ -40,7 +40,7 @@ import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.transaction.OutboundTransactionManager
 import pirate.android.sdk.internal.transaction.PiratePagedTransactionRepository
-import pirate.android.sdk.internal.transaction.PersistentTransactionManager
+import pirate.android.sdk.internal.transaction.PiratePersistentTransactionManager
 import pirate.android.sdk.internal.transaction.TransactionEncoder
 import pirate.android.sdk.internal.transaction.TransactionRepository
 import pirate.android.sdk.internal.transaction.WalletTransactionEncoder
@@ -728,7 +728,7 @@ class SdkSynchronizer internal constructor(
     override suspend fun validateConsensusBranch(): ConsensusMatchType {
         val serverBranchId = tryNull { processor.downloader.getServerInfo().consensusBranchId }
         val sdkBranchId = tryNull {
-            (txManager as PersistentTransactionManager).encoder.getConsensusBranchId()
+            (txManager as PiratePersistentTransactionManager).encoder.getConsensusBranchId()
         }
         return ConsensusMatchType(
             sdkBranchId?.let { PirateConsensusBranchId.fromId(it) },
@@ -811,7 +811,7 @@ object DefaultSynchronizerFactory {
         encoder: TransactionEncoder,
         service: LightWalletService
     ): OutboundTransactionManager =
-        PersistentTransactionManager(initializer.context, encoder, service)
+        PiratePersistentTransactionManager(initializer.context, encoder, service)
 
     fun defaultProcessor(
         initializer: Initializer,

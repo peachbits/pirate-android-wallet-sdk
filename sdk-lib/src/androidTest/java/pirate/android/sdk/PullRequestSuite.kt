@@ -3,7 +3,7 @@ package pirate.android.sdk
 import pirate.android.sdk.integration.SanityTest
 import pirate.android.sdk.integration.SmokeTest
 import pirate.android.sdk.integration.service.ChangeServiceTest
-import pirate.android.sdk.internal.transaction.PersistentTransactionManagerTest
+import pirate.android.sdk.internal.transaction.PiratePersistentTransactionManagerTest
 import pirate.android.sdk.jni.BranchIdTest
 import pirate.android.sdk.jni.TransparentTest
 import org.junit.runner.RunWith
@@ -21,7 +21,7 @@ import org.junit.runners.Suite
     // Fast tests that only run locally and don't require darksidewalletd or lightwalletd
     BranchIdTest::class,
     TransparentTest::class,
-    PersistentTransactionManagerTest::class,
+    PiratePersistentTransactionManagerTest::class,
 
     // potentially exclude because these are long-running (and hit external srvcs)
     SanityTest::class,

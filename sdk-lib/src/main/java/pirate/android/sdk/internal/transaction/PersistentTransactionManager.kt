@@ -33,7 +33,7 @@ import kotlin.math.max
  * id.
  * @property service the lightwallet service used to submit transactions.
  */
-class PersistentTransactionManager(
+class PiratePersistentTransactionManager(
     db: PiratePendingTransactionDb,
     internal val encoder: TransactionEncoder,
     private val service: LightWalletService

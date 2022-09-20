@@ -35,7 +35,7 @@ import org.mockito.MockitoAnnotations
 @MaintainedTest(TestPurpose.REGRESSION)
 @RunWith(AndroidJUnit4::class)
 @SmallTest
-class PersistentTransactionManagerTest : ScopedTest() {
+class PiratePersistentTransactionManagerTest : ScopedTest() {
 
     @Mock lateinit var mockEncoder: TransactionEncoder
     @Mock lateinit var mockService: LightWalletService
@@ -48,7 +48,7 @@ class PersistentTransactionManagerTest : ScopedTest() {
     fun setup() {
         initMocks()
         deleteDb()
-        manager = PersistentTransactionManager(context, mockEncoder, mockService, pendingDbName)
+        manager = PiratePersistentTransactionManager(context, mockEncoder, mockService, pendingDbName)
     }
 
     private fun deleteDb() {
