@@ -94,7 +94,7 @@ import kotlin.coroutines.EmptyCoroutineContext
  */
 @ExperimentalCoroutinesApi
 @FlowPreview
-class SdkSynchronizer internal constructor(
+class PirateSdkSynchronizer internal constructor(
     private val storage: TransactionRepository,
     private val txManager: OutboundTransactionManager,
     val processor: PirateCompactBlockProcessor
@@ -392,7 +392,7 @@ class SdkSynchronizer internal constructor(
         twig("Preparing to start...")
         prepare()
 
-        twig("Synchronizer (${this@SdkSynchronizer}) Ready. Starting processor!")
+        twig("Synchronizer (${this@PirateSdkSynchronizer}) Ready. Starting processor!")
         var lastScanTime = 0L
         processor.onProcessorErrorListener = ::onProcessorError
         processor.onSetupErrorListener = ::onSetupError
@@ -771,7 +771,7 @@ object DefaultSynchronizerFactory {
         // call the actual constructor now that all dependencies have been injected
         // alternatively, this entire object graph can be supplied by Dagger
         // This builder just makes that easier.
-        return SdkSynchronizer(
+        return PirateSdkSynchronizer(
             repository,
             txManager,
             processor

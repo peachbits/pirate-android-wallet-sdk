@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
 import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.SdkSynchronizer
+import pirate.android.sdk.PirateSdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
@@ -119,15 +119,15 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
 //                delta = now - parseStart
 //                updateStatus("parsed txs in ${delta}ms.")
             }
-            (synchronizer as SdkSynchronizer).refreshTransactions()
-//            val finalCount = (synchronizer as SdkSynchronizer).getTransactionCount()
+            (synchronizer as PirateSdkSynchronizer).refreshTransactions()
+//            val finalCount = (synchronizer as PirateSdkSynchronizer).getTransactionCount()
 //            "found ${finalCount - initialCount} shielded outputs.
             delta = now - allStart
             updateStatus("Total time ${delta}ms.")
 
             lifecycleScope.launch {
                 withContext(Dispatchers.IO) {
-                    finalCount = (synchronizer as SdkSynchronizer).getTransactionCount()
+                    finalCount = (synchronizer as PirateSdkSynchronizer).getTransactionCount()
                     withContext(Dispatchers.Main) {
                         delay(100)
                         updateStatus("Also found ${finalCount - initialCount} shielded txs")
@@ -169,7 +169,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
             lifecycleScope.launch {
                 withContext(Dispatchers.IO) {
                     synchronizer.prepare()
-                    initialCount = (synchronizer as SdkSynchronizer).getTransactionCount()
+                    initialCount = (synchronizer as PirateSdkSynchronizer).getTransactionCount()
                 }
             }
             synchronizer.clearedTransactions.collectWith(lifecycleScope, ::onTransactionsUpdated)
@@ -240,10 +240,10 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
     override fun onActionButtonClicked() {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                twig("current count: ${(synchronizer as SdkSynchronizer).getTransactionCount()}")
+                twig("current count: ${(synchronizer as PirateSdkSynchronizer).getTransactionCount()}")
                 twig("refreshing transactions")
-                (synchronizer as SdkSynchronizer).refreshTransactions()
-                twig("current count: ${(synchronizer as SdkSynchronizer).getTransactionCount()}")
+                (synchronizer as PirateSdkSynchronizer).refreshTransactions()
+                twig("current count: ${(synchronizer as PirateSdkSynchronizer).getTransactionCount()}")
             }
         }
     }

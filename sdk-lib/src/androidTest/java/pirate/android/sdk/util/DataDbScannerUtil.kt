@@ -2,7 +2,7 @@ package pirate.android.sdk.util
 
 import androidx.test.platform.app.InstrumentationRegistry
 import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.SdkSynchronizer
+import pirate.android.sdk.PirateSdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
@@ -83,7 +83,7 @@ class DataDbScannerUtil {
 
         println("sync!")
         synchronizer.start()
-        val scope = (synchronizer as SdkSynchronizer).coroutineScope
+        val scope = (synchronizer as PirateSdkSynchronizer).coroutineScope
 
         scope.launch {
             synchronizer.status.collect { status ->

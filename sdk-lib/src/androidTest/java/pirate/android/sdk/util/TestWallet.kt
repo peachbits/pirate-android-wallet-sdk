@@ -4,7 +4,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
 import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.SdkSynchronizer
+import pirate.android.sdk.PirateSdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.db.entity.isPending
 import pirate.android.sdk.internal.Twig
@@ -67,7 +67,7 @@ class TestWallet(
             runBlocking { config.importWallet(seed, startHeight, network, host, alias = alias) }
         }
     }
-    val synchronizer: SdkSynchronizer = Synchronizer.newBlocking(initializer) as SdkSynchronizer
+    val synchronizer: PirateSdkSynchronizer = Synchronizer.newBlocking(initializer) as PirateSdkSynchronizer
     val service = (synchronizer.processor.downloader.lightWalletService as PirateLightWalletGrpcService)
 
     val available get() = synchronizer.saplingBalances.value.availableZatoshi

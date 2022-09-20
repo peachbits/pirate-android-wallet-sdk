@@ -304,7 +304,7 @@ class PirateInitializer private constructor(
         companion object
     }
 
-    companion object : SdkSynchronizer.Erasable {
+    companion object : PirateSdkSynchronizer.Erasable {
 
         suspend fun new(appContext: Context, config: PirateConfig) = new(appContext, null, config)
 

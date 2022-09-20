@@ -16,7 +16,7 @@ import kotlinx.coroutines.runBlocking
 
 /**
  * Primary interface for interacting with the SDK. Defines the contract that specific
- * implementations like [MockSynchronizer] and [SdkSynchronizer] fulfill. Given the language-level
+ * implementations like [MockSynchronizer] and [PirateSdkSynchronizer] fulfill. Given the language-level
  * support for coroutines, we favor their use in the SDK and incorporate that choice into this
  * contract.
  */
@@ -452,7 +452,7 @@ interface Synchronizer {
             val processor =
                 DefaultSynchronizerFactory.defaultProcessor(initializer, downloader, repository)
 
-            return SdkSynchronizer(
+            return PirateSdkSynchronizer(
                 repository,
                 txManager,
                 processor
