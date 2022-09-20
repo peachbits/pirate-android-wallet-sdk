@@ -110,7 +110,7 @@ class SampleCodeTest {
 //    @Test fun createTransaction() = runBlocking {
 //        val rustBackend = RustBackend.init(context)
 //        val repository = PiratePagedTransactionRepository(context)
-//        val encoder = WalletTransactionEncoder(rustBackend, repository)
+//        val encoder = PirateWalletTransactionEncoder(rustBackend, repository)
 //        val spendingKey = DerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]
 //
 //        val amount = 0.123.convertArrrToZatoshi()

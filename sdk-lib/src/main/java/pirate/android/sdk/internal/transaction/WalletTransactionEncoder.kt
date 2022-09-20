@@ -18,7 +18,7 @@ import pirate.android.sdk.jni.RustBackendWelding
  * @property repository the repository that stores information about the transactions being created
  * such as the raw bytes and raw txId.
  */
-class WalletTransactionEncoder(
+class PirateWalletTransactionEncoder(
     private val rustBackend: RustBackendWelding,
     private val repository: TransactionRepository
 ) : TransactionEncoder {

@@ -43,7 +43,7 @@ import pirate.android.sdk.internal.transaction.PiratePagedTransactionRepository
 import pirate.android.sdk.internal.transaction.PiratePersistentTransactionManager
 import pirate.android.sdk.internal.transaction.TransactionEncoder
 import pirate.android.sdk.internal.transaction.TransactionRepository
-import pirate.android.sdk.internal.transaction.WalletTransactionEncoder
+import pirate.android.sdk.internal.transaction.PirateWalletTransactionEncoder
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.tool.DerivationTool
@@ -799,7 +799,7 @@ object DefaultSynchronizerFactory {
     fun defaultEncoder(
         initializer: Initializer,
         repository: TransactionRepository
-    ): TransactionEncoder = WalletTransactionEncoder(initializer.rustBackend, repository)
+    ): TransactionEncoder = PirateWalletTransactionEncoder(initializer.rustBackend, repository)
 
     fun defaultDownloader(
         service: LightWalletService,
