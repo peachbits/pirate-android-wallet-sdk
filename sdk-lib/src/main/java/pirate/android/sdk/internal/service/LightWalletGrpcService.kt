@@ -33,7 +33,7 @@ class PirateLightWalletGrpcService private constructor(
     private val streamingRequestTimeoutSec: Long = 90L
 ) : LightWalletService {
 
-    lateinit var connectionInfo: ConnectionInfo
+    lateinit var connectionInfo: PirateConnectionInfo
 
     constructor(
         appContext: Context,
@@ -59,7 +59,7 @@ class PirateLightWalletGrpcService private constructor(
         usePlaintext: Boolean =
             appContext.resources.getBoolean(R.bool.lightwalletd_allow_very_insecure_connections)
     ) : this(createDefaultChannel(appContext, host, port, usePlaintext)) {
-        connectionInfo = ConnectionInfo(appContext.applicationContext, host, port, usePlaintext)
+        connectionInfo = PirateConnectionInfo(appContext.applicationContext, host, port, usePlaintext)
     }
 
     /* LightWalletService implementation */
@@ -188,7 +188,7 @@ class PirateLightWalletGrpcService private constructor(
             }
         }
 
-    inner class ConnectionInfo(
+    inner class PirateConnectionInfo(
         val appContext: Context,
         val host: String,
         val port: Int,
