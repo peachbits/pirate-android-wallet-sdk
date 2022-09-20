@@ -2,7 +2,7 @@ package pirate.android.sdk.block
 
 import androidx.annotation.VisibleForTesting
 import pirate.android.sdk.BuildConfig
-import pirate.android.sdk.annotation.OpenForTesting
+import pirate.android.sdk.annotation.PirateOpenForTesting
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Disconnected
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Downloading
 import pirate.android.sdk.block.PirateCompactBlockProcessor.State.Enhancing
@@ -74,7 +74,7 @@ import kotlin.math.roundToInt
  * in when considering initial range to download. In most cases, this should be the birthday height
  * of the current wallet--the height before which we do not need to scan for transactions.
  */
-@OpenForTesting
+@PirateOpenForTesting
 class PirateCompactBlockProcessor(
     val downloader: PirateCompactBlockDownloader,
     private val repository: TransactionRepository,

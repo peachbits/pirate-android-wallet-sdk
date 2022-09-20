@@ -12,4 +12,4 @@ annotation class OpenClass
  */
 @OpenClass
 @Target(AnnotationTarget.CLASS)
-annotation class OpenForTesting
+annotation class PirateOpenForTesting

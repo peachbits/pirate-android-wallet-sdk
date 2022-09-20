@@ -8,4 +8,4 @@ package pirate.android.sdk.annotation
  * Note: the counterpart to this annotation in the debug buildType applies the OpenClass annotation but here we do not.
  */
 @Target(AnnotationTarget.CLASS)
-annotation class OpenForTesting
+annotation class PirateOpenForTesting

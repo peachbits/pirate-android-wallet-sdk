@@ -2,7 +2,7 @@ package pirate.android.sdk.internal.service
 
 import android.content.Context
 import pirate.android.sdk.R
-import pirate.android.sdk.annotation.OpenForTesting
+import pirate.android.sdk.annotation.PirateOpenForTesting
 import pirate.android.sdk.exception.PirateLightWalletException
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.type.PirateNetwork
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
  * is created for streaming requests, it will use a deadline that is after the given duration from
  * now.
  */
-@OpenForTesting
+@PirateOpenForTesting
 class PirateLightWalletGrpcService private constructor(
     var channel: ManagedChannel,
     private val singleRequestTimeoutSec: Long = 10L,
