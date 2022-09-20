@@ -710,13 +710,13 @@ class PirateCompactBlockProcessor(
         twig("=================== BLOCKS [$errorHeight..${errorHeight + count - 1}]: END ========")
     }
 
-    private suspend fun fetchValidationErrorInfo(errorHeight: Int): ValidationErrorInfo {
+    private suspend fun fetchValidationErrorInfo(errorHeight: Int): PirateValidationErrorInfo {
         val hash = (repository as PiratePagedTransactionRepository).findBlockHash(errorHeight + 1)?.toHexReversed()
         val prevHash = repository.findBlockHash(errorHeight)?.toHexReversed()
 
         val compactBlock = downloader.compactBlockStore.findCompactBlock(errorHeight + 1)
         val expectedPrevHash = compactBlock?.prevHash?.toByteArray()?.toHexReversed()
-        return ValidationErrorInfo(errorHeight, hash, expectedPrevHash, prevHash)
+        return PirateValidationErrorInfo(errorHeight, hash, expectedPrevHash, prevHash)
     }
 
     /**
@@ -963,7 +963,7 @@ class PirateCompactBlockProcessor(
         }
     }
 
-    data class ValidationErrorInfo(
+    data class PirateValidationErrorInfo(
         val errorHeight: Int,
         val hash: String?,
         val expectedPrevHash: String?,
