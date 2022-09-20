@@ -39,7 +39,7 @@ import pirate.android.sdk.internal.ext.tryNull
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.transaction.OutboundTransactionManager
-import pirate.android.sdk.internal.transaction.PagedTransactionRepository
+import pirate.android.sdk.internal.transaction.PiratePagedTransactionRepository
 import pirate.android.sdk.internal.transaction.PersistentTransactionManager
 import pirate.android.sdk.internal.transaction.TransactionEncoder
 import pirate.android.sdk.internal.transaction.TransactionRepository
@@ -335,7 +335,7 @@ class SdkSynchronizer internal constructor(
     // TODO: turn this section into the data access API. For now, just aggregate all the things that we want to do with the underlying data
 
     suspend fun findBlockHash(height: Int): ByteArray? {
-        return (storage as? PagedTransactionRepository)?.findBlockHash(height)
+        return (storage as? PiratePagedTransactionRepository)?.findBlockHash(height)
     }
 
     suspend fun findBlockHashAsHex(height: Int): String? {
@@ -343,7 +343,7 @@ class SdkSynchronizer internal constructor(
     }
 
     suspend fun getTransactionCount(): Int {
-        return (storage as? PagedTransactionRepository)?.getTransactionCount() ?: 0
+        return (storage as? PiratePagedTransactionRepository)?.getTransactionCount() ?: 0
     }
 
     fun refreshTransactions() {
@@ -781,7 +781,7 @@ object DefaultSynchronizerFactory {
     // TODO [#242]: Don't hard code page size.  It is a workaround for Uncaught Exception: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views. and is probably related to FlowPagedList
     private const val DEFAULT_PAGE_SIZE = 1000
     suspend fun defaultTransactionRepository(initializer: Initializer): TransactionRepository =
-        PagedTransactionRepository.new(
+        PiratePagedTransactionRepository.new(
             initializer.context,
             DEFAULT_PAGE_SIZE,
             initializer.rustBackend,

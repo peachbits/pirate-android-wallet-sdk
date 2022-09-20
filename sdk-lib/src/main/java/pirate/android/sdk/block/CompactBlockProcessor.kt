@@ -33,7 +33,7 @@ import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.ext.retryUpTo
 import pirate.android.sdk.internal.ext.retryWithBackoff
 import pirate.android.sdk.internal.ext.toHexReversed
-import pirate.android.sdk.internal.transaction.PagedTransactionRepository
+import pirate.android.sdk.internal.transaction.PiratePagedTransactionRepository
 import pirate.android.sdk.internal.transaction.TransactionRepository
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
@@ -704,14 +704,14 @@ class PirateCompactBlockProcessor(
             val height = errorHeight + i
             val block = downloader.compactBlockStore.findCompactBlock(height)
             // sometimes the initial block was inserted via checkpoint and will not appear in the cache. We can get the hash another way but prevHash is correctly null.
-            val hash = block?.hash?.toByteArray() ?: (repository as PagedTransactionRepository).findBlockHash(height)
+            val hash = block?.hash?.toByteArray() ?: (repository as PiratePagedTransactionRepository).findBlockHash(height)
             twig("block: $height\thash=${hash?.toHexReversed()} \tprevHash=${block?.prevHash?.toByteArray()?.toHexReversed()}")
         }
         twig("=================== BLOCKS [$errorHeight..${errorHeight + count - 1}]: END ========")
     }
 
     private suspend fun fetchValidationErrorInfo(errorHeight: Int): ValidationErrorInfo {
-        val hash = (repository as PagedTransactionRepository).findBlockHash(errorHeight + 1)?.toHexReversed()
+        val hash = (repository as PiratePagedTransactionRepository).findBlockHash(errorHeight + 1)?.toHexReversed()
         val prevHash = repository.findBlockHash(errorHeight)?.toHexReversed()
 
         val compactBlock = downloader.compactBlockStore.findCompactBlock(errorHeight + 1)

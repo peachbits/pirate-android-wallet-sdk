@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
  *
  * @param pageSize transactions per page. This influences pre-fetch and memory configuration.
  */
-class PagedTransactionRepository private constructor(
+class PiratePagedTransactionRepository private constructor(
     private val db: PirateDerivedDataDb,
     private val pageSize: Int
 ) : TransactionRepository {
@@ -116,13 +116,13 @@ class PagedTransactionRepository private constructor(
             birthday: WalletBirthday,
             viewingKeys: List<UnifiedViewingKey>,
             overwriteVks: Boolean = false,
-        ): PagedTransactionRepository {
+        ): PiratePagedTransactionRepository {
             initMissingDatabases(rustBackend, birthday, viewingKeys)
 
             val db = buildDatabase(appContext.applicationContext, rustBackend.pathDataDb)
             applyKeyMigrations(rustBackend, overwriteVks, viewingKeys)
 
-            return PagedTransactionRepository(db, pageSize)
+            return PiratePagedTransactionRepository(db, pageSize)
         }
 
         /**

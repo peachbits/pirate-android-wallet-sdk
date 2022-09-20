@@ -25,7 +25,7 @@ import kotlinx.coroutines.runBlocking
  * List all transactions related to the given seed, since the given birthday. This begins by
  * downloading any missing blocks and then validating and scanning their contents. Once scan is
  * complete, the transactions are available in the database and can be accessed by any SQL tool.
- * By default, the SDK uses a PagedTransactionRepository to provide transaction contents from the
+ * By default, the SDK uses a PiratePagedTransactionRepository to provide transaction contents from the
  * database in a paged format that works natively with RecyclerViews.
  */
 class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBinding>() {

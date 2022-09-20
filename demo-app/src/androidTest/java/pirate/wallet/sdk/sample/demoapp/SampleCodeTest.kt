@@ -109,7 +109,7 @@ class SampleCodeTest {
 //    // Create a signed transaction (with memo)
 //    @Test fun createTransaction() = runBlocking {
 //        val rustBackend = RustBackend.init(context)
-//        val repository = PagedTransactionRepository(context)
+//        val repository = PiratePagedTransactionRepository(context)
 //        val encoder = WalletTransactionEncoder(rustBackend, repository)
 //        val spendingKey = DerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]
 //
