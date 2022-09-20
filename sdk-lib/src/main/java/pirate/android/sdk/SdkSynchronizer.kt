@@ -36,7 +36,7 @@ import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.block.CompactBlockStore
 import pirate.android.sdk.internal.ext.toHexReversed
 import pirate.android.sdk.internal.ext.tryNull
-import pirate.android.sdk.internal.service.LightWalletGrpcService
+import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.transaction.OutboundTransactionManager
 import pirate.android.sdk.internal.transaction.PagedTransactionRepository
@@ -134,7 +134,7 @@ class SdkSynchronizer internal constructor(
      * the underlying channel to connect to the same service, and use other APIs
      * (such as darksidewalletd) because channels are heavyweight.
      */
-    val channel: ManagedChannel get() = (processor.downloader.lightWalletService as LightWalletGrpcService).channel
+    val channel: ManagedChannel get() = (processor.downloader.lightWalletService as PirateLightWalletGrpcService).channel
 
     override var isStarted = false
 
@@ -310,9 +310,9 @@ class SdkSynchronizer internal constructor(
      */
     override suspend fun changeServer(host: String, port: Int, errorHandler: (Throwable) -> Unit) {
         val info =
-            (processor.downloader.lightWalletService as LightWalletGrpcService).connectionInfo
+            (processor.downloader.lightWalletService as PirateLightWalletGrpcService).connectionInfo
         processor.downloader.changeService(
-            LightWalletGrpcService(info.appContext, host, port),
+            PirateLightWalletGrpcService(info.appContext, host, port),
             errorHandler
         )
     }
@@ -794,7 +794,7 @@ object DefaultSynchronizerFactory {
         PirateCompactBlockDbStore.new(initializer.context, initializer.rustBackend.pathCacheDb)
 
     fun defaultService(initializer: Initializer): LightWalletService =
-        LightWalletGrpcService(initializer.context, initializer.host, initializer.port)
+        PirateLightWalletGrpcService(initializer.context, initializer.host, initializer.port)
 
     fun defaultEncoder(
         initializer: Initializer,

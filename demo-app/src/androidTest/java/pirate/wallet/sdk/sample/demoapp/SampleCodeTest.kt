@@ -8,7 +8,7 @@ import pirate.android.sdk.ext.convertArrrToZatoshi
 import pirate.android.sdk.ext.toHex
 import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
-import pirate.android.sdk.internal.service.LightWalletGrpcService
+import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.tool.DerivationTool
 import pirate.android.sdk.type.PirateNetwork
@@ -78,7 +78,7 @@ class SampleCodeTest {
     // ///////////////////////////////////////////////////
     // Query latest block height
     @Test fun getLatestBlockHeightTest() {
-        val lightwalletService = LightWalletGrpcService(context, lightwalletdHost)
+        val lightwalletService = PirateLightWalletGrpcService(context, lightwalletdHost)
         log("Latest Block: ${lightwalletService.getLatestBlockHeight()}")
     }
 
@@ -86,7 +86,7 @@ class SampleCodeTest {
     // Download compact block range
     @Test fun getBlockRange() {
         val blockRange = 500_000..500_009
-        val lightwalletService = LightWalletGrpcService(context, lightwalletdHost)
+        val lightwalletService = PirateLightWalletGrpcService(context, lightwalletdHost)
         val blocks = lightwalletService.getBlockRange(blockRange)
         assertEquals(blockRange.count(), blocks.size)
 

@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit
  * now.
  */
 @OpenForTesting
-class LightWalletGrpcService private constructor(
+class PirateLightWalletGrpcService private constructor(
     var channel: ManagedChannel,
     private val singleRequestTimeoutSec: Long = 10L,
     private val streamingRequestTimeoutSec: Long = 90L

@@ -8,7 +8,7 @@ import pirate.android.sdk.SdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.db.entity.isPending
 import pirate.android.sdk.internal.Twig
-import pirate.android.sdk.internal.service.LightWalletGrpcService
+import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.tool.DerivationTool
 import pirate.android.sdk.type.PirateWalletBalance
@@ -68,7 +68,7 @@ class TestWallet(
         }
     }
     val synchronizer: SdkSynchronizer = Synchronizer.newBlocking(initializer) as SdkSynchronizer
-    val service = (synchronizer.processor.downloader.lightWalletService as LightWalletGrpcService)
+    val service = (synchronizer.processor.downloader.lightWalletService as PirateLightWalletGrpcService)
 
     val available get() = synchronizer.saplingBalances.value.availableZatoshi
     val shieldedAddress =

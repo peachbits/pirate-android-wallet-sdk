@@ -38,7 +38,7 @@ class BalancePrinterUtil {
 //    private val caceDbPath = Initializer.cacheDbPath(context, alias)
 //
 //    private val downloader = PirateCompactBlockDownloader(
-//        LightWalletGrpcService(context, host, port),
+//        PirateLightWalletGrpcService(context, host, port),
 //        PirateCompactBlockDbStore(context, caceDbPath)
 //    )
 

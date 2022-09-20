@@ -10,7 +10,7 @@ import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.onFirst
 import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
-import pirate.android.sdk.internal.service.LightWalletGrpcService
+import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.test.ScopedTest
 import pirate.android.sdk.tool.DerivationTool
@@ -36,7 +36,7 @@ class TestnetIntegrationTest : ScopedTest() {
     @Test
     @Ignore("This test is broken")
     fun testLatestBlockTest() {
-        val service = LightWalletGrpcService(
+        val service = PirateLightWalletGrpcService(
             context,
             host,
         )

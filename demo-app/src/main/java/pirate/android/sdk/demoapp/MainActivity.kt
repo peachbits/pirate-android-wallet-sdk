@@ -18,7 +18,7 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.viewbinding.ViewBinding
 import pirate.android.sdk.demoapp.util.fromResources
-import pirate.android.sdk.internal.service.LightWalletGrpcService
+import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.type.PirateNetwork
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -108,7 +108,7 @@ class MainActivity :
         if (lightwalletService != null) {
             lightwalletService?.shutdown()
         }
-        lightwalletService = LightWalletGrpcService(applicationContext, PirateNetwork.fromResources(applicationContext))
+        lightwalletService = PirateLightWalletGrpcService(applicationContext, PirateNetwork.fromResources(applicationContext))
     }
 
     private fun onFabClicked(view: View) {

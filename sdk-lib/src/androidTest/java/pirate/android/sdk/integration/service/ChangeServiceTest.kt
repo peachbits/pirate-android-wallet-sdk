@@ -8,7 +8,7 @@ import pirate.android.sdk.exception.PirateLightWalletException.PirateChangeServe
 import pirate.android.sdk.exception.PirateLightWalletException.PirateChangeServerException.PirateStatusException
 import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.block.CompactBlockStore
-import pirate.android.sdk.internal.service.LightWalletGrpcService
+import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.test.ScopedTest
@@ -40,7 +40,7 @@ class ChangeServiceTest : ScopedTest() {
     var mockCloseable: AutoCloseable? = null
 
     @Spy
-    val service = LightWalletGrpcService(context, network)
+    val service = PirateLightWalletGrpcService(context, network)
 
     lateinit var downloader: PirateCompactBlockDownloader
     lateinit var otherService: LightWalletService
@@ -49,7 +49,7 @@ class ChangeServiceTest : ScopedTest() {
     fun setup() {
         initMocks()
         downloader = PirateCompactBlockDownloader(service, mockBlockStore)
-        otherService = LightWalletGrpcService(context, "lightwalletd.electriccoin.co")
+        otherService = PirateLightWalletGrpcService(context, "lightwalletd.electriccoin.co")
     }
 
     @After
@@ -105,7 +105,7 @@ class ChangeServiceTest : ScopedTest() {
     @Test
     fun testSwitchToInvalidServer() = runBlocking {
         var caughtException: Throwable? = null
-        downloader.changeService(LightWalletGrpcService(context, "invalid.lightwalletd")) {
+        downloader.changeService(PirateLightWalletGrpcService(context, "invalid.lightwalletd")) {
             caughtException = it
         }
         assertNotNull("Using an invalid host should generate an exception.", caughtException)
@@ -118,7 +118,7 @@ class ChangeServiceTest : ScopedTest() {
     @Test
     fun testSwitchToTestnetFails() = runBlocking {
         var caughtException: Throwable? = null
-        downloader.changeService(LightWalletGrpcService(context, PirateNetwork.Testnet)) {
+        downloader.changeService(PirateLightWalletGrpcService(context, PirateNetwork.Testnet)) {
             caughtException = it
         }
         assertNotNull("Using an invalid host should generate an exception.", caughtException)
