@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.MathContext
 
-internal class ConversionsTest {
+internal class PirateConversionsTest {
 
     @Test
     fun `default right padding is 6`() {
