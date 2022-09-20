@@ -4,7 +4,7 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.ext.PirateSdk
-import pirate.android.sdk.type.AddressType
+import pirate.android.sdk.type.PirateAddressType
 import pirate.android.sdk.type.ConsensusMatchType
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
@@ -257,13 +257,13 @@ interface Synchronizer {
      * convenience method that combines the behavior of [isValidShieldedAddr] and
      * [isValidTransparentAddr] into one call so that the developer doesn't have to worry about
      * handling the exceptions that they throw. Rather, exceptions are converted to
-     * [AddressType.Invalid] which has a `reason` property describing why it is invalid.
+     * [PirateAddressType.Invalid] which has a `reason` property describing why it is invalid.
      *
      * @param address the address to validate.
      *
-     * @return an instance of [AddressType] providing validation info regarding the given address.
+     * @return an instance of [PirateAddressType] providing validation info regarding the given address.
      */
-    suspend fun validateAddress(address: String): AddressType
+    suspend fun validateAddress(address: String): PirateAddressType
 
     /**
      * Attempts to cancel a transaction that is about to be sent. Typically, cancellation is only

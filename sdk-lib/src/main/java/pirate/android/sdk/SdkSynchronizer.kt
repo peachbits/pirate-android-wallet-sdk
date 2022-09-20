@@ -47,9 +47,9 @@ import pirate.android.sdk.internal.transaction.PirateWalletTransactionEncoder
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.AddressType
-import pirate.android.sdk.type.AddressType.Shielded
-import pirate.android.sdk.type.AddressType.Transparent
+import pirate.android.sdk.type.PirateAddressType
+import pirate.android.sdk.type.PirateAddressType.Shielded
+import pirate.android.sdk.type.PirateAddressType.Transparent
 import pirate.android.sdk.type.ConsensusMatchType
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
@@ -707,7 +707,7 @@ class SdkSynchronizer internal constructor(
     override suspend fun isValidTransparentAddr(address: String) =
         txManager.isValidTransparentAddress(address)
 
-    override suspend fun validateAddress(address: String): AddressType {
+    override suspend fun validateAddress(address: String): PirateAddressType {
         return try {
             if (isValidShieldedAddr(address)) Shielded else Transparent
         } catch (zError: Throwable) {
@@ -715,7 +715,7 @@ class SdkSynchronizer internal constructor(
             try {
                 if (isValidTransparentAddr(address)) Transparent else Shielded
             } catch (tError: Throwable) {
-                AddressType.Invalid(
+                PirateAddressType.Invalid(
                     if (message != tError.message) "$message and ${tError.message}" else (
                         message
                             ?: "Invalid"
