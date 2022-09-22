@@ -17,6 +17,8 @@ plugins {
     id("com.vanniktech.maven.publish")
 }
 
+apply(plugin = "com.vanniktech.maven.publish")
+
 // Publishing information
 val isSnapshot = project.property("IS_SNAPSHOT").toString().toBoolean()
 val version = project.property("LIBRARY_VERSION").toString()
