@@ -8,7 +8,7 @@ import pirate.android.sdk.type.PirateAddressType
 import pirate.android.sdk.type.PirateConsensusMatchType
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
-import cash.z.wallet.sdk.rpc.Service
+import pirate.wallet.sdk.rpc.Service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow

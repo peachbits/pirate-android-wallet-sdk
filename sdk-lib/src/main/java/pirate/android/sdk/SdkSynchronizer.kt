@@ -53,7 +53,7 @@ import pirate.android.sdk.type.PirateAddressType.Transparent
 import pirate.android.sdk.type.PirateConsensusMatchType
 import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
-import cash.z.wallet.sdk.rpc.Service
+import pirate.wallet.sdk.rpc.Service
 import io.grpc.ManagedChannel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope

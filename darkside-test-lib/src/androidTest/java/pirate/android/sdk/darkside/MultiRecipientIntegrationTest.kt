@@ -6,8 +6,8 @@ package pirate.android.sdk.darkside // package pirate.android.sdk.integration
 // import pirate.android.sdk.internal.service.LightWalletGrpcService
 // import pirate.android.sdk.darkside.test.DarksideTestCoordinator
 // import pirate.android.sdk.util.SimpleMnemonics
-// import cash.z.wallet.sdk.rpc.CompactFormats
-// import cash.z.wallet.sdk.rpc.Service
+// import pirate.wallet.sdk.rpc.CompactFormats
+// import pirate.wallet.sdk.rpc.Service
 // import io.grpc.*
 // import kotlinx.coroutines.delay
 // import kotlinx.coroutines.runBlocking

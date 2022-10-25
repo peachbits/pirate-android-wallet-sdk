@@ -1,7 +1,7 @@
 package pirate.android.sdk.internal.service
 
-import cash.z.wallet.sdk.rpc.CompactFormats
-import cash.z.wallet.sdk.rpc.Service
+import pirate.wallet.sdk.rpc.CompactFormats
+import pirate.wallet.sdk.rpc.Service
 
 /**
  * Service for interacting with lightwalletd. Implementers of this service should make blocking

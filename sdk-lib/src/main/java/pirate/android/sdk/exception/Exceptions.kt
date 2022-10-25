@@ -1,7 +1,7 @@
 package pirate.android.sdk.exception
 
 import pirate.android.sdk.type.PirateNetwork
-import cash.z.wallet.sdk.rpc.Service
+import pirate.wallet.sdk.rpc.Service
 import io.grpc.Status
 import io.grpc.Status.Code.UNAVAILABLE
 

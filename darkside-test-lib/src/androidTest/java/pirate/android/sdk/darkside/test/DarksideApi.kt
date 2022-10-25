@@ -5,10 +5,10 @@ import pirate.android.sdk.R
 import pirate.android.sdk.internal.service.LightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.type.PirateNetwork
-import cash.z.wallet.sdk.rpc.Darkside
-import cash.z.wallet.sdk.rpc.Darkside.DarksideTransactionsURL
-import cash.z.wallet.sdk.rpc.DarksideStreamerGrpc
-import cash.z.wallet.sdk.rpc.Service
+import pirate.wallet.sdk.rpc.Darkside
+import pirate.wallet.sdk.rpc.Darkside.DarksideTransactionsURL
+import pirate.wallet.sdk.rpc.DarksideStreamerGrpc
+import pirate.wallet.sdk.rpc.Service
 import io.grpc.ManagedChannel
 import io.grpc.stub.StreamObserver
 import java.lang.RuntimeException

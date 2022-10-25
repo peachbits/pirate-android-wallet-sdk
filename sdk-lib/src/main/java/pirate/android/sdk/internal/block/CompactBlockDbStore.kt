@@ -7,7 +7,7 @@ import pirate.android.sdk.db.entity.PirateCompactBlockEntity
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.SdkExecutors
 import pirate.android.sdk.internal.db.PirateCompactBlockDb
-import cash.z.wallet.sdk.rpc.CompactFormats
+import pirate.wallet.sdk.rpc.CompactFormats
 import kotlinx.coroutines.withContext
 import kotlin.math.max
 

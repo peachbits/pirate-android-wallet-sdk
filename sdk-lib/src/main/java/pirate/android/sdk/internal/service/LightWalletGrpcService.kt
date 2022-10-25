@@ -6,9 +6,9 @@ import pirate.android.sdk.annotation.PirateOpenForTesting
 import pirate.android.sdk.exception.PirateLightWalletException
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.type.PirateNetwork
-import cash.z.wallet.sdk.rpc.CompactFormats
-import cash.z.wallet.sdk.rpc.CompactTxStreamerGrpc
-import cash.z.wallet.sdk.rpc.Service
+import pirate.wallet.sdk.rpc.CompactFormats
+import pirate.wallet.sdk.rpc.CompactTxStreamerGrpc
+import pirate.wallet.sdk.rpc.Service
 import com.google.protobuf.ByteString
 import io.grpc.Channel
 import io.grpc.ConnectivityState

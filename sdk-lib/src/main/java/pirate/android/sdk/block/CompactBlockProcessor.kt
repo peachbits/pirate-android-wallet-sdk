@@ -40,7 +40,7 @@ import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
 import pirate.android.sdk.type.PirateWalletBalance
-import cash.z.wallet.sdk.rpc.Service
+import pirate.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO

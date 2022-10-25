@@ -4,7 +4,7 @@ import pirate.android.sdk.internal.ext.retryUpTo
 import pirate.android.sdk.internal.ext.tryWarn
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
-import cash.z.wallet.sdk.rpc.Service
+import pirate.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

@@ -4,7 +4,7 @@ import android.content.Context
 import android.text.format.DateUtils
 import androidx.fragment.app.Fragment
 import pirate.android.sdk.demoapp.MainActivity
-import cash.z.wallet.sdk.rpc.CompactFormats
+import pirate.wallet.sdk.rpc.CompactFormats
 
 /**
  * Lazy extensions to make demo life easier.

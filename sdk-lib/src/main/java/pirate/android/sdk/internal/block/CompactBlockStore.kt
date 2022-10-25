@@ -1,6 +1,6 @@
 package pirate.android.sdk.internal.block
 
-import cash.z.wallet.sdk.rpc.CompactFormats
+import pirate.wallet.sdk.rpc.CompactFormats
 
 /**
  * Interface for storing compact blocks.
