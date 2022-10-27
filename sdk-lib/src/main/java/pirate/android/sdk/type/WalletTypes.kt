@@ -77,7 +77,7 @@ interface UnifiedAddress {
 
 enum class PirateNetwork(val id: Int, val networkName: String, val saplingActivationHeight: Int, val defaultHost: String, val defaultPort: Int) {
     Testnet(0, "testnet", 280_000, "testlightd.pirate.black", 443),
-    Mainnet(1, "mainnet", 152_855, "lightd.pirate.black", 443);
+    Mainnet(1, "mainnet", 152_855, "piratelightd.cryptoforge.cc", 443);
 
     companion object {
         fun from(id: Int) = values().first { it.id == id }
