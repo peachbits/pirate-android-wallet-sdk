@@ -316,7 +316,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
      * Exposes all of the librustzcash functions along with helpers for loading the static library.
      */
     companion object {
-        internal val rustLibraryLoader = PirateNativeLibraryLoader("zcashwalletsdk")
+        internal val rustLibraryLoader = PirateNativeLibraryLoader("piratewalletsdk")
 
         /**
          * Loads the library and initializes path variables. Although it is best to only call this

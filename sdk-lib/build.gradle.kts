@@ -145,7 +145,7 @@ protobuf {
 
 cargo {
     module = "."
-    libname = "zcashwalletsdk"
+    libname = "piratewalletsdk"
     targets = listOf(
         "arm",
         "arm64",

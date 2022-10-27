@@ -54,6 +54,6 @@ mainnet = ["zcash_client_sqlite/mainnet"]
 testnet = []
 
 [lib]
-name = "zcashwalletsdk"
+name = "piratewalletsdk"
 path = "src/main/rust/lib.rs"
 crate-type = ["staticlib", "cdylib"]
