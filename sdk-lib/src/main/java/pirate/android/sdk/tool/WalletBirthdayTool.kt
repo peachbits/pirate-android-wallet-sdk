@@ -3,16 +3,15 @@ package pirate.android.sdk.tool
 import android.content.Context
 import androidx.annotation.VisibleForTesting
 import pirate.android.sdk.exception.PirateBirthdayException
+import pirate.android.sdk.internal.from
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.type.PirateWalletBirthday
 import pirate.android.sdk.type.PirateNetwork
-import com.google.gson.Gson
-import com.google.gson.stream.JsonReader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
 import java.io.IOException
-import java.io.InputStreamReader
-import java.util.Locale
+import java.util.*
 
 /**
  * Tool for loading checkpoints for the wallet, based on the height at which the wallet was born.
@@ -64,7 +63,7 @@ object PirateWalletBirthdayTool {
      */
     @VisibleForTesting
     internal fun birthdayDirectory(network: PirateNetwork) =
-        "piratesaplingtree/${(network.networkName as java.lang.String).toLowerCase(Locale.US)}"
+        "piratesaplingtree/${(network.networkName as java.lang.String).toLowerCase(Locale.ROOT)}"
 
     internal fun birthdayHeight(fileName: String) = fileName.split('.').first().toInt()
 
@@ -133,19 +132,22 @@ object PirateWalletBirthdayTool {
         var lastException: Exception? = null
         treeFiles.forEach { treefile ->
             try {
-                return withContext(Dispatchers.IO) {
+                val jsonString = withContext(Dispatchers.IO) {
                     context.assets.open("$directory/$treefile").use { inputStream ->
-                        InputStreamReader(inputStream).use { inputStreamReader ->
-                            JsonReader(inputStreamReader).use { jsonReader ->
-                                Gson().fromJson(jsonReader, PirateWalletBirthday::class.java)
+                        inputStream.reader().use { inputStreamReader ->
+                            BufferedReader(inputStreamReader).use { bufferedReader ->
+                                bufferedReader.readText()
                             }
                         }
                     }
                 }
+
+                return PirateWalletBirthday.from(jsonString)
             } catch (t: Throwable) {
                 val exception = PirateBirthdayException.PirateMalformattedBirthdayFilesException(
                     directory,
-                    treefile
+                    treefile,
+                    t
                 )
                 lastException = exception
 

@@ -14,7 +14,9 @@ plugins {
     id("org.jetbrains.dokka")
     id("com.google.protobuf")
     id("org.mozilla.rust-android-gradle.rust-android")
-    id("com.vanniktech.maven.publish")
+    id("com.vanniktech.maven.publish.base")
+    id("wtf.emulator.gradle")
+    id("zcash-sdk.emulator-wtf-conventions")
 }
 
 apply(plugin = "com.vanniktech.maven.publish")
@@ -22,17 +24,19 @@ apply(plugin = "com.vanniktech.maven.publish")
 // Publishing information
 val isSnapshot = project.property("IS_SNAPSHOT").toString().toBoolean()
 val version = project.property("LIBRARY_VERSION").toString()
-val ARTIFACT_ID = project.property("POM_ARTIFACT_ID").toString()
 project.group = "io.github.piratenetwork"
 project.version = if (isSnapshot) {
     "$version-SNAPSHOT"
 } else {
     version
 }
+
+val myArtifactId = "pirate-android-sdk"
+
 publishing {
     publications {
         publications.withType<MavenPublication>().all {
-            artifactId = ARTIFACT_ID
+            artifactId = myArtifactId
         }
     }
 }
@@ -75,7 +79,7 @@ android {
 
     kotlinOptions {
         // Tricky: fix: By default, the kotlin_module name will not include the version (in classes.jar/META-INF). Instead it has a colon, which breaks compilation on Windows. This is one way to set it explicitly to the proper value. See https://github.com/zcash/zcash-android-wallet-sdk/issues/222 for more info.
-        freeCompilerArgs += listOf("-module-name", "$ARTIFACT_ID-${project.version}_release")
+        freeCompilerArgs += listOf("-module-name", "$myArtifactId-${project.version}_release")
     }
 
     packagingOptions {
@@ -98,10 +102,53 @@ android {
     lint {
         baseline = File("lint-baseline.xml")
     }
+
+    // Handled by com.vanniktech.maven.publish.AndroidSingleVariantLibrary below
+    // publishing {
+    //     singleVariant("release") {
+    //         withSourcesJar()
+    //         withJavadocJar()
+    //     }
+    // }
 }
 
-mavenPublish {
-    androidVariantToPublish = "release"
+mavenPublishing {
+    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.DEFAULT)
+    signAllPublications()
+
+    pom {
+        name.set("Pirate Android Wallet SDK")
+        description.set("This lightweight SDK connects Android to the Pirate network. It welds together Rust and Kotlin in a minimal way, allowing third-party Android apps to send and receive shielded transactions easily, securely and privately.")
+        url.set("https://github.com/piratenetwork/pirate-android-wallet-sdk/")
+        inceptionYear.set("2018")
+        scm {
+            url.set("https://github.com/piratenetwork/pirate-android-wallet-sdk/")
+            connection.set("scm:git:git://github.com/piratenetwork/pirate-android-wallet-sdk.git")
+            developerConnection.set("scm:git:ssh://git@github.com/piratenetwork/pirate-android-wallet-sdk.git")
+        }
+        developers {
+            developer {
+                id.set("cryptoforge")
+                name.set("Forge")
+                url.set("https://github.com/cryptoforge/")
+            }
+        }
+        licenses {
+            license {
+                name.set("The MIT License")
+                url.set("http://opensource.org/licenses/MIT")
+                distribution.set("repo")
+            }
+        }
+    }
+
+    configure(
+        com.vanniktech.maven.publish.AndroidSingleVariantLibrary(
+            "release",
+            sourcesJar = true,
+            publishJavadocJar = true
+        )
+    )
 }
 
 allOpen {
@@ -185,7 +232,6 @@ dependencies {
     implementation(libs.bundles.grpc)
     compileOnly(libs.javax.annotation)
 
-
     //
     // Locked Versions
     //    these should be checked regularly and removed when possible
@@ -193,11 +239,6 @@ dependencies {
     // solves error: Duplicate class com.google.common.util.concurrent.ListenableFuture found in modules jetified-guava-26.0-android.jar (com.google.guava:guava:26.0-android) and listenablefuture-1.0.jar (com.google.guava:listenablefuture:1.0)
     // per this recommendation from Chris Povirk, given guava's decision to split ListenableFuture away from Guava: https://groups.google.com/d/msg/guava-discuss/GghaKwusjcY/bCIAKfzOEwAJ
     implementation(libs.guava)
-    // Transitive dependencies used because they're already necessary for other libraries
-    // GSON is available as a transitive dependency from several places so we use it for processing
-    // checkpoints but also document that by explicitly including here. If dependencies like Room
-    // or grpc-okhttp stop including GSON, then we should switch to something else for parsing JSON.
-    implementation(libs.gson)
     // OKIO is a transitive dependency used when writing param files to disk. Like GSON, this can be
     // replaced if needed. For compatibility, we match the library version used in grpc-okhttp:
     // https://github.com/grpc/grpc-java/blob/v1.37.x/build.gradle#L159

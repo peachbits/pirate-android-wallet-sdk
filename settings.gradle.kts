@@ -2,6 +2,14 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
     repositories {
+        val isRepoRestrictionEnabled = true
+        mavenCentral {
+            if (isRepoRestrictionEnabled) {
+                content {
+                    includeGroup("wtf.emulator")
+                }
+            }
+        }
         gradlePluginPortal()
         google()
     }
@@ -10,11 +18,12 @@ pluginManagement {
         val androidGradlePluginVersion = extra["ANDROID_GRADLE_PLUGIN_VERSION"].toString()
         val detektVersion = extra["DETEKT_VERSION"].toString()
         val dokkaVersion = extra["DOKKA_VERSION"].toString()
+        val emulatorWtfGradlePluginVersion = extra["EMULATOR_WTF_GRADLE_PLUGIN_VERSION"].toString()
         val fulladleVersion = extra["FULLADLE_VERSION"].toString()
         val gradleVersionsPluginVersion = extra["GRADLE_VERSIONS_PLUGIN_VERSION"].toString()
         val kotlinVersion = extra["KOTLIN_VERSION"].toString()
         val kspVersion = extra["KSP_VERSION"].toString()
-        val owaspVersion = extra["OWASP_DEPENDENCY_CHECK_VERSION"].toString()
+        val mavenPublishPluginVersion = extra["MAVEN_PUBLISH_GRADLE_PLUGIN"].toString()
         val protobufVersion = extra["PROTOBUF_GRADLE_PLUGIN_VERSION"].toString()
 
         id("com.android.application") version (androidGradlePluginVersion) apply (false)
@@ -23,20 +32,32 @@ pluginManagement {
         id("com.google.devtools.ksp") version(kspVersion) apply (false)
         id("com.google.protobuf") version (protobufVersion) apply (false)
         id("com.osacky.fulladle") version (fulladleVersion) apply (false)
+        id("com.vanniktech.maven.publish.base") version(mavenPublishPluginVersion) apply (false)
         id("io.gitlab.arturbosch.detekt") version (detektVersion) apply (false)
         id("org.jetbrains.dokka") version (dokkaVersion) apply (false)
         id("org.jetbrains.kotlin.android") version (kotlinVersion) apply (false)
         id("org.jetbrains.kotlin.plugin.allopen") version (kotlinVersion) apply (false)
-        id("org.owasp.dependencycheck") version (owaspVersion) apply (false)
+        id("wtf.emulator.gradle") version (emulatorWtfGradlePluginVersion) apply (false)
     }
 }
 
 dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+
     repositories {
+        val isRepoRestrictionEnabled = true
+
         google()
         mavenCentral()
         maven("https://jitpack.io")
         maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven")
+        maven("https://maven.emulator.wtf/releases/") {
+            if (isRepoRestrictionEnabled) {
+                content {
+                    includeGroup("wtf.emulator")
+                }
+            }
+        }
     }
 
     @Suppress("UnstableApiUsage", "MaxLineLength")

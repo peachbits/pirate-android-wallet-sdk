@@ -1,27 +1,33 @@
 Change Log
 ==========
 
-<<<<<<< HEAD
-=======
 Upcoming
 ------------------------------------
 - Fix: SDK can now be used on Intel x86_64 emulators
-- Prevent R8 warnings for apps consuming the SDK 
+- Prevent R8 warnings for apps consuming the SDK
 
->>>>>>> 9388d5c... [#537] Prevent R8 warnings for OkHttp
+=======
+Upcoming
+------------------------------------
+- Updated checkpoints for Mainnet and Testnet
+- Fix: SDK can now be used on Intel x86_64 emulators
+- Prevent R8 warnings for apps consuming the SDK
+
 Version 1.5.0-beta01
 ------------------------------------
 - New: Transactions can be created after NU5 activation.
 - New: Support for receiving v5 transactions.
+- Known issues: The SDK will not run on Intel 64-bit API 31+ emulators.  Workarounds include: testing on a physical device, using an older 32-bit API version Intel emulator, or using an ARM emulator.
 
 Version 1.4.0-beta01
 ------------------------------------
 - Main entrypoint to the SDK has changed.  See [MIGRATIONS.md](MIGRATIONS.md)
-- The minumum version of Android supported is now API 19
+- The minimum version of Android supported is now API 19
 - Updated checkpoints for Mainnet and Testnet
 - Internal bugfixes around concurrent access to resources, which could cause transient failures and data corruption
 - Added ProGuard rules so that SDK clients can use R8 to shrink their apps
 - Updated dependencies, including Kotlin 1.6.21, Coroutines 1.6.1, GRPC 1.46.0, Okio 3.1.0, NDK 23
+- Known issues: The SDK will not run on Intel 64-bit API 31+ emulators.  Workarounds include: testing on a physical device, using an older 32-bit API version Intel emulator, or using an ARM emulator.
 
 Version 1.3.0-beta20
 ------------------------------------
