@@ -46,12 +46,13 @@ import pirate.android.sdk.internal.transaction.TransactionRepository
 import pirate.android.sdk.internal.transaction.PirateWalletTransactionEncoder
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
+import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateAddressType
 import pirate.android.sdk.type.PirateAddressType.Shielded
 import pirate.android.sdk.type.PirateAddressType.Transparent
 import pirate.android.sdk.type.PirateConsensusMatchType
-import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.ManagedChannel
@@ -101,9 +102,9 @@ class PirateSdkSynchronizer internal constructor(
 ) : Synchronizer {
 
     // pools
-    private val _orchardBalances = MutableStateFlow(PirateWalletBalance())
-    private val _saplingBalances = MutableStateFlow(PirateWalletBalance())
-    private val _transparentBalances = MutableStateFlow(PirateWalletBalance())
+    private val _orchardBalances = MutableStateFlow<PirateWalletBalance?>(null)
+    private val _saplingBalances = MutableStateFlow<PirateWalletBalance?>(null)
+    private val _transparentBalances = MutableStateFlow<PirateWalletBalance?>(null)
 
     private val _status = ConflatedBroadcastChannel<Synchronizer.PirateStatus>(DISCONNECTED)
 
@@ -636,14 +637,14 @@ class PirateSdkSynchronizer internal constructor(
 
     override fun sendToAddress(
         spendingKey: String,
-        zatoshi: Long,
+        amount: Arrrtoshi,
         toAddress: String,
         memo: String,
         fromAccountIndex: Int
     ): Flow<PendingTransaction> = flow {
         twig("Initializing pending transaction")
         // Emit the placeholder transaction, then switch to monitoring the database
-        txManager.initSpend(zatoshi, toAddress, memo, fromAccountIndex).let { placeHolderTx ->
+        txManager.initSpend(amount, toAddress, memo, fromAccountIndex).let { placeHolderTx ->
             emit(placeHolderTx)
             txManager.encode(spendingKey, placeHolderTx).let { encodedTx ->
                 // only submit if it wasn't cancelled. Otherwise cleanup, immediately for best UX.
@@ -675,7 +676,7 @@ class PirateSdkSynchronizer internal constructor(
         val zAddr = getAddress(0)
 
         // Emit the placeholder transaction, then switch to monitoring the database
-        txManager.initSpend(tBalance.availableZatoshi, zAddr, memo, 0).let { placeHolderTx ->
+        txManager.initSpend(tBalance.available, zAddr, memo, 0).let { placeHolderTx ->
             emit(placeHolderTx)
             txManager.encode(spendingKey, transparentSecretKey, placeHolderTx).let { encodedTx ->
                 // only submit if it wasn't cancelled. Otherwise cleanup, immediately for best UX.

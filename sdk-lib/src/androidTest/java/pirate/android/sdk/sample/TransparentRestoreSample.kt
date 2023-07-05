@@ -3,6 +3,7 @@ package pirate.android.sdk.sample
 import androidx.test.filters.LargeTest
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.type.PirateNetwork.Testnet
 import pirate.android.sdk.util.TestWallet
 import kotlinx.coroutines.delay
@@ -18,7 +19,7 @@ import org.junit.Test
  */
 class TransparentRestoreSample {
 
-    val TX_VALUE = PirateSdk.MINERS_FEE_ZATOSHI / 2
+    val TX_VALUE = Arrrtoshi(PirateSdk.MINERS_FEE.value / 2)
 
 //    val walletA = SimpleWallet(SEED_PHRASE, "WalletA")
 
@@ -58,8 +59,8 @@ class TransparentRestoreSample {
         val tbalance = wallet.transparentBalance()
         val address = wallet.transparentAddress
 
-        twig("t-avail: ${tbalance.availableZatoshi}  t-total: ${tbalance.totalZatoshi}")
-        Assert.assertTrue("Not enough funds to run sample. Expected some Zatoshi but found ${tbalance.availableZatoshi}. Try adding funds to $address", tbalance.availableZatoshi > 0)
+        twig("t-avail: ${tbalance.available}  t-total: ${tbalance.total}")
+        Assert.assertTrue("Not enough funds to run sample. Expected some Arrrtoshi but found ${tbalance.available}. Try adding funds to $address", tbalance.available.value > 0)
 
         twig("Shielding available transparent funds!")
 //        wallet.shieldFunds()
@@ -119,7 +120,7 @@ class TransparentRestoreSample {
         twig("Done syncing both wallets!")
         //        val value = walletA.available
         //        val address = walletA.shieldedAddress
-        //        Assert.assertTrue("Not enough funds to run sample. Expected at least $TX_VALUE Zatoshi but found $value. Try adding funds to $address", value >= TX_VALUE)
+        //        Assert.assertTrue("Not enough funds to run sample. Expected at least $TX_VALUE Arrrtoshi but found $value. Try adding funds to $address", value >= TX_VALUE)
 
         // send z->t
         //        walletA.send(TX_VALUE, walletA.transparentAddress, "${TransparentRestoreSample::class.java.simpleName} z->t")
@@ -153,7 +154,7 @@ class TransparentRestoreSample {
 //        }
 //
 //        val synchronizer = Synchronizer(initializer)
-//        val available get() = synchronizer.latestBalance.availableZatoshi
+//        val available get() = synchronizer.latestBalance.availableArrrtoshi
 //        val shieldedAddress = PirateDerivationTool.deriveShieldedAddress(seed, Testnet)
 //        val transparentAddress = PirateDerivationTool.deriveTransparentAddress(seed, Testnet)
 //        val birthdayHeight get() = synchronizer.latestBirthdayHeight
@@ -198,9 +199,9 @@ class TransparentRestoreSample {
 //            }
 //
 //            synchronizer.getTransparentBalance(transparentAddress).let { walletBalance ->
-//                twig("FOUND utxo balance of total: ${walletBalance.totalZatoshi}  available: ${walletBalance.availableZatoshi}")
+//                twig("FOUND utxo balance of total: ${walletBalance.totalArrrtoshi}  available: ${walletBalance.availableArrrtoshi}")
 //
-//                if (walletBalance.availableZatoshi > 0L) {
+//                if (walletBalance.availableArrrtoshi > 0L) {
 //                    synchronizer.shieldFunds(shieldedSpendingKey, transparentSecretKey)
 //                        .onCompletion { twig("done shielding funds") }
 //                        .catch { twig("Failed with $it") }

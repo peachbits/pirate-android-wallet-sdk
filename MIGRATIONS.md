@@ -1,7 +1,19 @@
 Troubleshooting Migrations
 ==========
 
-Upcoming Migrating to Version 1.4.* from 1.3.*
+Migration to Version 1.7 from 1.6
+--------------------------------------
+Various APIs used `Long` value to represent Arrrtoshi currency amounts.  Those APIs now use a typesafe `Arrrtoshi` class.  When passing amounts, simply wrap Long values with the Arrrtoshi constructor `Arrrtoshi(Long)`.  When receiving values, simply unwrap Long values with `Arrrtoshi.value`.
+
+`WalletBalance` no longer has uninitialized default values.  This means that `Synchronizer` fields that expose a WalletBalance now use `null` to signal an uninitialized value.  Specifically this means `Synchronizer.orchardBalances`, `Synchronzier.saplingBalances`, and `Synchronizer.transparentBalances` have nullable values now.
+
+`WalletBalance` has been moved from the package `cash.z.ecc.android.sdk.type` to `cash.z.ecc.android.sdk.model`
+
+`PirateSdk.ZATOSHI_PER_ARRR` has been moved to `Arrrtoshi.ZATOSHI_PER_ARRR`.
+
+`PirateSdk.MINERS_FEE_ZATOSHI` has been renamed to `PirateSdk.MINERS_FEE` and the type has changed from `Long` to `Arrrtoshi`.
+
+Migrating to Version 1.4.* from 1.3.*
 --------------------------------------
 The main entrypoint to the SDK has changed.
 

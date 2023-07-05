@@ -407,7 +407,7 @@
     <issue
         id="SetTextI18n"
         message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                Available balance: ${balance.availableZatoshi.convertZatoshiToZecString(12)}"
+        errorLine1="                Available balance: ${balance.availableArrrtoshi.convertArrrtoshiToZecString(12)}"
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/pirate/android/sdk/demoapp/demos/getbalance/GetBalanceFragment.kt"
@@ -418,7 +418,7 @@
     <issue
         id="SetTextI18n"
         message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                Total balance: ${balance.totalZatoshi.convertZatoshiToZecString(12)}"
+        errorLine1="                Total balance: ${balance.totalArrrtoshi.convertArrrtoshiToZecString(12)}"
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/pirate/android/sdk/demoapp/demos/getbalance/GetBalanceFragment.kt"
@@ -869,7 +869,7 @@
     <issue
         id="SetTextI18n"
         message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                Available balance: ${balance.availableZatoshi.convertZatoshiToZecString(12)}"
+        errorLine1="                Available balance: ${balance.availableArrrtoshi.convertArrrtoshiToZecString(12)}"
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/pirate/android/sdk/demoapp/demos/send/SendFragment.kt"
@@ -880,7 +880,7 @@
     <issue
         id="SetTextI18n"
         message="String literal in `setText` can not be translated. Use Android resources instead."
-        errorLine1="                Total balance: ${balance.totalZatoshi.convertZatoshiToZecString(12)}"
+        errorLine1="                Total balance: ${balance.totalArrrtoshi.convertArrrtoshiToZecString(12)}"
         errorLine2="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
         <location
             file="src/main/java/pirate/android/sdk/demoapp/demos/send/SendFragment.kt"

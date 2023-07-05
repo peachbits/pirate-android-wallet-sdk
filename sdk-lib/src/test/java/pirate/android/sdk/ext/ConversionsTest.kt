@@ -1,5 +1,6 @@
 package pirate.android.sdk.ext
 
+import pirate.android.sdk.model.Arrrtoshi
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
@@ -9,7 +10,7 @@ internal class PirateConversionsTest {
 
     @Test
     fun `default right padding is 6`() {
-        assertEquals(1.13.toArrr(6), 113000000L.convertZatoshiToArrr())
+        assertEquals(1.13.toArrr(6), Arrrtoshi(113000000L).convertArrrtoshiToArrr())
         assertEquals(1.13.toArrr(6), 1.13.toArrr())
     }
 
@@ -21,12 +22,12 @@ internal class PirateConversionsTest {
 
     @Test
     fun `toArrrString defaults to 6 digits`() {
-        assertEquals("1.123457", 112345678L.convertZatoshiToArrrString())
+        assertEquals("1.123457", Arrrtoshi(112345678L).convertArrrtoshiToArrrString())
     }
 
     @Test
     fun `toArrrString uses banker's rounding`() {
-        assertEquals("1.123456", 112345650L.convertZatoshiToArrrString())
+        assertEquals("1.123456", Arrrtoshi(112345650L).convertArrrtoshiToArrrString())
     }
 
     @Test
@@ -72,7 +73,7 @@ internal class PirateConversionsTest {
 
     @Test
     fun `toArrrString zatoshi converts`() {
-        assertEquals("1.123456", 112345650L.convertZatoshiToArrrString(6, 0))
+        assertEquals("1.123456", Arrrtoshi(112345650L).convertArrrtoshiToArrrString(6, 0))
     }
 
     @Test

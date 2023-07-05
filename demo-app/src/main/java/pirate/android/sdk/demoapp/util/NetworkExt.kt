@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:filename")
+
 package pirate.android.sdk.demoapp.util
 
 import android.content.Context

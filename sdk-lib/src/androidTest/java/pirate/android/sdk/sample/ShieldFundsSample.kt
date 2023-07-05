@@ -1,6 +1,7 @@
 package pirate.android.sdk.sample
 
 import pirate.android.sdk.internal.Twig
+import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.type.PirateNetwork
 import pirate.android.sdk.util.TestWallet
 import kotlinx.coroutines.runBlocking
@@ -33,6 +34,6 @@ class ShieldFundsSample {
 //        wallet.shieldFunds()
 
         Twig.clip("ShieldFundsSample")
-        Assert.assertEquals(5, wallet.synchronizer.saplingBalances.value.availableZatoshi)
+        Assert.assertEquals(Arrrtoshi(5), wallet.synchronizer.saplingBalances.value?.available)
     }
 }

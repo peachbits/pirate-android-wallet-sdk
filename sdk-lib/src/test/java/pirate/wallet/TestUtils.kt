@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:filename")
+
 package pirate.wallet
 
 import org.mockito.Mockito

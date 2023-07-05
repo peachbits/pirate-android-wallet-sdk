@@ -1,5 +1,7 @@
 package pirate.android.sdk.ext
 
+import pirate.android.sdk.model.Arrrtoshi
+
 /**
  * Wrapper for all the constant values in the SDK. It is important that these values stay fixed for
  * all users of the SDK. Otherwise, if individual wallet makers are using different values, it
@@ -11,12 +13,7 @@ object PirateSdk {
     /**
      * Miner's fee in zatoshi.
      */
-    val MINERS_FEE_ZATOSHI = 10_000L
-
-    /**
-     * The number of zatoshi that equal 1 ARRR.
-     */
-    val ZATOSHI_PER_ARRR = 100_000_000L
+    val MINERS_FEE = Arrrtoshi(1_000L)
 
     /**
      * The theoretical maximum number of blocks in a reorg, due to other bottlenecks in the protocol design.

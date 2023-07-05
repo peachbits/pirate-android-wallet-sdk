@@ -24,13 +24,13 @@ import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.demoapp.util.mainActivity
 import pirate.android.sdk.ext.collectWith
-import pirate.android.sdk.ext.convertZatoshiToArrrString
-import pirate.android.sdk.ext.convertArrrToZatoshi
+import pirate.android.sdk.ext.convertArrrtoshiToArrrString
+import pirate.android.sdk.ext.convertArrrToArrrtoshi
 import pirate.android.sdk.ext.toArrrString
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 
@@ -79,7 +79,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
     // Observable properties (done without livedata or flows for simplicity)
     //
 
-    private var balance = PirateWalletBalance()
+    private var balance: PirateWalletBalance? = null
         set(value) {
             field = value
             onUpdateSendButton()
@@ -144,19 +144,19 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
         if (info.isScanning) binding.textStatus.text = "Scanning blocks...${info.scanProgress}%"
     }
 
-    private fun onBalance(balance: PirateWalletBalance) {
+    private fun onBalance(balance: PirateWalletBalance?) {
         this.balance = balance
         if (!isSyncing) {
             binding.textBalance.text = """
-                Available balance: ${balance.availableZatoshi.convertZatoshiToArrrString(12)}
-                Total balance: ${balance.totalZatoshi.convertZatoshiToArrrString(12)}
+                Available balance: ${balance?.available.convertArrrtoshiToArrrString(12)}
+                Total balance: ${balance?.total.convertArrrtoshiToArrrString(12)}
             """.trimIndent()
         }
     }
 
     private fun onSend(unused: View) {
         isSending = true
-        val amount = amountInput.text.toString().toDouble().convertArrrToZatoshi()
+        val amount = amountInput.text.toString().toDouble().convertArrrToArrrtoshi()
         val toAddress = addressInput.text.toString().trim()
         synchronizer.sendToAddress(
             spendingKey,
@@ -196,7 +196,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
                     text = "⌛ syncing"
                     isEnabled = false
                 }
-                balance.availableZatoshi <= 0 -> isEnabled = false
+                (balance?.available?.value ?: 0) <= 0 -> isEnabled = false
                 else -> {
                     text = "send"
                     isEnabled = true

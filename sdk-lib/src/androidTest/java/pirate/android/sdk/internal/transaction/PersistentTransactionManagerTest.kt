@@ -11,6 +11,7 @@ import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.test.ScopedTest
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.stub
@@ -38,6 +39,7 @@ import org.mockito.MockitoAnnotations
 class PiratePersistentTransactionManagerTest : ScopedTest() {
 
     @Mock lateinit var mockEncoder: TransactionEncoder
+
     @Mock lateinit var mockService: LightWalletService
 
     val pendingDbName = "PersistentTxMgrTest_Pending.db"
@@ -71,7 +73,7 @@ class PiratePersistentTransactionManagerTest : ScopedTest() {
 
     @Test
     fun testCancellation_RaceCondition() = runBlocking {
-        val tx = manager.initSpend(1234, "taddr", "memo-good", 0)
+        val tx = manager.initSpend(Arrrtoshi(1234), "taddr", "memo-good", 0)
         val txFlow = manager.monitorById(tx.id)
 
         // encode TX
@@ -95,7 +97,7 @@ class PiratePersistentTransactionManagerTest : ScopedTest() {
 
     @Test
     fun testCancel() = runBlocking {
-        var tx = manager.initSpend(1234, "a", "b", 0)
+        var tx = manager.initSpend(Arrrtoshi(1234), "a", "b", 0)
         assertFalse(tx.isCancelled())
         manager.cancel(tx.id)
         tx = manager.findById(tx.id)!!
@@ -104,7 +106,7 @@ class PiratePersistentTransactionManagerTest : ScopedTest() {
 
     @Test
     fun testAbort() = runBlocking {
-        var tx: PendingTransaction? = manager.initSpend(1234, "a", "b", 0)
+        var tx: PendingTransaction? = manager.initSpend(Arrrtoshi(1234), "a", "b", 0)
         assertNotNull(tx)
         manager.abort(tx!!)
         tx = manager.findById(tx.id)

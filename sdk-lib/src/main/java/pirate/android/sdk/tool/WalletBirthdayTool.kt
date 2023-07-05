@@ -97,7 +97,7 @@ object PirateWalletBirthdayTool {
     private suspend fun getFilteredFileNames(
         context: Context,
         directory: String,
-        birthdayHeight: Int? = null,
+        birthdayHeight: Int? = null
     ): List<String> {
         val unfilteredTreeFiles = listBirthdayDirectoryContents(context, directory)
         if (unfilteredTreeFiles.isNullOrEmpty()) {

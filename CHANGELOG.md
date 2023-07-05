@@ -1,7 +1,12 @@
 Change Log
 ==========
 
-Upcoming
+Version 1.7.0-beta01
+------------------------------------
+- Added `Arrrtoshi` typesafe object to represent amounts.
+- Kotlin 1.7.0
+
+Version 1.6.0-beta01
 ------------------------------------
 - Fix: SDK can now be used on Intel x86_64 emulators
 - Prevent R8 warnings for apps consuming the SDK

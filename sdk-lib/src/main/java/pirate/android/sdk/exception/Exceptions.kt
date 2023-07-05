@@ -15,7 +15,8 @@ open class PirateSdkException(message: String, cause: Throwable?) : RuntimeExcep
  * Exceptions thrown in the Rust layer of the SDK. We may not always be able to surface details about this
  * exception so it's important for the SDK to provide helpful messages whenever these errors are encountered.
  */
-sealed class PirateRustLayerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+sealed class PirateRustLayerException(message: String, cause: Throwable? = null) :
+    PirateSdkException(message, cause) {
     class PirateBalanceException(cause: Throwable) : PirateRustLayerException(
         "Error while requesting the current balance over " +
             "JNI. This might mean that the database has been corrupted and needs to be rebuilt. Verify that " +

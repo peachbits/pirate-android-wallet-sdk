@@ -39,7 +39,7 @@ import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
-import pirate.android.sdk.type.PirateWalletBalance
+import pirate.android.sdk.model.PirateWalletBalance
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.Dispatchers
@@ -679,7 +679,7 @@ class PirateCompactBlockProcessor(
             } else {
                 updateProgress(
                     lastScannedHeight = targetHeight,
-                    lastScanRange = (targetHeight + 1)..currentInfo.networkBlockHeight,
+                    lastScanRange = (targetHeight + 1)..currentInfo.networkBlockHeight
                 )
                 _progress.send(0)
                 val range = (targetHeight + 1)..lastScannedHeight

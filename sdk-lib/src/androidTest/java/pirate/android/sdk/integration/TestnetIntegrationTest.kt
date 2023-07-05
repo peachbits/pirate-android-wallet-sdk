@@ -12,12 +12,14 @@ import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.test.ScopedTest
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.tool.PirateWalletBirthdayTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
@@ -38,7 +40,7 @@ class TestnetIntegrationTest : ScopedTest() {
     fun testLatestBlockTest() {
         val service = PirateLightWalletGrpcService(
             context,
-            host,
+            host
         )
         val height = service.getLatestBlockHeight()
         assertTrue(height > saplingActivation)
@@ -67,9 +69,9 @@ class TestnetIntegrationTest : ScopedTest() {
     @LargeTest
     @Ignore("This test is extremely slow")
     fun testBalance() = runBlocking {
-        var availableBalance: Long = 0L
+        var availableBalance: Arrrtoshi? = null
         synchronizer.saplingBalances.onFirst {
-            availableBalance = it.availableZatoshi
+            availableBalance = it?.available
         }
 
         synchronizer.status.filter { it == SYNCED }.onFirst {
@@ -78,7 +80,7 @@ class TestnetIntegrationTest : ScopedTest() {
 
         assertTrue(
             "No funds available when we expected a balance greater than zero!",
-            availableBalance > 0
+            availableBalance!!.value > 0
         )
     }
 
@@ -86,7 +88,7 @@ class TestnetIntegrationTest : ScopedTest() {
     @Ignore("This test is broken")
     fun testSpend() = runBlocking {
         var success = false
-        synchronizer.saplingBalances.filter { it.availableZatoshi > 0 }.onEach {
+        synchronizer.saplingBalances.filterNotNull().onEach {
             success = sendFunds()
         }.first()
         log("asserting $success")
@@ -98,7 +100,7 @@ class TestnetIntegrationTest : ScopedTest() {
         log("sending to address")
         synchronizer.sendToAddress(
             spendingKey,
-            PirateSdk.MINERS_FEE_ZATOSHI,
+            PirateSdk.MINERS_FEE,
             toAddress,
             "first mainnet tx from the SDK"
         ).filter { it?.isSubmitSuccess() == true }.onFirst {

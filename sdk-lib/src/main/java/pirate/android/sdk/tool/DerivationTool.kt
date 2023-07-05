@@ -117,14 +117,14 @@ class PirateDerivationTool {
         private external fun deriveExtendedSpendingKeys(
             seed: ByteArray,
             numberOfAccounts: Int,
-            networkId: Int,
+            networkId: Int
         ): Array<String>
 
         @JvmStatic
         private external fun derivePirateUnifiedViewingKeysFromSeed(
             seed: ByteArray,
             numberOfAccounts: Int,
-            networkId: Int,
+            networkId: Int
         ): Array<Array<String>>
 
         @JvmStatic
@@ -134,7 +134,7 @@ class PirateDerivationTool {
         private external fun deriveShieldedAddressFromSeed(
             seed: ByteArray,
             accountIndex: Int,
-            networkId: Int,
+            networkId: Int
         ): String
 
         @JvmStatic

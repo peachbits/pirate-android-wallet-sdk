@@ -6,8 +6,9 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
+import pirate.android.sdk.db.entity.valueInArrrtoshi
 import pirate.android.sdk.demoapp.R
-import pirate.android.sdk.ext.convertZatoshiToArrrString
+import pirate.android.sdk.ext.convertArrrtoshiToArrrString
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -23,7 +24,7 @@ class TransactionViewHolder<T : PirateConfirmedTransaction>(itemView: View) : Re
 
     fun bindTo(transaction: T?) {
         val isInbound = transaction?.toAddress.isNullOrEmpty()
-        amountText.text = transaction?.value.convertZatoshiToArrrString()
+        amountText.text = transaction?.valueInArrrtoshi.convertArrrtoshiToArrrString()
         timeText.text =
             if (transaction == null || transaction?.blockTimeInSeconds == 0L) "Pending"
             else formatter.format(transaction.blockTimeInSeconds * 1000L)

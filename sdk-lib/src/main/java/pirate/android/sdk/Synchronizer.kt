@@ -4,9 +4,10 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.ext.PirateSdk
+import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.type.PirateAddressType
 import pirate.android.sdk.type.PirateConsensusMatchType
-import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import pirate.wallet.sdk.rpc.Service
 import kotlinx.coroutines.CoroutineScope
@@ -102,17 +103,17 @@ interface Synchronizer {
     /**
      * A stream of balance values for the orchard pool. Includes the available and total balance.
      */
-    val orchardBalances: StateFlow<PirateWalletBalance>
+    val orchardBalances: StateFlow<PirateWalletBalance?>
 
     /**
      * A stream of balance values for the sapling pool. Includes the available and total balance.
      */
-    val saplingBalances: StateFlow<PirateWalletBalance>
+    val saplingBalances: StateFlow<PirateWalletBalance?>
 
     /**
      * A stream of balance values for the transparent pool. Includes the available and total balance.
      */
-    val transparentBalances: StateFlow<PirateWalletBalance>
+    val transparentBalances: StateFlow<PirateWalletBalance?>
 
     /* Transactions */
 
@@ -203,7 +204,7 @@ interface Synchronizer {
      */
     fun sendToAddress(
         spendingKey: String,
-        zatoshi: Long,
+        amount: Arrrtoshi,
         toAddress: String,
         memo: String = "",
         fromAccountIndex: Int = 0

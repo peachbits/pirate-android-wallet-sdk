@@ -52,7 +52,7 @@ package pirate.android.sdk.darkside
 //
 //            // check the extra viewing key balance!!!
 //            val account1Balance = (synchronizer as SdkSynchronizer).processor.getBalanceInfo(1)
-//            assertEquals(10000, account1Balance.totalZatoshi)
+//            assertEquals(10000, account1Balance.totalArrrtoshi)
 //            twig("done waiting for 663261!")
 //        }
 //    }

@@ -1,7 +1,8 @@
 package pirate.android.sdk.jni
 
+import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 
 /**
@@ -47,7 +48,7 @@ interface PirateRustBackendWelding {
 
     suspend fun getTransparentAddress(account: Int = 0, index: Int = 0): String
 
-    suspend fun getBalance(account: Int = 0): Long
+    suspend fun getBalance(account: Int = 0): Arrrtoshi
 
     fun getBranchIdForHeight(height: Int): Long
 
@@ -55,7 +56,7 @@ interface PirateRustBackendWelding {
 
     suspend fun getSentMemoAsUtf8(idNote: Long): String
 
-    suspend fun getVerifiedBalance(account: Int = 0): Long
+    suspend fun getVerifiedBalance(account: Int = 0): Arrrtoshi
 
 //    fun parseTransactionDataList(tdl: LocalRpcTypes.TransactionDataList): LocalRpcTypes.TransparentTransactionList
 
@@ -90,20 +91,20 @@ interface PirateRustBackendWelding {
         suspend fun deriveShieldedAddress(
             seed: ByteArray,
             network: PirateNetwork,
-            accountIndex: Int = 0,
+            accountIndex: Int = 0
         ): String
 
         suspend fun deriveSpendingKeys(
             seed: ByteArray,
             network: PirateNetwork,
-            numberOfAccounts: Int = 1,
+            numberOfAccounts: Int = 1
         ): Array<String>
 
         suspend fun deriveTransparentAddress(
             seed: ByteArray,
             network: PirateNetwork,
             account: Int = 0,
-            index: Int = 0,
+            index: Int = 0
         ): String
 
         suspend fun deriveTransparentAddressFromPublicKey(
@@ -120,7 +121,7 @@ interface PirateRustBackendWelding {
             seed: ByteArray,
             network: PirateNetwork,
             account: Int = 0,
-            index: Int = 0,
+            index: Int = 0
         ): String
 
         suspend fun deriveViewingKey(
@@ -131,7 +132,7 @@ interface PirateRustBackendWelding {
         suspend fun derivePirateUnifiedViewingKeys(
             seed: ByteArray,
             network: PirateNetwork,
-            numberOfAccounts: Int = 1,
+            numberOfAccounts: Int = 1
         ): Array<PirateUnifiedViewingKey>
     }
 }

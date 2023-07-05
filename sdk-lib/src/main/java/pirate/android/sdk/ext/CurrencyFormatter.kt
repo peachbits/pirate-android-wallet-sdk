@@ -4,7 +4,7 @@ package pirate.android.sdk.ext
 
 import pirate.android.sdk.ext.Conversions.USD_FORMATTER
 import pirate.android.sdk.ext.Conversions.ARRR_FORMATTER
-import pirate.android.sdk.ext.PirateSdk.ZATOSHI_PER_ARRR
+import pirate.android.sdk.model.Arrrtoshi
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
@@ -14,14 +14,14 @@ import java.util.Locale
 /*
  * Convenience functions for converting currency values for display in user interfaces. The
  * calculations done here are not intended for financial purposes, because all such transactions
- * are done using Zatoshis in the Rust layer. Instead, these functions are focused on displaying
+ * are done using Arrrtoshis in the Rust layer. Instead, these functions are focused on displaying
  * accurately rounded values to the user.
  */
 
 // TODO: provide a dynamic way to configure this globally for the SDK
 // For now, just make these vars so at least they could be modified in one place
 object Conversions {
-    var ONE_ARRR_IN_ZATOSHI = BigDecimal(ZATOSHI_PER_ARRR, MathContext.DECIMAL128)
+    var ONE_ARRR_IN_ZATOSHI = BigDecimal(Arrrtoshi.ZATOSHI_PER_ARRR, MathContext.DECIMAL128)
     var ARRR_FORMATTER = NumberFormat.getInstance(Locale.getDefault()).apply {
         roundingMode = RoundingMode.HALF_EVEN
         maximumFractionDigits = 6
@@ -37,21 +37,21 @@ object Conversions {
 }
 
 /**
- * Format a Zatoshi value into ARRR with the given number of digits, represented as a string.
- * Start with Zatoshi -> End with ARRR.
+ * Format a Arrrtoshi value into ARRR with the given number of digits, represented as a string.
+ * Start with Arrrtoshi -> End with ARRR.
  *
  * @param maxDecimals the number of decimal places to use in the format. Default is 6 because ARRR is
  * better than USD.
  * @param minDecimals the minimum number of digits to allow to the right of the decimal.
  *
- * @return this Zatoshi value represented as ARRR, in a string with at least [minDecimals] and at
+ * @return this Arrrtoshi value represented as ARRR, in a string with at least [minDecimals] and at
  * most [maxDecimals]
  */
-inline fun Long?.convertZatoshiToArrrString(
+inline fun Arrrtoshi?.convertArrrtoshiToArrrString(
     maxDecimals: Int = ARRR_FORMATTER.maximumFractionDigits,
     minDecimals: Int = ARRR_FORMATTER.minimumFractionDigits
 ): String {
-    return currencyFormatter(maxDecimals, minDecimals).format(this.convertZatoshiToArrr(maxDecimals))
+    return currencyFormatter(maxDecimals, minDecimals).format(this.convertArrrtoshiToArrr(maxDecimals))
 }
 
 /**
@@ -73,7 +73,7 @@ inline fun Double?.toArrrString(
 }
 
 /**
- * Format a Zatoshi value into ARRR with the given number of decimal places, represented as a string.
+ * Format a Arrrtoshi value into ARRR with the given number of decimal places, represented as a string.
  * Start with ArrR -> End with ARRR.
  *
  * @param maxDecimals the number of decimal places to use in the format. Default is 6 because ARRR is
@@ -151,40 +151,40 @@ inline fun currencyFormatter(maxDecimals: Int, minDecimals: Int): NumberFormat {
 }
 
 /**
- * Convert a Zatoshi value into ARRR, right-padded to the given number of fraction digits,
+ * Convert a Arrrtoshi value into ARRR, right-padded to the given number of fraction digits,
  * represented as a BigDecimal in order to preserve rounding that minimizes cumulative error when
  * applied repeatedly over a sequence of calculations.
- * Start with Zatoshi -> End with ARRR.
+ * Start with Arrrtoshi -> End with ARRR.
  *
  * @param scale the number of digits to the right of the decimal place. Right-padding will be added,
  * if necessary.
  *
- * @return this Long Zatoshi value represented as ARRR using a BigDecimal with the given scale,
+ * @return this Long Arrrtoshi value represented as ARRR using a BigDecimal with the given scale,
  * rounded accurately out to 128 digits.
  */
-inline fun Long?.convertZatoshiToArrr(scale: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
-    return BigDecimal(this ?: 0L, MathContext.DECIMAL128).divide(
+inline fun Arrrtoshi?.convertArrrtoshiToArrr(scale: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
+    return BigDecimal(this?.value ?: 0L, MathContext.DECIMAL128).divide(
         Conversions.ONE_ARRR_IN_ZATOSHI,
         MathContext.DECIMAL128
     ).setScale(scale, ARRR_FORMATTER.roundingMode)
 }
 
 /**
- * Convert a ARRR value into Zatoshi.
- * Start with ARRR -> End with Zatoshi.
+ * Convert a ARRR value into Arrrtoshi.
+ * Start with ARRR -> End with Arrrtoshi.
  *
- * @return this ARRR value represented as Zatoshi, rounded accurately out to 128 digits, in order to
+ * @return this ARRR value represented as Arrrtoshi, rounded accurately out to 128 digits, in order to
  * minimize cumulative errors when applied repeatedly over a sequence of calculations.
  */
-inline fun BigDecimal?.convertArrrToZatoshi(): Long {
-    if (this == null) return 0L
+inline fun BigDecimal?.convertArrrToArrrtoshi(): Arrrtoshi {
+    if (this == null) return Arrrtoshi(0L)
     if (this < BigDecimal.ZERO) {
         throw IllegalArgumentException(
             "Invalid ARRR value: $this. ARRR is represented by notes and" +
                 " cannot be negative"
         )
     }
-    return this.multiply(Conversions.ONE_ARRR_IN_ZATOSHI, MathContext.DECIMAL128).toLong()
+    return Arrrtoshi(this.multiply(Conversions.ONE_ARRR_IN_ZATOSHI, MathContext.DECIMAL128).toLong())
 }
 
 /**
@@ -205,17 +205,17 @@ inline fun Double?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigits):
 }
 
 /**
- * Format a Double ARRR value as a Long Zatoshi value, by first converting to ARRR with the given
+ * Format a Double ARRR value as a Long Arrrtoshi value, by first converting to ARRR with the given
  * precision.
- * Start with ARRR -> End with Zatoshi.
+ * Start with ARRR -> End with Arrrtoshi.
  *
  * @param decimals the scale to use for the intermediate BigDecimal.
  *
- * @return this Double ARRR value converted into Zatoshi, with proper rounding and precision by
+ * @return this Double ARRR value converted into Arrrtoshi, with proper rounding and precision by
  * leveraging an intermediate BigDecimal object.
  */
-inline fun Double?.convertArrrToZatoshi(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): Long {
-    return this.toArrr(decimals).convertArrrToZatoshi()
+inline fun Double?.convertArrrToArrrtoshi(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): Arrrtoshi {
+    return this.toArrr(decimals).convertArrrToArrrtoshi()
 }
 
 /**

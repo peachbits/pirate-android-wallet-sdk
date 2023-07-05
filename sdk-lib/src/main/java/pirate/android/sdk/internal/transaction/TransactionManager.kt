@@ -1,6 +1,7 @@
 package pirate.android.sdk.internal.transaction
 
 import pirate.android.sdk.db.entity.PendingTransaction
+import pirate.android.sdk.model.Arrrtoshi
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -21,7 +22,7 @@ interface OutboundTransactionManager {
      * @return the associated pending transaction whose ID can be used to monitor for changes.
      */
     suspend fun initSpend(
-        zatoshi: Long,
+        zatoshi: Arrrtoshi,
         toAddress: String,
         memo: String,
         fromAccountIndex: Int

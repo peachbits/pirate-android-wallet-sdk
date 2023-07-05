@@ -13,10 +13,11 @@ import pirate.android.sdk.demoapp.databinding.FragmentGetBalanceBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.collectWith
-import pirate.android.sdk.ext.convertZatoshiToArrrString
+import pirate.android.sdk.ext.convertArrrtoshiToArrrString
+import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -68,22 +69,23 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         synchronizer.status.collectWith(lifecycleScope, ::onStatus)
         synchronizer.progress.collectWith(lifecycleScope, ::onProgress)
         synchronizer.processorInfo.collectWith(lifecycleScope, ::onProcessorInfoUpdated)
-        synchronizer.saplingBalances.collectWith(lifecycleScope, ::onBalance)
+        synchronizer.saplingBalances.filterNotNull().collectWith(lifecycleScope, ::onBalance)
     }
 
     private fun onBalance(balance: PirateWalletBalance) {
         binding.textBalance.text = """
-                Available balance: ${balance.availableZatoshi.convertZatoshiToArrrString(12)}
-                Total balance: ${balance.totalZatoshi.convertZatoshiToArrrString(12)}
+                Available balance: ${balance.available.convertArrrtoshiToArrrString(12)}
+                Total balance: ${balance.total.convertArrrtoshiToArrrString(12)}
         """.trimIndent()
     }
 
     private fun onStatus(status: Synchronizer.PirateStatus) {
         binding.textStatus.text = "Status: $status"
-        if (PirateWalletBalance().none()) {
+        val balance = synchronizer.saplingBalances.value
+        if (null == balance) {
             binding.textBalance.text = "Calculating balance..."
         } else {
-            onBalance(synchronizer.saplingBalances.value)
+            onBalance(balance)
         }
     }
 
@@ -91,16 +93,6 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         if (i < 100) {
             binding.textStatus.text = "Downloading blocks...$i%"
         }
-    }
-
-    /**
-     * Extension function which checks if the balance has been updated or its -1
-     */
-    private fun PirateWalletBalance.none(): Boolean {
-        if (synchronizer.saplingBalances.value.totalZatoshi == -1L &&
-            synchronizer.saplingBalances.value.availableZatoshi == -1L
-        ) return true
-        return false
     }
 
     private fun onProcessorInfoUpdated(info: PirateCompactBlockProcessor.ProcessorInfo) {

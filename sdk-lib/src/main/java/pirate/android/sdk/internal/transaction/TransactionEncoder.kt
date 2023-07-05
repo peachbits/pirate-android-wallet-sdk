@@ -1,6 +1,7 @@
 package pirate.android.sdk.internal.transaction
 
 import pirate.android.sdk.db.entity.PirateEncodedTransaction
+import pirate.android.sdk.model.Arrrtoshi
 
 interface TransactionEncoder {
     /**
@@ -18,7 +19,7 @@ interface TransactionEncoder {
      */
     suspend fun createTransaction(
         spendingKey: String,
-        zatoshi: Long,
+        amount: Arrrtoshi,
         toAddress: String,
         memo: ByteArray? = byteArrayOf(),
         fromAccountIndex: Int = 0

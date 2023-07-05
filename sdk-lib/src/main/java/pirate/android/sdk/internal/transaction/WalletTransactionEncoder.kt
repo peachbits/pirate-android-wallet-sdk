@@ -8,6 +8,7 @@ import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
+import pirate.android.sdk.model.Arrrtoshi
 
 /**
  * Class responsible for encoding a transaction in a consistent way. This bridges the gap by
@@ -29,7 +30,7 @@ class PirateWalletTransactionEncoder(
      * exception ourselves (rather than using double-bangs for things).
      *
      * @param spendingKey the key associated with the notes that will be spent.
-     * @param zatoshi the amount of zatoshi to send.
+     * @param amount the amount of zatoshi to send.
      * @param toAddress the recipient's address.
      * @param memo the optional memo to include as part of the transaction.
      * @param fromAccountIndex the optional account id to use. By default, the 1st account is used.
@@ -38,12 +39,12 @@ class PirateWalletTransactionEncoder(
      */
     override suspend fun createTransaction(
         spendingKey: String,
-        zatoshi: Long,
+        amount: Arrrtoshi,
         toAddress: String,
         memo: ByteArray?,
         fromAccountIndex: Int
     ): PirateEncodedTransaction {
-        val transactionId = createSpend(spendingKey, zatoshi, toAddress, memo)
+        val transactionId = createSpend(spendingKey, amount, toAddress, memo)
         return repository.findEncodedTransactionById(transactionId)
             ?: throw PirateTransactionEncoderException.PirateTransactionNotFoundException(transactionId)
     }
@@ -92,7 +93,7 @@ class PirateWalletTransactionEncoder(
      * the result in the database. On average, this call takes over 10 seconds.
      *
      * @param spendingKey the key associated with the notes that will be spent.
-     * @param zatoshi the amount of zatoshi to send.
+     * @param amount the amount of zatoshi to send.
      * @param toAddress the recipient's address.
      * @param memo the optional memo to include as part of the transaction.
      * @param fromAccountIndex the optional account id to use. By default, the 1st account is used.
@@ -102,13 +103,13 @@ class PirateWalletTransactionEncoder(
      */
     private suspend fun createSpend(
         spendingKey: String,
-        zatoshi: Long,
+        amount: Arrrtoshi,
         toAddress: String,
         memo: ByteArray? = byteArrayOf(),
         fromAccountIndex: Int = 0
     ): Long {
         return twigTask(
-            "creating transaction to spend $zatoshi zatoshi to" +
+            "creating transaction to spend $amount zatoshi to" +
                 " ${toAddress.masked()} with memo $memo"
         ) {
             try {
@@ -120,7 +121,7 @@ class PirateWalletTransactionEncoder(
                     fromAccountIndex,
                     spendingKey,
                     toAddress,
-                    zatoshi,
+                    amount.value,
                     memo
                 )
             } catch (t: Throwable) {

@@ -12,6 +12,7 @@ import pirate.android.sdk.internal.db.PendingTransactionDao
 import pirate.android.sdk.internal.db.PiratePendingTransactionDb
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Arrrtoshi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
@@ -70,14 +71,14 @@ class PiratePersistentTransactionManager(
     //
 
     override suspend fun initSpend(
-        zatoshiValue: Long,
+        value: Arrrtoshi,
         toAddress: String,
         memo: String,
         fromAccountIndex: Int
     ): PendingTransaction = withContext(Dispatchers.IO) {
         twig("constructing a placeholder transaction")
         var tx = PiratePendingTransactionEntity(
-            value = zatoshiValue,
+            value = value.value,
             toAddress = toAddress,
             memo = memo.toByteArray(),
             accountIndex = fromAccountIndex
@@ -114,7 +115,7 @@ class PiratePersistentTransactionManager(
             twig("beginning to encode transaction with : $encoder")
             val encodedTx = encoder.createTransaction(
                 spendingKey,
-                tx.value,
+                tx.valueArrrtoshi,
                 tx.toAddress,
                 tx.memo,
                 tx.accountIndex
@@ -306,6 +307,7 @@ class PiratePersistentTransactionManager(
     companion object {
         /** Error code for an error while encoding a transaction */
         const val ERROR_ENCODING = 2000
+
         /** Error code for an error while submitting a transaction */
         const val ERROR_SUBMITTING = 3000
     }

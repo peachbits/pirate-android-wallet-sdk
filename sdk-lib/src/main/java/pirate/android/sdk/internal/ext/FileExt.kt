@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:filename")
+
 package pirate.android.sdk.internal.ext
 
 import kotlinx.coroutines.Dispatchers

@@ -10,8 +10,9 @@ import pirate.android.sdk.db.entity.isPending
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.LightWalletGrpcService
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.tool.DerivationTool
 import pirate.android.sdk.type.WalletBalance
+import pirate.android.sdk.model.Arrrtoshi
+import pirate.android.sdk.tool.DerivationTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -36,7 +37,7 @@ class TestWallet(
     val network: PirateNetwork = PirateNetwork.Testnet,
     val host: String = network.defaultHost,
     startHeight: Int? = null,
-    val port: Int = network.defaultPort,
+    val port: Int = network.defaultPort
 ) {
     constructor(
         backup: Backups,
@@ -70,7 +71,7 @@ class TestWallet(
     val synchronizer: SdkSynchronizer = runBlocking { Synchronizer.new(initializer) } as SdkSynchronizer
     val service = (synchronizer.processor.downloader.lightWalletService as LightWalletGrpcService)
 
-    val available get() = synchronizer.saplingBalances.value.availableZatoshi
+    val available get() = synchronizer.saplingBalances.value?.available
     val shieldedAddress =
         runBlocking { DerivationTool.deriveShieldedAddress(seed, network = network) }
     val transparentAddress =
@@ -105,7 +106,7 @@ class TestWallet(
         return this
     }
 
-    suspend fun send(address: String = transparentAddress, memo: String = "", amount: Long = 500L, fromAccountIndex: Int = 0): TestWallet {
+    suspend fun send(address: String = transparentAddress, memo: String = "", amount: Arrrtoshi = Arrrtoshi(500L), fromAccountIndex: Int = 0): TestWallet {
         Twig.sprout("$alias sending")
         synchronizer.sendToAddress(shieldedSpendingKey, amount, address, memo, fromAccountIndex)
             .takeWhile { it.isPending() }
@@ -128,9 +129,9 @@ class TestWallet(
         }
 
         synchronizer.getTransparentBalance(transparentAddress).let { walletBalance ->
-            twig("FOUND utxo balance of total: ${walletBalance.totalZatoshi}  available: ${walletBalance.availableZatoshi}")
+            twig("FOUND utxo balance of total: ${walletBalance.total}  available: ${walletBalance.available}")
 
-            if (walletBalance.availableZatoshi > 0L) {
+            if (walletBalance.available.value > 0L) {
                 synchronizer.shieldFunds(shieldedSpendingKey, transparentSecretKey)
                     .onCompletion { twig("done shielding funds") }
                     .catch { twig("Failed with $it") }

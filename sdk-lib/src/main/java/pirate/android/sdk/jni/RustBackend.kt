@@ -6,9 +6,10 @@ import pirate.android.sdk.ext.PirateSdk.SPEND_PARAM_FILE_NAME
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateWalletBalance
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -100,36 +101,51 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         }
     }
 
-    override suspend fun getShieldedAddress(account: Int) = withContext(SdkDispatchers.DATABASE_IO) {
-        getShieldedAddress(
-            pathDataDb,
-            account,
-            networkId = network.id
-        )
-    }
+    override suspend fun getShieldedAddress(account: Int) =
+        withContext(SdkDispatchers.DATABASE_IO) {
+            getShieldedAddress(
+                pathDataDb,
+                account,
+                networkId = network.id
+            )
+        }
 
     override suspend fun getTransparentAddress(account: Int, index: Int): String {
         throw NotImplementedError("TODO: implement this at the zcash_client_sqlite level. But for now, use PirateDerivationTool, instead to derive addresses from seeds")
     }
 
-    override suspend fun getBalance(account: Int) = withContext(SdkDispatchers.DATABASE_IO) {
-        getBalance(
-            pathDataDb,
-            account,
-            networkId = network.id
-        )
+    override suspend fun getBalance(account: Int): Arrrtoshi {
+        val longValue = withContext(SdkDispatchers.DATABASE_IO) {
+            getBalance(
+                pathDataDb,
+                account,
+                networkId = network.id
+            )
+        }
+
+        return Arrrtoshi(longValue)
     }
 
-    override suspend fun getVerifiedBalance(account: Int) = withContext(SdkDispatchers.DATABASE_IO) {
-        getVerifiedBalance(
-            pathDataDb,
-            account,
-            networkId = network.id
-        )
+    override suspend fun getVerifiedBalance(account: Int): Arrrtoshi {
+        val longValue = withContext(SdkDispatchers.DATABASE_IO) {
+            getVerifiedBalance(
+                pathDataDb,
+                account,
+                networkId = network.id
+            )
+        }
+
+        return Arrrtoshi(longValue)
     }
 
     override suspend fun getReceivedMemoAsUtf8(idNote: Long) =
-        withContext(SdkDispatchers.DATABASE_IO) { getReceivedMemoAsUtf8(pathDataDb, idNote, networkId = network.id) }
+        withContext(SdkDispatchers.DATABASE_IO) {
+            getReceivedMemoAsUtf8(
+                pathDataDb,
+                idNote,
+                networkId = network.id
+            )
+        }
 
     override suspend fun getSentMemoAsUtf8(idNote: Long) = withContext(SdkDispatchers.DATABASE_IO) {
         getSentMemoAsUtf8(
@@ -143,17 +159,18 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         validateCombinedChain(
             pathCacheDb,
             pathDataDb,
-            networkId = network.id,
-        )
-    }
-
-    override suspend fun getNearestRewindHeight(height: Int): Int = withContext(SdkDispatchers.DATABASE_IO) {
-        getNearestRewindHeight(
-            pathDataDb,
-            height,
             networkId = network.id
         )
     }
+
+    override suspend fun getNearestRewindHeight(height: Int): Int =
+        withContext(SdkDispatchers.DATABASE_IO) {
+            getNearestRewindHeight(
+                pathDataDb,
+                height,
+                networkId = network.id
+            )
+        }
 
     /**
      * Deletes data for all blocks above the given height. Boils down to:
@@ -161,7 +178,13 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
      * DELETE FROM blocks WHERE height > ?
      */
     override suspend fun rewindToHeight(height: Int) =
-        withContext(SdkDispatchers.DATABASE_IO) { rewindToHeight(pathDataDb, height, networkId = network.id) }
+        withContext(SdkDispatchers.DATABASE_IO) {
+            rewindToHeight(
+                pathDataDb,
+                height,
+                networkId = network.id
+            )
+        }
 
     override suspend fun scanBlocks(limit: Int): Boolean {
         return if (limit > 0) {
@@ -184,13 +207,14 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         }
     }
 
-    override suspend fun decryptAndStoreTransaction(tx: ByteArray) = withContext(SdkDispatchers.DATABASE_IO) {
-        decryptAndStoreTransaction(
-            pathDataDb,
-            tx,
-            networkId = network.id
-        )
-    }
+    override suspend fun decryptAndStoreTransaction(tx: ByteArray) =
+        withContext(SdkDispatchers.DATABASE_IO) {
+            decryptAndStoreTransaction(
+                pathDataDb,
+                tx,
+                networkId = network.id
+            )
+        }
 
     override suspend fun createToAddress(
         consensusBranchId: Long,
@@ -210,7 +234,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             memo ?: ByteArray(0),
             "$pathParamsDir/$SPEND_PARAM_FILE_NAME",
             "$pathParamsDir/$OUTPUT_PARAM_FILE_NAME",
-            networkId = network.id,
+            networkId = network.id
         )
     }
 
@@ -229,7 +253,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
                 memo ?: ByteArray(0),
                 "$pathParamsDir/$SPEND_PARAM_FILE_NAME",
                 "$pathParamsDir/$OUTPUT_PARAM_FILE_NAME",
-                networkId = network.id,
+                networkId = network.id
             )
         }
     }
@@ -256,7 +280,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
 
     override suspend fun clearUtxos(
         tAddress: String,
-        aboveHeight: Int,
+        aboveHeight: Int
     ): Boolean = withContext(SdkDispatchers.DATABASE_IO) {
         clearUtxos(
             pathDataDb,
@@ -281,7 +305,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
                 networkId = network.id
             )
         }
-        return PirateWalletBalance(total, verified)
+        return PirateWalletBalance(Arrrtoshi(total), Arrrtoshi(verified))
     }
 
     override fun isValidShieldedAddr(addr: String) =
@@ -366,7 +390,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             dbDataPath: String,
             extfvk: Array<out String>,
             extpub: Array<out String>,
-            networkId: Int,
+            networkId: Int
         ): Boolean
 
         @JvmStatic
@@ -376,14 +400,14 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             hash: String,
             time: Long,
             saplingTree: String,
-            networkId: Int,
+            networkId: Int
         ): Boolean
 
         @JvmStatic
         private external fun getShieldedAddress(
             dbDataPath: String,
             account: Int,
-            networkId: Int,
+            networkId: Int
         ): String
 
         @JvmStatic
@@ -399,49 +423,49 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         private external fun getVerifiedBalance(
             dbDataPath: String,
             account: Int,
-            networkId: Int,
+            networkId: Int
         ): Long
 
         @JvmStatic
         private external fun getReceivedMemoAsUtf8(
             dbDataPath: String,
             idNote: Long,
-            networkId: Int,
+            networkId: Int
         ): String
 
         @JvmStatic
         private external fun getSentMemoAsUtf8(
             dbDataPath: String,
             dNote: Long,
-            networkId: Int,
+            networkId: Int
         ): String
 
         @JvmStatic
         private external fun validateCombinedChain(
             dbCachePath: String,
             dbDataPath: String,
-            networkId: Int,
+            networkId: Int
         ): Int
 
         @JvmStatic
         private external fun getNearestRewindHeight(
             dbDataPath: String,
             height: Int,
-            networkId: Int,
+            networkId: Int
         ): Int
 
         @JvmStatic
         private external fun rewindToHeight(
             dbDataPath: String,
             height: Int,
-            networkId: Int,
+            networkId: Int
         ): Boolean
 
         @JvmStatic
         private external fun scanBlocks(
             dbCachePath: String,
             dbDataPath: String,
-            networkId: Int,
+            networkId: Int
         ): Boolean
 
         @JvmStatic
@@ -449,14 +473,14 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             dbCachePath: String,
             dbDataPath: String,
             limit: Int,
-            networkId: Int,
+            networkId: Int
         ): Boolean
 
         @JvmStatic
         private external fun decryptAndStoreTransaction(
             dbDataPath: String,
             tx: ByteArray,
-            networkId: Int,
+            networkId: Int
         )
 
         @JvmStatic
@@ -470,7 +494,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             memo: ByteArray,
             spendParamsPath: String,
             outputParamsPath: String,
-            networkId: Int,
+            networkId: Int
         ): Long
 
         @JvmStatic
@@ -482,7 +506,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             memo: ByteArray,
             spendParamsPath: String,
             outputParamsPath: String,
-            networkId: Int,
+            networkId: Int
         ): Long
 
         @JvmStatic
@@ -500,7 +524,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             script: ByteArray,
             value: Long,
             height: Int,
-            networkId: Int,
+            networkId: Int
         ): Boolean
 
         @JvmStatic
@@ -508,21 +532,21 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             dbDataPath: String,
             tAddress: String,
             aboveHeight: Int,
-            networkId: Int,
+            networkId: Int
         ): Boolean
 
         @JvmStatic
         private external fun getVerifiedTransparentBalance(
             pathDataDb: String,
             taddr: String,
-            networkId: Int,
+            networkId: Int
         ): Long
 
         @JvmStatic
         private external fun getTotalTransparentBalance(
             pathDataDb: String,
             taddr: String,
-            networkId: Int,
+            networkId: Int
         ): Long
     }
 }

@@ -5,13 +5,15 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import pirate.android.sdk.model.Arrrtoshi
 
 //
 // Entities
 //
 
 @Entity(
-    primaryKeys = ["id_tx"], tableName = "transactions",
+    primaryKeys = ["id_tx"],
+    tableName = "transactions",
     foreignKeys = [
         ForeignKey(
             entity = PirateBlock::class,
@@ -94,6 +96,10 @@ data class PiratePendingTransactionEntity(
     @ColumnInfo(typeAffinity = ColumnInfo.BLOB)
     override val rawTransactionId: ByteArray? = byteArrayOf()
 ) : PendingTransaction {
+
+    val valueArrrtoshi: Arrrtoshi
+        get() = Arrrtoshi(value)
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is PiratePendingTransactionEntity) return false
@@ -166,6 +172,7 @@ data class PirateConfirmedTransaction(
     val expiryHeight: Int? = null,
     override val raw: ByteArray? = byteArrayOf()
 ) : MinedTransaction, SignedTransaction {
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is PirateConfirmedTransaction) return false
@@ -206,6 +213,9 @@ data class PirateConfirmedTransaction(
         return result
     }
 }
+
+val PirateConfirmedTransaction.valueInArrrtoshi
+    get() = Arrrtoshi(value)
 
 data class PirateEncodedTransaction(val txId: ByteArray, override val raw: ByteArray, val expiryHeight: Int?) :
     SignedTransaction {
@@ -283,8 +293,7 @@ interface PendingTransaction : SignedTransaction, Transaction {
 //
 
 fun PendingTransaction.isSameTxId(other: MinedTransaction): Boolean {
-    return rawTransactionId != null && other.rawTransactionId != null &&
-        rawTransactionId!!.contentEquals(other.rawTransactionId)
+    return rawTransactionId != null && rawTransactionId!!.contentEquals(other.rawTransactionId)
 }
 
 fun PendingTransaction.isSameTxId(other: PendingTransaction): Boolean {
