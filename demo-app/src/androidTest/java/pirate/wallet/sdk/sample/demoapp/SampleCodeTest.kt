@@ -10,6 +10,7 @@ import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.flow.collect
@@ -93,10 +94,10 @@ class SampleCodeTest {
     // ///////////////////////////////////////////////////
     // Download compact block range
     @Test fun getBlockRange() {
-        val blockRange = 500_000..500_009
+        val blockRange = BlockHeight.new(PirateNetwork.Mainnet, 500_000)..BlockHeight.new(PirateNetwork.Mainnet, 500_009)
         val lightwalletService = PirateLightWalletGrpcService(context, lightwalletdHost)
         val blocks = lightwalletService.getBlockRange(blockRange)
-        assertEquals(blockRange.count(), blocks.size)
+        assertEquals(blockRange.endInclusive.value - blockRange.start.value, blocks.count())
 
         blocks.forEachIndexed { i, block ->
             log("Block #$i:    height:${block.height}   hash:${block.hash.toByteArray().toHex()}")

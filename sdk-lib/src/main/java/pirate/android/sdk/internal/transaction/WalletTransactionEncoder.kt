@@ -19,7 +19,7 @@ import pirate.android.sdk.model.Arrrtoshi
  * @property repository the repository that stores information about the transactions being created
  * such as the raw bytes and raw txId.
  */
-class PirateWalletTransactionEncoder(
+internal class PirateWalletTransactionEncoder(
     private val rustBackend: PirateRustBackendWelding,
     private val repository: TransactionRepository
 ) : TransactionEncoder {

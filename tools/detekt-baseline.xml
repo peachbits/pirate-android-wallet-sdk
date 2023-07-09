@@ -2,6 +2,7 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
+    <ID>ComplexCondition:CompactBlockProcessor.kt$CompactBlockProcessor$(null == lastScannedHeight &amp;&amp; targetHeight &lt; lastLocalBlock) || (null != lastScannedHeight &amp;&amp; targetHeight &lt; lastScannedHeight)</ID>
     <ID>ComplexMethod:SdkSynchronizer.kt$SdkSynchronizer$private suspend fun refreshPendingTransactions()</ID>
     <ID>ComplexMethod:SendFragment.kt$SendFragment$private fun onPendingTxUpdated(pendingTransaction: PendingTransaction?)</ID>
     <ID>ComplexMethod:Transactions.kt$ConfirmedTransaction$override fun equals(other: Any?): Boolean</ID>
@@ -12,6 +13,8 @@
     <ID>EmptyFunctionBlock:ReproduceZ2TFailureTest.kt$ReproduceZ2TFailureTest${ }</ID>
     <ID>EmptyFunctionBlock:SampleCodeTest.kt$SampleCodeTest${ }</ID>
     <ID>ForbiddenComment:BalancePrinterUtil.kt$BalancePrinterUtil$// TODO: clear the dataDb but leave the cacheDb</ID>
+    <ID>ForbiddenComment:CheckpointTool.kt$CheckpointTool$// TODO: If we ever add crash analytics hooks, this would be something to report</ID>
+    <ID>ForbiddenComment:CheckpointTool.kt$CheckpointTool$// TODO: potentially pull from shared preferences first</ID>
     <ID>ForbiddenComment:CompactBlockDownloader.kt$CompactBlockDownloader$// TODO: cancel anything in flight</ID>
     <ID>ForbiddenComment:CompactBlockProcessor.kt$CompactBlockProcessor$// TODO: add a concept of original checkpoint height to the processor. For now, derive it</ID>
     <ID>ForbiddenComment:CompactBlockProcessor.kt$CompactBlockProcessor$// TODO: more accurately track the utxos that were skipped (in theory, this could fail for other reasons)</ID>
@@ -39,14 +42,13 @@
     <ID>ForbiddenComment:TestUtils.kt$* Use in place of `any()` to fix the issue with mockito `any` returning null (so you can't pass it to functions that * take a non-null param) * * TODO: perhaps submit this function to the mockito kotlin project because it allows the use of non-null 'any()'</ID>
     <ID>ForbiddenComment:TestWallet.kt$TestWallet.Backups.DEFAULT$// TODO: get the proper birthday values for these wallets</ID>
     <ID>ForbiddenComment:Transactions.kt$// TODO: test for off-by-one error here. Should we use &lt;= or &lt;</ID>
-    <ID>ForbiddenComment:WalletBirthdayTool.kt$WalletBirthdayTool$// TODO: If we ever add crash analytics hooks, this would be something to report</ID>
-    <ID>ForbiddenComment:WalletBirthdayTool.kt$WalletBirthdayTool$// TODO: potentially pull from shared preferences first</ID>
     <ID>ForbiddenComment:WalletTransactionEncoder.kt$WalletTransactionEncoder$// TODO: if this error matches: Insufficient balance (have 0, need 1000 including fee)</ID>
     <ID>FunctionParameterNaming:GetBlockFragment.kt$GetBlockFragment$_unused: View? = null</ID>
     <ID>FunctionParameterNaming:GetBlockRangeFragment.kt$GetBlockRangeFragment$_unused: View</ID>
     <ID>ImplicitDefaultLocale:BlockExt.kt$String.format("%02x", b)</ID>
     <ID>ImplicitDefaultLocale:BlockExt.kt$String.format("%02x", this[i--])</ID>
     <ID>ImplicitDefaultLocale:Twig.kt$TroubleshootingTwig.Companion$String.format("$tag %1\$tD %1\$tI:%1\$tM:%1\$tS.%1\$tN", System.currentTimeMillis())</ID>
+    <ID>LargeClass:CompactBlockProcessor.kt$CompactBlockProcessor</ID>
     <ID>LongMethod:SdkSynchronizer.kt$SdkSynchronizer$private suspend fun refreshPendingTransactions()</ID>
     <ID>LongParameterList:Initializer.kt$Initializer$( val context: Context, val rustBackend: RustBackend, val network: PirateNetwork, val alias: String, val host: String, val port: Int, val viewingKeys: List&lt;UnifiedViewingKey>, val overwriteVks: Boolean, val birthday: WalletBirthday )</ID>
     <ID>LongParameterList:Initializer.kt$Initializer.Config$( seed: ByteArray, birthdayHeight: Int? = null, network: PirateNetwork, host: String = network.defaultHost, port: Int = network.defaultPort, alias: String = PirateSdk.DEFAULT_ALIAS )</ID>
@@ -57,7 +59,7 @@
     <ID>LongParameterList:RustBackend.kt$RustBackend.Companion$( dbDataPath: String, height: Int, hash: String, time: Long, saplingTree: String, networkId: Int, )</ID>
     <ID>LongParameterList:RustBackend.kt$RustBackend.Companion$( dbDataPath: String, tAddress: String, txId: ByteArray, index: Int, script: ByteArray, value: Long, height: Int, networkId: Int, )</ID>
     <ID>LongParameterList:RustBackendWelding.kt$RustBackendWelding$( consensusBranchId: Long, account: Int, extsk: String, to: String, value: Long, memo: ByteArray? = byteArrayOf() )</ID>
-    <ID>LongParameterList:RustBackendWelding.kt$RustBackendWelding$( tAddress: String, txId: ByteArray, index: Int, script: ByteArray, value: Long, height: Int )</ID>
+    <ID>LongParameterList:RustBackendWelding.kt$RustBackendWelding$( tAddress: String, txId: ByteArray, index: Int, script: ByteArray, value: Long, height: BlockHeight )</ID>
     <ID>MagicNumber:BatchMetrics.kt$BatchMetrics$1000.0f</ID>
     <ID>MagicNumber:BlockExt.kt$16</ID>
     <ID>MagicNumber:BlockExt.kt$4</ID>
@@ -133,20 +135,27 @@
     <ID>MagicNumber:build.gradle.kts$21</ID>
     <ID>MatchingDeclarationName:CurrencyFormatter.kt$Conversions</ID>
     <ID>MaxLineLength:BatchMetrics.kt$BatchMetrics$class</ID>
+    <ID>MaxLineLength:BlockHeight.kt$BlockHeight.Companion$*</ID>
     <ID>MaxLineLength:BranchIdTest.kt$BranchIdTest$assertEquals("Invalid branch ID for $networkName at height $height on ${rustBackend.network.networkName}", branchId, actual)</ID>
     <ID>MaxLineLength:BranchIdTest.kt$BranchIdTest$assertEquals("Invalid branch Id Hex value for $networkName at height $height on ${rustBackend.network.networkName}", branchHex, clientBranch)</ID>
     <ID>MaxLineLength:ChangeServiceTest.kt$ChangeServiceTest$"Exception was of the wrong type. Expected ${ChainInfoNotMatching::class.simpleName} but was ${caughtException!!::class.simpleName}"</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$!info.matchingConsensusBranchId(clientBranch) -> MismatchedBranch(clientBranch = clientBranch, serverBranch = info.consensusBranchId, networkName = network)</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$!info.matchingNetwork(network) -> MismatchedNetwork(clientNetwork = network, serverNetwork = info.chainName)</ID>
+    <ID>MaxLineLength:CheckpointTool.kt$CheckpointTool$* @param treeFiles A list of files, sorted in descending order based on `int` value of the first part of the filename.</ID>
+    <ID>MaxLineLength:CompactBlockDbStore.kt$CompactBlockDbStore$override suspend fun getLatestHeight(): BlockHeight</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$"ERROR: unable to resolve reorg at height $result after ${consecutiveChainErrors.get()} correction attempts!"</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$(lastScannedHeight.value - range.start.value) / (range.endInclusive.value - range.start.value + 1).toFloat() * 100.0f</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$// Note: blocks are public information so it's okay to print them but, still, let's not unless we're debugging something</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$// TODO: more accurately track the utxos that were skipped (in theory, this could fail for other reasons)</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$// communicate that the wallet is no longer synced because it might remain this way for 20+ seconds because we only download on 20s time boundaries so we can't trigger any immediate action</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$// so we round down to the nearest 100 and then subtract 100 to ensure that the result is always at least 100 blocks away</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$// sometimes the initial block was inserted via checkpoint and will not appear in the cache. We can get the hash another way but prevHash is correctly null.</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$internal suspend</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$oldestTransactionHeight = repository.receivedTransactions.first().lastOrNull()?.minedHeight ?: lowerBoundHeight</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$currentInfo.lastDownloadRange?.isEmpty() ?: true &amp;&amp; currentInfo.lastScanRange?.isEmpty() ?: true</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$if</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$lastDownloadRange</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$lastScanRange</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$lowerBoundHeight + MAX_REORG_SIZE + 2</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$tempOldestTransactionHeight.value - tempOldestTransactionHeight.value.rem(ZcashSdk.MAX_REORG_SIZE) - ZcashSdk.MAX_REORG_SIZE.toLong()</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("$summary${if (result == ERROR_CODE_FAILED_ENHANCE) " (but there were enhancement errors! We ignore those, for now. Memos in this block range are probably missing! This will be improved in a future release.)" else ""}! Sleeping for ${napTime}ms (latest height: ${currentInfo.networkBlockHeight}).")</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("$summary${if (result == BlockProcessingResult.FailedEnhance) " (but there were enhancement errors! We ignore those, for now. Memos in this block range are probably missing! This will be improved in a future release.)" else ""}! Sleeping for ${napTime}ms (latest height: ${currentInfo.networkBlockHeight}).")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("Also clearing block cache back to $targetHeight. These rewound blocks will download in the next scheduled scan")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("Rewinding from $lastScannedHeight to requested height: $height using target height: $targetHeight with last local block: $lastLocalBlock")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("The next block block: ${errorInfo.errorHeight} which had hash ${errorInfo.actualPrevHash} but the expected hash was ${errorInfo.expectedPrevHash}")</ID>
@@ -154,18 +163,12 @@
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("Warning: An ${error::class.java.simpleName} was encountered while verifying setup but it was ignored by the onSetupErrorHandler. Ignoring message: ${error.message}")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("Warning: Fetching UTXOs is repeatedly failing! We will only try about ${(9 - failedUtxoFetches + 2) / 3} more times then give up for this session.")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("Warning: Ignoring transaction at height ${utxo.height} @ index ${utxo.index} because it already exists")</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("We kept the cache blocks in place so we don't need to wait for the next scheduled download to rescan. Instead we will rescan and validate blocks ${range.first}..${range.last}")</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("We kept the cache blocks in place so we don't need to wait for the next scheduled download to rescan. Instead we will rescan and validate blocks ${range.start}..${range.endInclusive}")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("batch scan complete! Total time: ${metrics.cumulativeTime} Total blocks measured: ${metrics.cumulativeItems} Cumulative bps: ${metrics.cumulativeIps.format()}")</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("batch scanned ($percent%): $lastScannedHeight/${range.last} | ${metrics.batchTime}ms, ${metrics.batchItems}blks, ${metrics.batchIps.format()}bps")</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("block: $height\thash=${hash?.toHexReversed()} \tprevHash=${block?.prevHash?.toByteArray()?.toHexReversed()}")</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("batch scanned ($percent%): $lastScannedHeight/${range.endInclusive} | ${metrics.batchTime}ms, ${metrics.batchItems}blks, ${metrics.batchIps.format()}bps")</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("found $missingBlockCount missing blocks, downloading in $batches batches of $DOWNLOAD_BATCH_SIZE...")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("not rewinding dataDb because the last scanned height is $lastScannedHeight and the last local block is $lastLocalBlock both of which are less than the target height of $targetHeight")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("validation failed at block ${errorInfo.errorHeight} which had hash ${errorInfo.actualPrevHash} but the expected hash was ${errorInfo.expectedPrevHash}")</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$val end = min((range.first + (i * DOWNLOAD_BATCH_SIZE)) - 1, range.last) // subtract 1 on the first value because the range is inclusive</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$val errorMessage = "ERROR: unable to resolve reorg at height $result after ${consecutiveChainErrors.get()} correction attempts!"</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$val lastDownloadedHeight = downloader.getLastDownloadedHeight().takeUnless { it &lt; network.saplingActivationHeight } ?: -1</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$val originalCheckpoint = lowerBoundHeight + MAX_REORG_SIZE + 2 // add one because we already have the checkpoint. Add one again because we delete ABOVE the block</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$val percentValue = (lastScannedHeight - range.first) / (range.last - range.first + 1).toFloat() * 100.0f</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$val summary = if (noWorkDone) "Nothing to process: no new blocks to download or scan" else "Done processing blocks"</ID>
     <ID>MaxLineLength:ConsensusBranchId.kt$ConsensusBranchId.SPROUT$// TODO: see if we can find a way to not rely on this separate source of truth (either stop converting from hex to display name in the apps or use Rust to get this info)</ID>
     <ID>MaxLineLength:DarksideApi.kt$DarksideApi$onNext(it.newBuilderForType().setData(it.data).setHeight(tipHeight.toLong()).build())</ID>
     <ID>MaxLineLength:DarksideApi.kt$DarksideApi$twig("resetting darksidewalletd with saplingActivation=$saplingActivationHeight branchId=$branchId chainName=$chainName")</ID>
@@ -187,6 +190,7 @@
     <ID>MaxLineLength:DerivedDataDb.kt$TransactionDao$ /* we want all received txs except those that are change and all sent transactions (even those that haven't been mined yet). Note: every entry in the 'send_notes' table has a non-null value for 'address' */</ID>
     <ID>MaxLineLength:DerivedDataDb.kt$TransactionDao$// delete the UTXOs because these are effectively cached and we don't have a good way of knowing whether they're spent</ID>
     <ID>MaxLineLength:DerivedDataDb.kt$TransactionDao$suspend</ID>
+    <ID>MaxLineLength:Exceptions.kt$BirthdayException.ExactBirthdayNotFoundException$class</ID>
     <ID>MaxLineLength:Exceptions.kt$CompactBlockProcessorException$ConfigurationException : CompactBlockProcessorException</ID>
     <ID>MaxLineLength:Exceptions.kt$CompactBlockProcessorException$Disconnected : CompactBlockProcessorException</ID>
     <ID>MaxLineLength:Exceptions.kt$CompactBlockProcessorException.EnhanceTransactionError$EnhanceTxDecryptError : EnhanceTransactionError</ID>
@@ -276,6 +280,7 @@
     <ID>MaxLineLength:RustBackend.kt$RustBackend$// // serialize the list, send it over to rust and get back a serialized set of results that we parse out and return</ID>
     <ID>MaxLineLength:RustBackend.kt$RustBackend$// override fun parseTransactionDataList(tdl: LocalRpcTypes.TransactionDataList): LocalRpcTypes.TransparentTransactionList {</ID>
     <ID>MaxLineLength:RustBackend.kt$RustBackend$throw NotImplementedError("TODO: implement this at the zcash_client_sqlite level. But for now, use DerivationTool, instead to derive addresses from seeds")</ID>
+    <ID>MaxLineLength:RustBackendWelding.kt$RustBackendWelding$suspend fun clearUtxos(tAddress: String, aboveHeightInclusive: BlockHeight = BlockHeight(network.saplingActivationHeight.value)): Boolean</ID>
     <ID>MaxLineLength:SanityTest.kt$SanityTest$"$info\n ${wallet.networkName} Lightwalletd is too far behind. Downloader height $downloaderHeight is more than 10 blocks behind block explorer height $expectedHeight"</ID>
     <ID>MaxLineLength:SanityTest.kt$SanityTest$"is using plaintext. This will cause problems for the test. Ensure that the `lightwalletd_allow_very_insecure_connections` resource value is false"</ID>
     <ID>MaxLineLength:SanityTest.kt$SanityTest$assertTrue("$networkName failed to return a proper block. Height was ${block.height} but we expected $height", block.height.toInt() == height)</ID>
@@ -333,7 +338,6 @@
     <ID>MaxLineLength:TransparentTest.kt$TransparentTest.Companion$const val PHRASE = "deputy visa gentle among clean scout farm drive comfort patch skin salt ranch cool ramp warrior drink narrow normal lunch behind salt deal person"</ID>
     <ID>MaxLineLength:TransparentTest.kt$TransparentTest.Companion.ExpectedTestnet$override val zAddr = "ztestsapling1wn3tw9w5rs55x5yl586gtk72e8hcfdq8zsnjzcu8p7ghm8lrx54axc74mvm335q7lmy3g0sqje6"</ID>
     <ID>MaxLineLength:Twig.kt$inline</ID>
-    <ID>MaxLineLength:WalletBirthdayTool.kt$WalletBirthdayTool$* @param treeFiles A list of files, sorted in descending order based on `int` value of the first part of the filename.</ID>
     <ID>MaxLineLength:WalletService.kt$var duration = Math.pow(initialDelayMillis.toDouble(), (sequence.toDouble() / 4.0)).toLong() + Random.nextLong(1000L)</ID>
     <ID>MaxLineLength:WalletService.kt$var sequence = 0 // count up to the max and then reset to half. So that we don't repeat the max but we also don't repeat too much.</ID>
     <ID>MaxLineLength:WalletTypes.kt$PirateNetwork$enum</ID>
@@ -348,7 +352,6 @@
     <ID>MayBeConst:DemoConstants.kt$DemoConstants$val sendAmount: Double = 0.000018</ID>
     <ID>MayBeConst:DemoConstants.kt$DemoConstants$val sendAmount: Double = 0.00017</ID>
     <ID>MayBeConst:DemoConstants.kt$DemoConstants$val utxoEndHeight: Int = 1075590</ID>
-    <ID>MayBeConst:DemoConstants.kt$DemoConstants$val utxoEndHeight: Int = 968085</ID>
     <ID>MayBeConst:TestnetIntegrationTest.kt$TestnetIntegrationTest.Companion$val address = "zs1m30y59wxut4zk9w24d6ujrdnfnl42hpy0ugvhgyhr8s0guszutqhdj05c7j472dndjstulph74m"</ID>
     <ID>MayBeConst:TestnetIntegrationTest.kt$TestnetIntegrationTest.Companion$val toAddress = "zs1vp7kvlqr4n9gpehztr76lcn6skkss9p8keqs3nv8avkdtjrcctrvmk9a7u494kluv756jeee5k0"</ID>
     <ID>MayBeConst:PirateSdk.kt$PirateSdk$/** * Default amount of time, in milliseconds, to poll for new blocks. Typically, this should be about half the average * block time. */ val POLL_INTERVAL = 20_000L</ID>
@@ -383,6 +386,7 @@
     <ID>SwallowedException:Ext.kt$t: Throwable</ID>
     <ID>SwallowedException:SdkSynchronizer.kt$SdkSynchronizer$t: Throwable</ID>
     <ID>SwallowedException:SharedViewModel.kt$SharedViewModel$t: Throwable</ID>
+    <ID>TooGenericExceptionCaught:CheckpointTool.kt$CheckpointTool$t: Throwable</ID>
     <ID>TooGenericExceptionCaught:CompactBlockDownloader.kt$CompactBlockDownloader$t: Throwable</ID>
     <ID>TooGenericExceptionCaught:CompactBlockProcessor.kt$CompactBlockProcessor$e: Throwable</ID>
     <ID>TooGenericExceptionCaught:CompactBlockProcessor.kt$CompactBlockProcessor$t: Throwable</ID>
@@ -399,7 +403,6 @@
     <ID>TooGenericExceptionCaught:SdkSynchronizer.kt$SdkSynchronizer$tError: Throwable</ID>
     <ID>TooGenericExceptionCaught:SdkSynchronizer.kt$SdkSynchronizer$zError: Throwable</ID>
     <ID>TooGenericExceptionCaught:SharedViewModel.kt$SharedViewModel$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:WalletBirthdayTool.kt$WalletBirthdayTool$t: Throwable</ID>
     <ID>TooGenericExceptionCaught:WalletService.kt$t: Throwable</ID>
     <ID>TooGenericExceptionCaught:WalletTransactionEncoder.kt$WalletTransactionEncoder$t: Throwable</ID>
     <ID>TooGenericExceptionThrown:DarksideApi.kt$DarksideApi.EmptyResponse$throw RuntimeException("Server responded with an error: $error caused by ${error?.cause}")</ID>

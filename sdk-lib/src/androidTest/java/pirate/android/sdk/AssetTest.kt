@@ -3,7 +3,7 @@ package pirate.android.sdk
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.filters.SmallTest
-import pirate.android.sdk.tool.PirateWalletBirthdayTool
+import pirate.android.sdk.tool.CheckpointTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
@@ -57,7 +57,7 @@ class AssetTest {
 
     private fun assertFileContents(network: PirateNetwork, files: Array<String>?) {
         files?.map { filename ->
-            val filePath = "${PirateWalletBirthdayTool.birthdayDirectory(network)}/$filename"
+            val filePath = "${CheckpointTool.checkpointDirectory(network)}/$filename"
             ApplicationProvider.getApplicationContext<Context>().assets.open(filePath)
                 .use { inputSteam ->
                     inputSteam.bufferedReader().use { bufferedReader ->
@@ -82,7 +82,7 @@ class AssetTest {
 
             assertEquals(
                 "File: ${it.filename}",
-                PirateWalletBirthdayTool.birthdayHeight(it.filename),
+                CheckpointTool.checkpointHeightFromFilename(network, it.filename),
                 jsonObject.getInt("height")
             )
 
@@ -94,9 +94,9 @@ class AssetTest {
 
     companion object {
         fun listAssets(network: PirateNetwork) = runBlocking {
-            PirateWalletBirthdayTool.listBirthdayDirectoryContents(
+            CheckpointTool.listCheckpointDirectoryContents(
                 ApplicationProvider.getApplicationContext<Context>(),
-                PirateWalletBirthdayTool.birthdayDirectory(network)
+                CheckpointTool.checkpointDirectory(network)
             )
         }
     }

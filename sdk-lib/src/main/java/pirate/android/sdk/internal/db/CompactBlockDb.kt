@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.Transaction
 import pirate.android.sdk.db.entity.PirateCompactBlockEntity
 
 //
@@ -42,12 +43,24 @@ interface CompactBlockDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(block: List<PirateCompactBlockEntity>)
 
+    @Transaction
+    suspend fun insert(blocks: Sequence<PirateCompactBlockEntity>): Int {
+        var count = 0
+
+        blocks.forEach {
+            insert(it)
+            count++
+        }
+
+        return count
+    }
+
     @Query("DELETE FROM compactblocks WHERE height > :height")
-    suspend fun rewindTo(height: Int)
+    suspend fun rewindTo(height: Long)
 
     @Query("SELECT MAX(height) FROM compactblocks")
-    suspend fun latestBlockHeight(): Int
+    suspend fun latestBlockHeight(): Long
 
     @Query("SELECT data FROM compactblocks WHERE height = :height")
-    suspend fun findCompactBlock(height: Int): ByteArray?
+    suspend fun findCompactBlock(height: Long): ByteArray?
 }

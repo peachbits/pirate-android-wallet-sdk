@@ -1,5 +1,7 @@
 package pirate.android.sdk.exception
 
+import pirate.android.sdk.internal.model.Checkpoint
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.type.PirateNetwork
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.Status
@@ -15,8 +17,7 @@ open class PirateSdkException(message: String, cause: Throwable?) : RuntimeExcep
  * Exceptions thrown in the Rust layer of the SDK. We may not always be able to surface details about this
  * exception so it's important for the SDK to provide helpful messages whenever these errors are encountered.
  */
-sealed class PirateRustLayerException(message: String, cause: Throwable? = null) :
-    PirateSdkException(message, cause) {
+sealed class PirateRustLayerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     class PirateBalanceException(cause: Throwable) : PirateRustLayerException(
         "Error while requesting the current balance over " +
             "JNI. This might mean that the database has been corrupted and needs to be rebuilt. Verify that " +
@@ -49,8 +50,8 @@ sealed class PirateRepositoryException(message: String, cause: Throwable? = null
  */
 sealed class PirateSynchronizerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
     object PirateFalseStart : PirateSynchronizerException(
-        "This synchronizer was already started. Multiple calls to start are not" +
-            "allowed and once a synchronizer has stopped it cannot be restarted."
+        "This pirate synchronizer was already started. Multiple calls to start are not" +
+            "allowed and once a pirate synchronizer has stopped it cannot be restarted."
     )
     object NotYetStarted : PirateSynchronizerException(
         "The synchronizer has not yet started. Verify that" +
@@ -96,9 +97,9 @@ sealed class PirateCompactBlockProcessorException(message: String, cause: Throwa
         "Attempting to scan without an account. This is probably a setup error or a race condition."
     )
 
-    open class PirateEnhanceTransactionError(message: String, val height: Int, cause: Throwable) : PirateCompactBlockProcessorException(message, cause) {
-        class PirateEnhanceTxDownloadError(height: Int, cause: Throwable) : PirateEnhanceTransactionError("Error while attempting to download a transaction to enhance", height, cause)
-        class PirateEnhanceTxDecryptError(height: Int, cause: Throwable) : PirateEnhanceTransactionError("Error while attempting to decrypt and store a transaction to enhance", height, cause)
+    open class PirateEnhanceTransactionError(message: String, val height: BlockHeight?, cause: Throwable) : PirateCompactBlockProcessorException(message, cause) {
+        class PirateEnhanceTxDownloadError(height: BlockHeight?, cause: Throwable) : PirateEnhanceTransactionError("Error while attempting to download a transaction to enhance", height, cause)
+        class PirateEnhanceTxDecryptError(height: BlockHeight?, cause: Throwable) : PirateEnhanceTransactionError("Error while attempting to decrypt and store a transaction to enhance", height, cause)
     }
 
     class PirateMismatchedNetwork(clientNetwork: String?, serverNetwork: String?) : PirateCompactBlockProcessorException(
@@ -122,14 +123,14 @@ sealed class PirateBirthdayException(message: String, cause: Throwable? = null) 
     class PirateMissingBirthdayFilesException(directory: String) : PirateBirthdayException(
         "Cannot initialize wallet because no birthday files were found in the $directory directory."
     )
-    class PirateExactBirthdayNotFoundException(height: Int, nearestMatch: Int? = null) : PirateBirthdayException(
-        "Unable to find birthday that exactly matches $height.${
-        if (nearestMatch != null)
-            " An exact match was request but the nearest match found was $nearestMatch."
-        else ""
+    class PirateExactBirthdayNotFoundException internal constructor(birthday: BlockHeight, nearestMatch: Checkpoint? = null) : PirateBirthdayException(
+        "Unable to find birthday that exactly matches $birthday.${
+        if (nearestMatch != null) {
+            " An exact match was request but the nearest match found was ${nearestMatch.height}."
+        } else ""
         }"
     )
-    class PirateBirthdayFileNotFoundException(directory: String, height: Int?) : PirateBirthdayException(
+    class PirateBirthdayFileNotFoundException(directory: String, height: BlockHeight?) : PirateBirthdayException(
         "Unable to find birthday file for $height verify that $directory/$height.json exists."
     )
     class PirateMalformattedBirthdayFilesException(directory: String, file: String, cause: Throwable?) : PirateBirthdayException(
@@ -176,8 +177,8 @@ sealed class PirateInitializerException(message: String, cause: Throwable? = nul
                 " data."
         )
 
-    class PirateInvalidBirthdayHeightException(height: Int?, network: PirateNetwork) : PirateInitializerException(
-        "Invalid birthday height of $height. The birthday height must be at least the height of" +
+    class PirateInvalidBirthdayHeightException(birthday: BlockHeight?, network: PirateNetwork) : PirateInitializerException(
+        "Invalid birthday height of ${birthday?.value}. The birthday height must be at least the height of" +
             " Sapling activation on ${network.networkName} (${network.saplingActivationHeight})."
     )
 
@@ -243,7 +244,7 @@ sealed class PirateTransactionEncoderException(message: String, cause: Throwable
             " with id $transactionId, does not have any raw data. This is a scenario where the wallet should have thrown" +
             " an exception but failed to do so."
     )
-    class PirateIncompleteScanException(lastScannedHeight: Int) : PirateTransactionEncoderException(
+    class PirateIncompleteScanException(lastScannedHeight: BlockHeight) : PirateTransactionEncoderException(
         "Cannot" +
             " create spending transaction because scanning is incomplete. We must scan up to the" +
             " latest height to know which consensus rules to apply. However, the last scanned" +

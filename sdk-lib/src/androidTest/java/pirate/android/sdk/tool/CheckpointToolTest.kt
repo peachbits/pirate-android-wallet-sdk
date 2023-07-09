@@ -4,18 +4,19 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import pirate.android.sdk.tool.PirateWalletBirthdayTool.IS_FALLBACK_ON_FAILURE
+import pirate.android.sdk.tool.CheckpointTool.IS_FALLBACK_ON_FAILURE
+import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PirateWalletBirthdayToolTest {
+class CheckpointToolTest {
     @Test
     @SmallTest
     fun birthday_height_from_filename() {
-        assertEquals(123, PirateWalletBirthdayTool.birthdayHeight("123.json"))
+        assertEquals(123, CheckpointTool.checkpointHeightFromFilename(PirateNetwork.Mainnet, "123.json"))
     }
 
     @Test
@@ -27,13 +28,14 @@ class PirateWalletBirthdayToolTest {
 
         val context = ApplicationProvider.getApplicationContext<Context>()
         val birthday = runBlocking {
-            PirateWalletBirthdayTool.getFirstValidWalletBirthday(
+            CheckpointTool.getFirstValidWalletBirthday(
                 context,
+                PirateNetwork.Mainnet,
                 directory,
                 listOf("1300000.json", "1290000.json")
             )
         }
-        assertEquals(1300000, birthday.height)
+        assertEquals(1300000, birthday.height.value)
     }
 
     @Test
@@ -46,12 +48,13 @@ class PirateWalletBirthdayToolTest {
         val directory = "co.electriccoin.zcash/checkpoint/badnet"
         val context = ApplicationProvider.getApplicationContext<Context>()
         val birthday = runBlocking {
-            PirateWalletBirthdayTool.getFirstValidWalletBirthday(
+            CheckpointTool.getFirstValidWalletBirthday(
                 context,
+                PirateNetwork.Mainnet,
                 directory,
                 listOf("1300000.json", "1290000.json")
             )
         }
-        assertEquals(1290000, birthday.height)
+        assertEquals(1290000, birthday.height.value)
     }
 }

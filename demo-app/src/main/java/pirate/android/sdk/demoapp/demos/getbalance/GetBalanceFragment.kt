@@ -51,7 +51,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         runBlocking {
             PirateInitializer.new(requireApplicationContext(), null) {
                 it.setNetwork(PirateNetwork.fromResources(requireApplicationContext()))
-                it.importWallet(viewingKey, network = PirateNetwork.fromResources(requireApplicationContext()))
+                it.newWallet(viewingKey, network = PirateNetwork.fromResources(requireApplicationContext()))
             }
         }.let { initializer ->
             synchronizer = Synchronizer.newBlocking(initializer)
@@ -81,7 +81,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
 
     private fun onStatus(status: Synchronizer.PirateStatus) {
         binding.textStatus.text = "Status: $status"
-        val balance = synchronizer.saplingBalances.value
+        val balance: PirateWalletBalance? = synchronizer.saplingBalances.value
         if (null == balance) {
             binding.textBalance.text = "Calculating balance..."
         } else {

@@ -5,6 +5,7 @@ import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.type.PirateNetwork
 import org.junit.Ignore
 import org.junit.Test
@@ -23,7 +24,12 @@ class TransactionCounterUtil {
     @Ignore("This test is broken")
     fun testBlockSize() {
         val sizes = mutableMapOf<Int, Int>()
-        service.getBlockRange(900_000..910_000).forEach { b ->
+        service.getBlockRange(
+            BlockHeight.new(PirateNetwork.Mainnet, 900_000)..BlockHeight.new(
+                PirateNetwork.Mainnet,
+                910_000
+            )
+        ).forEach { b ->
             twig("h: ${b.header.size()}")
             val s = b.serializedSize
             sizes[s] = (sizes[s] ?: 0) + 1
@@ -38,7 +44,12 @@ class TransactionCounterUtil {
         val outputCounts = mutableMapOf<Int, Int>()
         var totalOutputs = 0
         var totalTxs = 0
-        service.getBlockRange(900_000..950_000).forEach { b ->
+        service.getBlockRange(
+            BlockHeight.new(PirateNetwork.Mainnet, 900_000)..BlockHeight.new(
+                PirateNetwork.Mainnet,
+                950_000
+            )
+        ).forEach { b ->
             b.header.size()
             b.vtxList.map { it.outputsCount }.forEach { oCount ->
                 outputCounts[oCount] = (outputCounts[oCount] ?: 0) + oCount.coerceAtLeast(1)

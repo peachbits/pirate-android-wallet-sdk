@@ -7,11 +7,15 @@ import android.view.View
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentGetBlockBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
+import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.demoapp.util.mainActivity
 import pirate.android.sdk.demoapp.util.toHtml
 import pirate.android.sdk.demoapp.util.toRelativeTime
 import pirate.android.sdk.demoapp.util.withCommas
 import pirate.android.sdk.ext.toHex
+import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.type.PirateNetwork
+import kotlin.math.min
 
 /**
  * Retrieves a compact block from the lightwalletd service and displays basic information about it.
@@ -20,7 +24,7 @@ import pirate.android.sdk.ext.toHex
  */
 class GetBlockFragment : BaseDemoFragment<FragmentGetBlockBinding>() {
 
-    private fun setBlockHeight(blockHeight: Int) {
+    private fun setBlockHeight(blockHeight: BlockHeight) {
         val blocks =
             lightwalletService?.getBlockRange(blockHeight..blockHeight)
         val block = blocks?.firstOrNull()
@@ -38,8 +42,11 @@ class GetBlockFragment : BaseDemoFragment<FragmentGetBlockBinding>() {
     }
 
     private fun onApply(_unused: View? = null) {
+        val network = PirateNetwork.fromResources(requireApplicationContext())
+        val newHeight = min(binding.textBlockHeight.text.toString().toLongOrNull() ?: network.saplingActivationHeight.value, network.saplingActivationHeight.value)
+
         try {
-            setBlockHeight(binding.textBlockHeight.text.toString().toInt())
+            setBlockHeight(BlockHeight.new(network, newHeight))
         } catch (t: Throwable) {
             toast("Error: $t")
         }

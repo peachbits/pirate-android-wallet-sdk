@@ -6,9 +6,10 @@ import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.ext.deleteSuspend
+import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.tool.PirateWalletBirthdayTool
-import pirate.android.sdk.type.PirateWalletBirthday
+import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.tool.CheckpointTool
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
@@ -30,7 +31,7 @@ class BalancePrinterUtil {
 
     private val network = PirateNetwork.Mainnet
     private val downloadBatchSize = 9_000
-    private val birthdayHeight = 523240
+    private val birthdayHeight = BlockHeight.new(network, 523240)
 
     private val mnemonics = SimpleMnemonics()
     private val context = InstrumentationRegistry.getInstrumentation().context
@@ -46,14 +47,14 @@ class BalancePrinterUtil {
 
 //    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
 
-    private lateinit var birthday: PirateWalletBirthday
+    private lateinit var birthday: Checkpoint
     private var synchronizer: Synchronizer? = null
 
     @Before
     fun setup() {
         Twig.plant(PirateTroubleshootingTwig())
         cacheBlocks()
-        birthday = runBlocking { PirateWalletBirthdayTool.loadNearest(context, network, birthdayHeight) }
+        birthday = runBlocking { CheckpointTool.loadNearest(context, network, birthdayHeight) }
     }
 
     private fun cacheBlocks() = runBlocking {

@@ -12,6 +12,7 @@ import pirate.android.sdk.internal.db.PendingTransactionDao
 import pirate.android.sdk.internal.db.PiratePendingTransactionDb
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.Arrrtoshi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
@@ -98,10 +99,10 @@ class PiratePersistentTransactionManager(
         tx
     }
 
-    override suspend fun applyMinedHeight(pendingTx: PendingTransaction, minedHeight: Int) {
+    override suspend fun applyMinedHeight(pendingTx: PendingTransaction, minedHeight: BlockHeight) {
         twig("a pending transaction has been mined!")
         safeUpdate("updating mined height for pending tx id: ${pendingTx.id} to $minedHeight") {
-            updateMinedHeight(pendingTx.id, minedHeight)
+            updateMinedHeight(pendingTx.id, minedHeight.value)
         }
     }
 

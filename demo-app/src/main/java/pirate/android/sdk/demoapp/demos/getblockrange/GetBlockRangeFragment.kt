@@ -8,9 +8,13 @@ import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.R
 import pirate.android.sdk.demoapp.databinding.FragmentGetBlockRangeBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
+import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.demoapp.util.mainActivity
 import pirate.android.sdk.demoapp.util.toRelativeTime
 import pirate.android.sdk.demoapp.util.withCommas
+import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.type.PirateNetwork
+import kotlin.math.max
 
 /**
  * Retrieves a range of compact block from the lightwalletd service and displays basic information
@@ -20,16 +24,17 @@ import pirate.android.sdk.demoapp.util.withCommas
  */
 class GetBlockRangeFragment : BaseDemoFragment<FragmentGetBlockRangeBinding>() {
 
-    private fun setBlockRange(blockRange: IntRange) {
+    private fun setBlockRange(blockRange: ClosedRange<BlockHeight>) {
         val start = System.currentTimeMillis()
         val blocks =
             lightwalletService?.getBlockRange(blockRange)
         val fetchDelta = System.currentTimeMillis() - start
 
         // Note: This is a demo so we won't worry about iterating efficiently over these blocks
-
+        // Note: Converting the blocks sequence to a list can consume a lot of memory and may
+        // cause OOM.
         binding.textInfo.text = Html.fromHtml(
-            blocks?.run {
+            blocks?.toList()?.run {
                 val count = size
                 val emptyCount = count { it.vtxCount == 0 }
                 val maxTxs = maxByOrNull { it.vtxCount }
@@ -41,9 +46,9 @@ class GetBlockRangeFragment : BaseDemoFragment<FragmentGetBlockRangeBinding>() {
                     block.vtxList.maxOfOrNull { it.outputsCount } ?: -1
                 }
                 val maxOutTx = maxOuts?.vtxList?.maxByOrNull { it.outputsCount }
-                val txCount = sumBy { it.vtxCount }
-                val outCount = sumBy { block -> block.vtxList.sumBy { it.outputsCount } }
-                val inCount = sumBy { block -> block.vtxList.sumBy { it.spendsCount } }
+                val txCount = sumOf { it.vtxCount }
+                val outCount = sumOf { block -> block.vtxList.sumOf { it.outputsCount } }
+                val inCount = sumOf { block -> block.vtxList.sumOf { it.spendsCount } }
 
                 val processTime = System.currentTimeMillis() - start - fetchDelta
                 @Suppress("MaxLineLength")
@@ -69,8 +74,9 @@ class GetBlockRangeFragment : BaseDemoFragment<FragmentGetBlockRangeBinding>() {
     }
 
     private fun onApply(_unused: View) {
-        val start = binding.textStartHeight.text.toString().toInt()
-        val end = binding.textEndHeight.text.toString().toInt()
+        val network = PirateNetwork.fromResources(requireApplicationContext())
+        val start = max(binding.textStartHeight.text.toString().toLongOrNull() ?: network.saplingActivationHeight.value, network.saplingActivationHeight.value)
+        val end = max(binding.textEndHeight.text.toString().toLongOrNull() ?: network.saplingActivationHeight.value, network.saplingActivationHeight.value)
         if (start <= end) {
             try {
                 with(binding.buttonApply) {
@@ -78,7 +84,7 @@ class GetBlockRangeFragment : BaseDemoFragment<FragmentGetBlockRangeBinding>() {
                     setText(R.string.loading)
                     binding.textInfo.setText(R.string.loading)
                     post {
-                        setBlockRange(start..end)
+                        setBlockRange(BlockHeight.new(network, start)..BlockHeight.new(network, end))
                         isEnabled = true
                         setText(R.string.apply)
                     }

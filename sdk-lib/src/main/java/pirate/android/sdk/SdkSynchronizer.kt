@@ -36,6 +36,7 @@ import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.block.CompactBlockStore
 import pirate.android.sdk.internal.ext.toHexReversed
 import pirate.android.sdk.internal.ext.tryNull
+import pirate.android.sdk.internal.isEmpty
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.transaction.OutboundTransactionManager
@@ -46,6 +47,7 @@ import pirate.android.sdk.internal.transaction.TransactionRepository
 import pirate.android.sdk.internal.transaction.PirateWalletTransactionEncoder
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.tool.PirateDerivationTool
@@ -188,7 +190,7 @@ class PirateSdkSynchronizer internal constructor(
      * The latest height seen on the network while processing blocks. This may differ from the
      * latest height scanned and is useful for determining block confirmations and expiration.
      */
-    override val networkHeight: StateFlow<Int> = processor.networkHeight
+    override val networkHeight: StateFlow<BlockHeight?> = processor.networkHeight
 
     //
     // Error Handling
@@ -230,7 +232,7 @@ class PirateSdkSynchronizer internal constructor(
      * A callback to invoke whenever a chain error is encountered. These occur whenever the
      * processor detects a missing or non-chain-sequential block (i.e. a reorg).
      */
-    override var onChainErrorHandler: ((errorHeight: Int, rewindHeight: Int) -> Any)? = null
+    override var onChainErrorHandler: ((errorHeight: BlockHeight, rewindHeight: BlockHeight) -> Any)? = null
 
     //
     // Public API
@@ -242,9 +244,11 @@ class PirateSdkSynchronizer internal constructor(
      * this, a wallet will more likely want to consume the flow of processor info using
      * [processorInfo].
      */
-    override val latestHeight: Int get() = processor.currentInfo.networkBlockHeight
+    override val latestHeight
+        get() = processor.currentInfo.networkBlockHeight
 
-    override val latestBirthdayHeight: Int get() = processor.birthdayHeight
+    override val latestBirthdayHeight
+        get() = processor.birthdayHeight
 
     override suspend fun prepare(): Synchronizer = apply {
         // Do nothing; this could likely be removed
@@ -318,10 +322,10 @@ class PirateSdkSynchronizer internal constructor(
         )
     }
 
-    override suspend fun getNearestRewindHeight(height: Int): Int =
+    override suspend fun getNearestRewindHeight(height: BlockHeight): BlockHeight =
         processor.getNearestRewindHeight(height)
 
-    override suspend fun rewindToNearestHeight(height: Int, alsoClearBlockCache: Boolean) {
+    override suspend fun rewindToNearestHeight(height: BlockHeight, alsoClearBlockCache: Boolean) {
         processor.rewindToNearestHeight(height, alsoClearBlockCache)
     }
 
@@ -335,11 +339,11 @@ class PirateSdkSynchronizer internal constructor(
 
     // TODO: turn this section into the data access API. For now, just aggregate all the things that we want to do with the underlying data
 
-    suspend fun findBlockHash(height: Int): ByteArray? {
+    suspend fun findBlockHash(height: BlockHeight): ByteArray? {
         return (storage as? PiratePagedTransactionRepository)?.findBlockHash(height)
     }
 
-    suspend fun findBlockHashAsHex(height: Int): String? {
+    suspend fun findBlockHashAsHex(height: BlockHeight): String? {
         return findBlockHash(height)?.toHexReversed()
     }
 
@@ -479,7 +483,7 @@ class PirateSdkSynchronizer internal constructor(
         return onSetupErrorHandler?.invoke(error) == true
     }
 
-    private fun onChainError(errorHeight: Int, rewindHeight: Int) {
+    private fun onChainError(errorHeight: BlockHeight, rewindHeight: BlockHeight) {
         twig("Chain error detected at height: $errorHeight. Rewinding to: $rewindHeight")
         if (onChainErrorHandler == null) {
             twig(
@@ -494,7 +498,7 @@ class PirateSdkSynchronizer internal constructor(
     /**
      * @param elapsedMillis the amount of time that passed since the last scan
      */
-    private suspend fun onScanComplete(scannedRange: IntRange, elapsedMillis: Long) {
+    private suspend fun onScanComplete(scannedRange: ClosedRange<BlockHeight>?, elapsedMillis: Long) {
         // We don't need to update anything if there have been no blocks
         // refresh anyway if:
         // - if it's the first time we finished scanning
@@ -694,7 +698,7 @@ class PirateSdkSynchronizer internal constructor(
         txManager.monitorById(it.id)
     }.distinctUntilChanged()
 
-    override suspend fun refreshUtxos(address: String, startHeight: Int): Int? {
+    override suspend fun refreshUtxos(address: String, startHeight: BlockHeight): Int? {
         return processor.refreshUtxos(address, startHeight)
     }
 
@@ -784,15 +788,16 @@ object DefaultSynchronizerFactory {
     suspend fun defaultTransactionRepository(initializer: PirateInitializer): TransactionRepository =
         PiratePagedTransactionRepository.new(
             initializer.context,
+            initializer.network,
             DEFAULT_PAGE_SIZE,
             initializer.rustBackend,
-            initializer.birthday,
+            initializer.checkpoint,
             initializer.viewingKeys,
             initializer.overwriteVks
         )
 
     fun defaultBlockStore(initializer: PirateInitializer): CompactBlockStore =
-        PirateCompactBlockDbStore.new(initializer.context, initializer.rustBackend.pathCacheDb)
+        PirateCompactBlockDbStore.new(initializer.context, initializer.network, initializer.rustBackend.pathCacheDb)
 
     fun defaultService(initializer: PirateInitializer): LightWalletService =
         PirateLightWalletGrpcService(initializer.context, initializer.host, initializer.port)

@@ -4,6 +4,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import pirate.android.sdk.darkside.test.DarksideTestCoordinator
 import pirate.android.sdk.darkside.test.ScopedTest
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.type.PirateNetwork
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.BeforeClass
@@ -13,7 +15,10 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ReorgSmallTest : ScopedTest() {
 
-    private val targetHeight = 663250
+    private val targetHeight = BlockHeight.new(
+        PirateNetwork.Mainnet,
+        663250
+    )
     private val hashBeforeReorg = "09ec0d5de30d290bc5a2318fbf6a2427a81c7db4790ce0e341a96aeac77108b9"
     private val hashAfterReorg = "tbd"
 

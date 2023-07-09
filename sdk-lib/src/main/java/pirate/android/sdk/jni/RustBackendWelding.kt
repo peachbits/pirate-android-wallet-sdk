@@ -1,5 +1,7 @@
 package pirate.android.sdk.jni
 
+import pirate.android.sdk.internal.model.Checkpoint
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.type.PirateUnifiedViewingKey
@@ -11,7 +13,7 @@ import pirate.android.sdk.type.PirateNetwork
  * It is not documented because it is not intended to be used, directly.
  * Instead, use the synchronizer or one of its subcomponents.
  */
-interface PirateRustBackendWelding {
+internal interface PirateRustBackendWelding {
 
     val network: PirateNetwork
 
@@ -36,7 +38,7 @@ interface PirateRustBackendWelding {
 
     suspend fun initAccountsTable(vararg keys: PirateUnifiedViewingKey): Boolean
 
-    suspend fun initBlocksTable(height: Int, hash: String, time: Long, saplingTree: String): Boolean
+    suspend fun initBlocksTable(checkpoint: Checkpoint): Boolean
 
     suspend fun initDataDb(): Boolean
 
@@ -50,7 +52,7 @@ interface PirateRustBackendWelding {
 
     suspend fun getBalance(account: Int = 0): Arrrtoshi
 
-    fun getBranchIdForHeight(height: Int): Long
+    fun getBranchIdForHeight(height: BlockHeight): Long
 
     suspend fun getReceivedMemoAsUtf8(idNote: Long): String
 
@@ -60,13 +62,16 @@ interface PirateRustBackendWelding {
 
 //    fun parseTransactionDataList(tdl: LocalRpcTypes.TransactionDataList): LocalRpcTypes.TransparentTransactionList
 
-    suspend fun getNearestRewindHeight(height: Int): Int
+    suspend fun getNearestRewindHeight(height: BlockHeight): BlockHeight
 
-    suspend fun rewindToHeight(height: Int): Boolean
+    suspend fun rewindToHeight(height: BlockHeight): Boolean
 
     suspend fun scanBlocks(limit: Int = -1): Boolean
 
-    suspend fun validateCombinedChain(): Int
+    /**
+     * @return Null if successful. If an error occurs, the height will be the height where the error was detected.
+     */
+    suspend fun validateCombinedChain(): BlockHeight?
 
     suspend fun putUtxo(
         tAddress: String,
@@ -74,10 +79,10 @@ interface PirateRustBackendWelding {
         index: Int,
         script: ByteArray,
         value: Long,
-        height: Int
+        height: BlockHeight
     ): Boolean
 
-    suspend fun clearUtxos(tAddress: String, aboveHeight: Int = network.saplingActivationHeight - 1): Boolean
+    suspend fun clearUtxos(tAddress: String, aboveHeightInclusive: BlockHeight = BlockHeight(network.saplingActivationHeight.value)): Boolean
 
     suspend fun getDownloadedUtxoBalance(address: String): PirateWalletBalance
 

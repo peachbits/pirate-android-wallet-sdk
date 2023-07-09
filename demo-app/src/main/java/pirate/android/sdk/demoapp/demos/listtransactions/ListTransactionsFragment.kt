@@ -48,12 +48,18 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
         // have the seed stored
         val seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
-        initializer = runBlocking {
-            PirateInitializer.new(requireApplicationContext()) {
-                runBlocking { it.importWallet(seed, network = PirateNetwork.fromResources(requireApplicationContext())) }
-                it.setNetwork(PirateNetwork.fromResources(requireApplicationContext()))
+        initializer = PirateInitializer.newBlocking(
+            requireApplicationContext(),
+            PirateInitializer.PirateConfig {
+                runBlocking {
+                    it.importWallet(
+                        seed,
+                        birthday = null,
+                        network = PirateNetwork.fromResources(requireApplicationContext())
+                    )
+                }
             }
-        }
+        )
         address = runBlocking {
             PirateDerivationTool.deriveShieldedAddress(
                 seed,

@@ -12,6 +12,7 @@ import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.test.ScopedTest
 import pirate.android.sdk.tool.PirateDerivationTool
@@ -49,7 +50,7 @@ class TestnetIntegrationTest : ScopedTest() {
     @Test
     fun testLoadBirthday() {
         val (height, hash, time, tree) = runBlocking {
-            PirateWalletBirthdayTool.loadNearest(
+            CheckpointTool.loadNearest(
                 context,
                 synchronizer.network,
                 saplingActivation + 1
@@ -118,7 +119,7 @@ class TestnetIntegrationTest : ScopedTest() {
         init { Twig.plant(PirateTroubleshootingTwig()) }
 
         const val host = "lightwalletd.testnet.z.cash"
-        private const val birthdayHeight = 963150
+        private const val birthdayHeight = 963150L
         private const val targetHeight = 663250
         private const val seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
         val seed = "pirate.android.sdk.integration.IntegrationTest.seed.value.64bytes".toByteArray()
@@ -129,7 +130,7 @@ class TestnetIntegrationTest : ScopedTest() {
         private val initializer = runBlocking {
             PirateInitializer.new(context) { config ->
                 config.setNetwork(PirateNetwork.Testnet, host)
-                runBlocking { config.importWallet(seed, birthdayHeight, PirateNetwork.Testnet) }
+                runBlocking { config.importWallet(seed, BlockHeight.new(PirateNetwork.Testnet, birthdayHeight), PirateNetwork.Testnet) }
             }
         }
         private lateinit var synchronizer: Synchronizer

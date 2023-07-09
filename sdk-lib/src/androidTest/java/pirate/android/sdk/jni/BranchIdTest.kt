@@ -2,6 +2,7 @@ package pirate.android.sdk.jni
 
 import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -14,9 +15,9 @@ import org.junit.runners.Parameterized
  */
 @MaintainedTest(TestPurpose.REGRESSION)
 @RunWith(Parameterized::class)
-class BranchIdTest(
+class BranchIdTest internal constructor(
     private val networkName: String,
-    private val height: Int,
+    private val height: BlockHeight,
     private val branchId: Long,
     private val branchHex: String,
     private val rustBackend: PirateRustBackendWelding
@@ -44,8 +45,8 @@ class BranchIdTest(
             // is an abnormal use of the SDK because this really should run at the rust level
             // However, due to quirks on certain devices, we created this test at the Android level,
             // as a sanity check
-            val testnetBackend = runBlocking { PirateRustBackend.init("", "", "", PirateNetwork.Testnet) }
-            val mainnetBackend = runBlocking { PirateRustBackend.init("", "", "", PirateNetwork.Mainnet) }
+            val testnetBackend = runBlocking { PirateRustBackend.init("", "", "", PirateNetwork.Testnet, PirateNetwork.Testnet.saplingActivationHeight) }
+            val mainnetBackend = runBlocking { PirateRustBackend.init("", "", "", PirateNetwork.Mainnet, PirateNetwork.Mainnet.saplingActivationHeight) }
             return listOf(
                 // Mainnet Cases
                 arrayOf("Sapling", 419_200, 1991772603L, "76b809bb", mainnetBackend),

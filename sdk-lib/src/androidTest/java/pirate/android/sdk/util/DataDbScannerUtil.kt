@@ -6,6 +6,8 @@ import pirate.android.sdk.PirateSdkSynchronizer
 import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
+import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -36,7 +38,7 @@ class DataDbScannerUtil {
 
 //    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
 
-    private val birthdayHeight = 600_000
+    private val birthdayHeight = 600_000L
     private lateinit var synchronizer: Synchronizer
 
     @Before
@@ -67,7 +69,11 @@ class DataDbScannerUtil {
             val initializer = runBlocking {
                 PirateInitializer.new(context) {
                     it.setBirthdayHeight(
-                        birthdayHeight
+                        BlockHeight.new(
+                            PirateNetwork.Mainnet,
+                            birthdayHeight
+                        ),
+                        false
                     )
                 }
             }

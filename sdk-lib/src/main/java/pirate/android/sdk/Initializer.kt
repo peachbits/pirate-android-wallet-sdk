@@ -6,12 +6,13 @@ import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.ext.getCacheDirSuspend
 import pirate.android.sdk.internal.ext.getDatabasePathSuspend
+import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
+import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.tool.CheckpointTool
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.tool.PirateWalletBirthdayTool
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateWalletBirthday
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -22,14 +23,14 @@ import java.io.File
  */
 class PirateInitializer private constructor(
     val context: Context,
-    val rustBackend: PirateRustBackend,
+    internal val rustBackend: PirateRustBackend,
     val network: PirateNetwork,
     val alias: String,
     val host: String,
     val port: Int,
     val viewingKeys: List<PirateUnifiedViewingKey>,
     val overwriteVks: Boolean,
-    val birthday: PirateWalletBirthday
+    internal val checkpoint: Checkpoint
 ) {
 
     suspend fun erase() = erase(context, network, alias)
@@ -38,7 +39,7 @@ class PirateInitializer private constructor(
         val viewingKeys: MutableList<PirateUnifiedViewingKey> = mutableListOf(),
         var alias: String = PirateSdk.DEFAULT_ALIAS,
     ) {
-        var birthdayHeight: Int? = null
+        var birthdayHeight: BlockHeight? = null
             private set
 
         lateinit var network: PirateNetwork
@@ -86,7 +87,7 @@ class PirateInitializer private constructor(
          * transactions. Again, this value is only considered when [height] is null.
          *
          */
-        fun setBirthdayHeight(height: Int?, defaultToOldestHeight: Boolean = false): PirateConfig =
+        fun setBirthdayHeight(height: BlockHeight?, defaultToOldestHeight: Boolean): PirateConfig =
             apply {
                 this.birthdayHeight = height
                 this.defaultToOldestHeight = defaultToOldestHeight
@@ -105,7 +106,7 @@ class PirateInitializer private constructor(
          * importing a pre-existing wallet. It is the same as calling
          * `birthdayHeight = importedHeight`.
          */
-        fun importedWalletBirthday(importedHeight: Int?): PirateConfig = apply {
+        fun importedWalletBirthday(importedHeight: BlockHeight?): PirateConfig = apply {
             birthdayHeight = importedHeight
             defaultToOldestHeight = true
         }
@@ -172,7 +173,7 @@ class PirateInitializer private constructor(
          */
         suspend fun importWallet(
             seed: ByteArray,
-            birthdayHeight: Int? = null,
+            birthday: BlockHeight?,
             network: PirateNetwork,
             host: String = network.defaultHost,
             port: Int = network.defaultPort,
@@ -180,7 +181,7 @@ class PirateInitializer private constructor(
         ): PirateConfig =
             importWallet(
                 PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network = network)[0],
-                birthdayHeight,
+                birthday,
                 network,
                 host,
                 port,
@@ -192,7 +193,7 @@ class PirateInitializer private constructor(
          */
         fun importWallet(
             viewingKey: PirateUnifiedViewingKey,
-            birthdayHeight: Int? = null,
+            birthday: BlockHeight?,
             network: PirateNetwork,
             host: String = network.defaultHost,
             port: Int = network.defaultPort,
@@ -200,7 +201,7 @@ class PirateInitializer private constructor(
         ): PirateConfig = apply {
             setViewingKeys(viewingKey)
             setNetwork(network, host, port)
-            importedWalletBirthday(birthdayHeight)
+            importedWalletBirthday(birthday)
             this.alias = alias
         }
 
@@ -284,8 +285,8 @@ class PirateInitializer private constructor(
             }
             // allow either null or a value greater than the activation height
             if (
-                (birthdayHeight ?: network.saplingActivationHeight)
-                < network.saplingActivationHeight
+                (birthdayHeight?.value ?: network.saplingActivationHeight.value)
+                < network.saplingActivationHeight.value
             ) {
                 throw PirateInitializerException.PirateInvalidBirthdayHeightException(birthdayHeight, network)
             }
@@ -328,12 +329,23 @@ class PirateInitializer private constructor(
             config: PirateConfig
         ): PirateInitializer {
             config.validate()
-            val heightToUse = config.birthdayHeight
-                ?: (if (config.defaultToOldestHeight == true) config.network.saplingActivationHeight else null)
-            val loadedBirthday =
-                PirateWalletBirthdayTool.loadNearest(context, config.network, heightToUse)
 
-            val rustBackend = initPirateRustBackend(context, config.network, config.alias, loadedBirthday)
+            val loadedCheckpoint = run {
+                val height = config.birthdayHeight
+                    ?: if (config.defaultToOldestHeight == true) {
+                        config.network.saplingActivationHeight
+                    } else {
+                        null
+                    }
+
+                CheckpointTool.loadNearest(
+                    context,
+                    config.network,
+                    height
+                )
+            }
+
+            val rustBackend = initPirateRustBackend(context, config.network, config.alias, loadedCheckpoint.height)
 
             return PirateInitializer(
                 context.applicationContext,
@@ -344,7 +356,7 @@ class PirateInitializer private constructor(
                 config.port,
                 config.viewingKeys,
                 config.overwriteVks,
-                loadedBirthday
+                loadedCheckpoint
             )
         }
 
@@ -375,14 +387,14 @@ class PirateInitializer private constructor(
             context: Context,
             network: PirateNetwork,
             alias: String,
-            birthday: PirateWalletBirthday
+            blockHeight: BlockHeight
         ): PirateRustBackend {
             return PirateRustBackend.init(
                 cacheDbPath(context, network, alias),
                 dataDbPath(context, network, alias),
                 File(context.getCacheDirSuspend(), "params").absolutePath,
                 network,
-                birthday.height
+                blockHeight
             )
         }
 

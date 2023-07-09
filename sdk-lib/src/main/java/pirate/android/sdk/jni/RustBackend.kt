@@ -1,11 +1,13 @@
 package pirate.android.sdk.jni
 
-import pirate.android.sdk.exception.PirateBirthdayException
+
 import pirate.android.sdk.ext.PirateSdk.OUTPUT_PARAM_FILE_NAME
 import pirate.android.sdk.ext.PirateSdk.SPEND_PARAM_FILE_NAME
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.ext.deleteSuspend
+import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.tool.PirateDerivationTool
@@ -19,21 +21,13 @@ import java.io.File
  * not be called directly by code outside of the SDK. Instead, one of the higher-level components
  * should be used such as Wallet.kt or PirateCompactBlockProcessor.kt.
  */
-class PirateRustBackend private constructor() : PirateRustBackendWelding {
-
-    // Paths
-    lateinit var pathDataDb: String
-        internal set
-    lateinit var pathCacheDb: String
-        internal set
-    lateinit var pathParamsDir: String
-        internal set
-
-    override lateinit var network: PirateNetwork
-
-    internal var birthdayHeight: Int = -1
-        get() = if (field != -1) field else throw PirateBirthdayException.UninitializedBirthdayException
-        private set
+internal class PirateRustBackend private constructor(
+    override val network: PirateNetwork,
+    val birthdayHeight: BlockHeight,
+    val pathDataDb: String,
+    val pathCacheDb: String,
+    val pathParamsDir: String
+) : PirateRustBackendWelding {
 
     suspend fun clear(clearCacheDb: Boolean = true, clearDataDb: Boolean = true) {
         if (clearCacheDb) {
@@ -84,18 +78,15 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
     }
 
     override suspend fun initBlocksTable(
-        height: Int,
-        hash: String,
-        time: Long,
-        saplingTree: String
+        checkpoint: Checkpoint
     ): Boolean {
         return withContext(SdkDispatchers.DATABASE_IO) {
             initBlocksTable(
                 pathDataDb,
-                height,
-                hash,
-                time,
-                saplingTree,
+                checkpoint.height.value,
+                checkpoint.hash,
+                checkpoint.epochSeconds,
+                checkpoint.tree,
                 networkId = network.id
             )
         }
@@ -156,19 +147,28 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
     }
 
     override suspend fun validateCombinedChain() = withContext(SdkDispatchers.DATABASE_IO) {
-        validateCombinedChain(
+        val validationResult = validateCombinedChain(
             pathCacheDb,
             pathDataDb,
             networkId = network.id
         )
+
+        if (-1L == validationResult) {
+            null
+        } else {
+            BlockHeight.new(network, validationResult)
+        }
     }
 
-    override suspend fun getNearestRewindHeight(height: Int): Int =
+    override suspend fun getNearestRewindHeight(height: BlockHeight): BlockHeight =
         withContext(SdkDispatchers.DATABASE_IO) {
-            getNearestRewindHeight(
-                pathDataDb,
-                height,
-                networkId = network.id
+            BlockHeight.new(
+                network,
+                getNearestRewindHeight(
+                    pathDataDb,
+                    height.value,
+                    networkId = network.id
+                )
             )
         }
 
@@ -177,11 +177,11 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
      *
      * DELETE FROM blocks WHERE height > ?
      */
-    override suspend fun rewindToHeight(height: Int) =
+    override suspend fun rewindToHeight(height: BlockHeight) =
         withContext(SdkDispatchers.DATABASE_IO) {
             rewindToHeight(
                 pathDataDb,
-                height,
+                height.value,
                 networkId = network.id
             )
         }
@@ -264,7 +264,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         index: Int,
         script: ByteArray,
         value: Long,
-        height: Int
+        height: BlockHeight
     ): Boolean = withContext(SdkDispatchers.DATABASE_IO) {
         putUtxo(
             pathDataDb,
@@ -273,19 +273,21 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             index,
             script,
             value,
-            height,
+            height.value,
             networkId = network.id
         )
     }
 
     override suspend fun clearUtxos(
         tAddress: String,
-        aboveHeight: Int
+        aboveHeightInclusive: BlockHeight
     ): Boolean = withContext(SdkDispatchers.DATABASE_IO) {
         clearUtxos(
             pathDataDb,
             tAddress,
-            aboveHeight,
+            // The Kotlin API is inclusive, but the Rust API is exclusive.
+            // This can create invalid BlockHeights if the height is saplingActivationHeight.
+            aboveHeightInclusive.value - 1,
             networkId = network.id
         )
     }
@@ -314,8 +316,8 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
     override fun isValidTransparentAddr(addr: String) =
         isValidTransparentAddress(addr, networkId = network.id)
 
-    override fun getBranchIdForHeight(height: Int): Long =
-        branchIdForHeight(height, networkId = network.id)
+    override fun getBranchIdForHeight(height: BlockHeight): Long =
+        branchIdForHeight(height.value, networkId = network.id)
 
 //    /**
 //     * This is a proof-of-concept for doing Local RPC, where we are effectively using the JNI
@@ -351,19 +353,17 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             dataDbPath: String,
             paramsPath: String,
             zcashNetwork: PirateNetwork,
-            birthdayHeight: Int? = null
+            birthdayHeight: BlockHeight
         ): PirateRustBackend {
             rustLibraryLoader.load()
 
-            return PirateRustBackend().apply {
-                pathCacheDb = cacheDbPath
-                pathDataDb = dataDbPath
+            return PirateRustBackend(
+                zcashNetwork,
+                birthdayHeight,
+                pathDataDb = dataDbPath,
+                pathCacheDb = cacheDbPath,
                 pathParamsDir = paramsPath
-                network = zcashNetwork
-                if (birthdayHeight != null) {
-                    this.birthdayHeight = birthdayHeight
-                }
-            }
+            )
         }
 
         /**
@@ -396,7 +396,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         @JvmStatic
         private external fun initBlocksTable(
             dbDataPath: String,
-            height: Int,
+            height: Long,
             hash: String,
             time: Long,
             saplingTree: String,
@@ -445,19 +445,19 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             dbCachePath: String,
             dbDataPath: String,
             networkId: Int
-        ): Int
+        ): Long
 
         @JvmStatic
         private external fun getNearestRewindHeight(
             dbDataPath: String,
-            height: Int,
+            height: Long,
             networkId: Int
-        ): Int
+        ): Long
 
         @JvmStatic
         private external fun rewindToHeight(
             dbDataPath: String,
-            height: Int,
+            height: Long,
             networkId: Int
         ): Boolean
 
@@ -513,7 +513,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         private external fun initLogs()
 
         @JvmStatic
-        private external fun branchIdForHeight(height: Int, networkId: Int): Long
+        private external fun branchIdForHeight(height: Long, networkId: Int): Long
 
         @JvmStatic
         private external fun putUtxo(
@@ -523,7 +523,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
             index: Int,
             script: ByteArray,
             value: Long,
-            height: Int,
+            height: Long,
             networkId: Int
         ): Boolean
 
@@ -531,7 +531,7 @@ class PirateRustBackend private constructor() : PirateRustBackendWelding {
         private external fun clearUtxos(
             dbDataPath: String,
             tAddress: String,
-            aboveHeight: Int,
+            aboveHeight: Long,
             networkId: Int
         ): Boolean
 

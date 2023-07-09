@@ -1,5 +1,6 @@
 package pirate.android.sdk.internal.service
 
+import pirate.android.sdk.model.BlockHeight
 import pirate.wallet.sdk.rpc.CompactFormats
 import pirate.wallet.sdk.rpc.Service
 
@@ -24,7 +25,7 @@ interface LightWalletService {
      *
      * @return the UTXOs for the given address from the startHeight.
      */
-    fun fetchUtxos(tAddress: String, startHeight: Int): List<Service.GetAddressUtxosReply>
+    fun fetchUtxos(tAddress: String, startHeight: BlockHeight): List<Service.GetAddressUtxosReply>
 
     /**
      * Return the given range of blocks.
@@ -35,14 +36,14 @@ interface LightWalletService {
      * @return a list of compact blocks for the given range
      *
      */
-    fun getBlockRange(heightRange: IntRange): List<CompactFormats.CompactBlock>
+    fun getBlockRange(heightRange: ClosedRange<BlockHeight>): Sequence<CompactFormats.CompactBlock>
 
     /**
      * Return the latest block height known to the service.
      *
      * @return the latest block height known to the service.
      */
-    fun getLatestBlockHeight(): Int
+    fun getLatestBlockHeight(): BlockHeight
 
     /**
      * Return basic information about the server such as:
@@ -70,7 +71,7 @@ interface LightWalletService {
      *
      * @return a list of transactions that correspond to the given address for the given range.
      */
-    fun getTAddressTransactions(tAddress: String, blockHeightRange: IntRange): List<Service.RawTransaction>
+    fun getTAddressTransactions(tAddress: String, blockHeightRange: ClosedRange<BlockHeight>): List<Service.RawTransaction>
 
     /**
      * Reconnect to the same or a different server. This is useful when the connection is

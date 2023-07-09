@@ -11,6 +11,7 @@ import pirate.android.sdk.internal.block.CompactBlockStore
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.test.ScopedTest
 import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.delay
@@ -70,7 +71,7 @@ class ChangeServiceTest : ScopedTest() {
     @Test
     fun testCleanSwitch() = runBlocking {
         downloader.changeService(otherService)
-        val result = downloader.downloadBlockRange(900_000..901_000)
+        val result = downloader.downloadBlockRange(BlockHeight.new(network, 900_000)..BlockHeight.new(network, 901_000))
         assertEquals(1_001, result)
     }
 
@@ -81,7 +82,7 @@ class ChangeServiceTest : ScopedTest() {
     @Test
     @Ignore("This test is broken")
     fun testSwitchWhileActive() = runBlocking {
-        val start = 900_000
+        val start = BlockHeight.new(PirateNetwork.Mainnet, 900_000)
         val count = 5
         val differentiators = mutableListOf<String>()
         var initialValue = downloader.getServerInfo().buildUser

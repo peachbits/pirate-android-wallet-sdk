@@ -1,6 +1,7 @@
 package pirate.android.sdk.internal.transaction
 
 import pirate.android.sdk.db.entity.PendingTransaction
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.Arrrtoshi
 import kotlinx.coroutines.flow.Flow
 
@@ -65,7 +66,7 @@ interface OutboundTransactionManager {
      * @param minedHeight the height at which the given transaction was mined, according to the data
      * that has been processed from the blockchain.
      */
-    suspend fun applyMinedHeight(pendingTx: PendingTransaction, minedHeight: Int)
+    suspend fun applyMinedHeight(pendingTx: PendingTransaction, minedHeight: BlockHeight)
 
     /**
      * Generate a flow of information about the given id where a new pending transaction is emitted

@@ -33,12 +33,14 @@ import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.ext.retryUpTo
 import pirate.android.sdk.internal.ext.retryWithBackoff
 import pirate.android.sdk.internal.ext.toHexReversed
+import pirate.android.sdk.internal.isEmpty
 import pirate.android.sdk.internal.transaction.PiratePagedTransactionRepository
 import pirate.android.sdk.internal.transaction.TransactionRepository
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
@@ -75,11 +77,11 @@ import kotlin.math.roundToInt
  * of the current wallet--the height before which we do not need to scan for transactions.
  */
 @PirateOpenForTesting
-class PirateCompactBlockProcessor(
+class PirateCompactBlockProcessor internal constructor(
     val downloader: PirateCompactBlockDownloader,
     private val repository: TransactionRepository,
     private val rustBackend: PirateRustBackendWelding,
-    minimumHeight: Int = rustBackend.network.saplingActivationHeight
+    minimumHeight: BlockHeight = rustBackend.network.saplingActivationHeight
 ) {
     /**
      * Callback for any non-trivial errors that occur while processing compact blocks.
@@ -93,7 +95,7 @@ class PirateCompactBlockProcessor(
      * Callback for reorgs. This callback is invoked when validation fails with the height at which
      * an error was found and the lower bound to which the data will rewind, at most.
      */
-    var onChainErrorListener: ((errorHeight: Int, rewindHeight: Int) -> Any)? = null
+    var onChainErrorListener: ((errorHeight: BlockHeight, rewindHeight: BlockHeight) -> Any)? = null
 
     /**
      * Callback for setup errors that occur prior to processing compact blocks. Can be used to
@@ -117,12 +119,18 @@ class PirateCompactBlockProcessor(
     var onScanMetricCompleteListener: ((PirateBatchMetrics, Boolean) -> Unit)? = null
 
     private val consecutiveChainErrors = AtomicInteger(0)
-    private val lowerBoundHeight: Int = max(rustBackend.network.saplingActivationHeight, minimumHeight - MAX_REORG_SIZE)
+    private val lowerBoundHeight: BlockHeight = BlockHeight(
+        max(
+            rustBackend.network.saplingActivationHeight.value,
+            minimumHeight.value - MAX_REORG_SIZE
+        )
+    )
 
     private val _state: ConflatedBroadcastChannel<PirateState> = ConflatedBroadcastChannel(Initialized)
     private val _progress = ConflatedBroadcastChannel(0)
-    private val _processorInfo = ConflatedBroadcastChannel(ProcessorInfo())
-    private val _networkHeight = MutableStateFlow(-1)
+    private val _processorInfo =
+        ConflatedBroadcastChannel(ProcessorInfo(null, null, null, null, null))
+    private val _networkHeight = MutableStateFlow<BlockHeight?>(null)
     private val processingMutex = Mutex()
 
     /**
@@ -139,7 +147,10 @@ class PirateCompactBlockProcessor(
      * sequentially, due to the way sqlite works so it is okay for this not to be threadsafe or
      * coroutine safe because processing cannot be concurrent.
      */
-    internal var currentInfo = ProcessorInfo()
+    // This accessed by the Dispatchers.IO thread, which means multiple threads are reading/writing
+    // concurrently.
+    @Volatile
+    internal var currentInfo = ProcessorInfo(null, null, null, null, null)
 
     /**
      * The zcash network that is being processed. Either Testnet or Mainnet.
@@ -193,25 +204,38 @@ class PirateCompactBlockProcessor(
                     processNewBlocks()
                 }
                 // immediately process again after failures in order to download new blocks right away
-                if (result == ERROR_CODE_RECONNECT) {
-                    val napTime = calculatePollInterval(true)
-                    twig("Unable to process new blocks because we are disconnected! Attempting to reconnect in ${napTime}ms")
-                    delay(napTime)
-                } else if (result == ERROR_CODE_NONE || result == ERROR_CODE_FAILED_ENHANCE) {
-                    val noWorkDone = currentInfo.lastDownloadRange.isEmpty() && currentInfo.lastScanRange.isEmpty()
-                    val summary = if (noWorkDone) "Nothing to process: no new blocks to download or scan" else "Done processing blocks"
-                    consecutiveChainErrors.set(0)
-                    val napTime = calculatePollInterval()
-                    twig("$summary${if (result == ERROR_CODE_FAILED_ENHANCE) " (but there were enhancement errors! We ignore those, for now. Memos in this block range are probably missing! This will be improved in a future release.)" else ""}! Sleeping for ${napTime}ms (latest height: ${currentInfo.networkBlockHeight}).")
-                    delay(napTime)
-                } else {
-                    if (consecutiveChainErrors.get() >= RETRIES) {
-                        val errorMessage = "ERROR: unable to resolve reorg at height $result after ${consecutiveChainErrors.get()} correction attempts!"
-                        fail(PirateCompactBlockProcessorException.PirateFailedReorgRepair(errorMessage))
-                    } else {
-                        handleChainError(result)
+                when (result) {
+                    BlockProcessingResult.Reconnecting -> {
+                        val napTime = calculatePollInterval(true)
+                        twig("Unable to process new blocks because we are disconnected! Attempting to reconnect in ${napTime}ms")
+                        delay(napTime)
                     }
-                    consecutiveChainErrors.getAndIncrement()
+                    BlockProcessingResult.NoBlocksToProcess, BlockProcessingResult.FailedEnhance -> {
+                        val noWorkDone =
+                            currentInfo.lastDownloadRange?.isEmpty() ?: true && currentInfo.lastScanRange?.isEmpty() ?: true
+                        val summary = if (noWorkDone) {
+                            "Nothing to process: no new blocks to download or scan"
+                        } else {
+                            "Done processing blocks"
+                        }
+                        consecutiveChainErrors.set(0)
+                        val napTime = calculatePollInterval()
+                        twig("$summary${if (result == BlockProcessingResult.FailedEnhance) " (but there were enhancement errors! We ignore those, for now. Memos in this block range are probably missing! This will be improved in a future release.)" else ""}! Sleeping for ${napTime}ms (latest height: ${currentInfo.networkBlockHeight}).")
+                        delay(napTime)
+                    }
+                    is BlockProcessingResult.Error -> {
+                        if (consecutiveChainErrors.get() >= RETRIES) {
+                            val errorMessage =
+                                "ERROR: unable to resolve reorg at height $result after ${consecutiveChainErrors.get()} correction attempts!"
+                            fail(PirateCompactBlockProcessorException.PirateFailedReorgRepair(errorMessage))
+                        } else {
+                            handleChainError(result.failedAtHeight)
+                        }
+                        consecutiveChainErrors.getAndIncrement()
+                    }
+                    is BlockProcessingResult.Success -> {
+                        // Do nothing. We are done.
+                    }
                 }
             }
         } while (isActive && !_state.isClosedForSend && _state.value !is Stopped)
@@ -238,30 +262,35 @@ class PirateCompactBlockProcessor(
         throw error
     }
 
-    /**
-     * Process new blocks returning false whenever an error was found.
-     *
-     * @return -1 when processing was successful and did not encounter errors during validation or scanning. Otherwise
-     * return the block height where an error was found.
-     */
-    private suspend fun processNewBlocks(): Int = withContext(IO) {
+    private suspend fun processNewBlocks(): BlockProcessingResult = withContext(IO) {
         twig("beginning to process new blocks (with lower bound: $lowerBoundHeight)...", -1)
 
         if (!updateRanges()) {
             twig("Disconnection detected! Attempting to reconnect!")
             setState(Disconnected)
             downloader.lightWalletService.reconnect()
-            ERROR_CODE_RECONNECT
+            BlockProcessingResult.Reconnecting
         } else if (currentInfo.lastDownloadRange.isEmpty() && currentInfo.lastScanRange.isEmpty()) {
             setState(PirateScanned(currentInfo.lastScanRange))
-            ERROR_CODE_NONE
+            BlockProcessingResult.NoBlocksToProcess
         } else {
             downloadNewBlocks(currentInfo.lastDownloadRange)
             val error = validateAndScanNewBlocks(currentInfo.lastScanRange)
-            if (error != ERROR_CODE_NONE) error else {
-                enhanceTransactionDetails(currentInfo.lastScanRange)
+            if (error != BlockProcessingResult.Success) {
+                error
+            } else {
+                currentInfo.lastScanRange?.let { enhanceTransactionDetails(it) }
+                    ?: BlockProcessingResult.NoBlocksToProcess
             }
         }
+    }
+
+    sealed class BlockProcessingResult {
+        object NoBlocksToProcess : BlockProcessingResult()
+        object Success : BlockProcessingResult()
+        object Reconnecting : BlockProcessingResult()
+        object FailedEnhance : BlockProcessingResult()
+        data class Error(val failedAtHeight: BlockHeight) : BlockProcessingResult()
     }
 
     /**
@@ -278,19 +307,39 @@ class PirateCompactBlockProcessor(
             ProcessorInfo(
                 networkBlockHeight = downloader.getLatestBlockHeight(),
                 lastScannedHeight = getLastScannedHeight(),
-                lastDownloadedHeight = max(getLastDownloadedHeight(), lowerBoundHeight - 1)
+                lastDownloadedHeight = getLastDownloadedHeight()?.let {
+                    BlockHeight.new(
+                        network,
+                        max(
+                            it.value,
+                            lowerBoundHeight.value - 1
+                        )
+                    )
+                },
+                lastDownloadRange = null,
+                lastScanRange = null
             ).let { initialInfo ->
                 updateProgress(
                     networkBlockHeight = initialInfo.networkBlockHeight,
                     lastScannedHeight = initialInfo.lastScannedHeight,
                     lastDownloadedHeight = initialInfo.lastDownloadedHeight,
-                    lastScanRange = (initialInfo.lastScannedHeight + 1)..initialInfo.networkBlockHeight,
-                    lastDownloadRange = (
-                        max(
-                            initialInfo.lastDownloadedHeight,
-                            initialInfo.lastScannedHeight
-                        ) + 1
+                    lastScanRange = if (initialInfo.lastScannedHeight != null && initialInfo.networkBlockHeight != null) {
+                        initialInfo.lastScannedHeight + 1..initialInfo.networkBlockHeight
+                    } else {
+                        null
+                    },
+                    lastDownloadRange = if (initialInfo.networkBlockHeight != null) {
+                        BlockHeight.new(
+                            network,
+                            buildList {
+                                add(network.saplingActivationHeight.value)
+                                initialInfo.lastDownloadedHeight?.let { add(it.value + 1) }
+                                initialInfo.lastScannedHeight?.let { add(it.value + 1) }
+                            }.max()
                         )..initialInfo.networkBlockHeight
+                    } else {
+                        null
+                    }
                 )
             }
             true
@@ -306,35 +355,34 @@ class PirateCompactBlockProcessor(
      * prevHash value matches the preceding block in the chain.
      *
      * @param lastScanRange the range to be validated and scanned.
-     *
-     * @return error code or [ERROR_CODE_NONE] when there is no error.
      */
-    private suspend fun validateAndScanNewBlocks(lastScanRange: IntRange): Int = withContext(IO) {
-        setState(Validating)
-        var error = validateNewBlocks(lastScanRange)
-        if (error == ERROR_CODE_NONE) {
-            // in theory, a scan should not fail after validation succeeds but maybe consider
-            // changing the rust layer to return the failed block height whenever scan does fail
-            // rather than a boolean
-            setState(Scanning)
-            val success = scanNewBlocks(lastScanRange)
-            if (!success) throw PirateCompactBlockProcessorException.PirateFailedScan()
-            else {
-                setState(PirateScanned(lastScanRange))
+    private suspend fun validateAndScanNewBlocks(lastScanRange: ClosedRange<BlockHeight>?): BlockProcessingResult =
+        withContext(IO) {
+            setState(Validating)
+            val result = validateNewBlocks(lastScanRange)
+            if (result == BlockProcessingResult.Success) {
+                // in theory, a scan should not fail after validation succeeds but maybe consider
+                // changing the rust layer to return the failed block height whenever scan does fail
+                // rather than a boolean
+                setState(Scanning)
+                val success = scanNewBlocks(lastScanRange)
+                if (!success) {
+                    throw PirateCompactBlockProcessorException.PirateFailedScan()
+                } else {
+                    setState(PirateScanned(lastScanRange))
+                }
             }
-            ERROR_CODE_NONE
-        } else {
-            error
-        }
-    }
 
-    private suspend fun enhanceTransactionDetails(lastScanRange: IntRange): Int {
+            result
+        }
+
+    private suspend fun enhanceTransactionDetails(lastScanRange: ClosedRange<BlockHeight>): BlockProcessingResult {
         Twig.sprout("enhancing")
         twig("Enhancing transaction details for blocks $lastScanRange")
         setState(Enhancing)
         return try {
             val newTxs = repository.findNewTransactions(lastScanRange)
-            if (newTxs == null) {
+            if (newTxs.isEmpty()) {
                 twig("no new transactions found in $lastScanRange")
             } else {
                 twig("enhancing ${newTxs.size} transaction(s)!")
@@ -346,15 +394,18 @@ class PirateCompactBlockProcessor(
             }
 
             newTxs?.onEach { newTransaction ->
-                if (newTransaction == null) twig("somehow, new transaction was null!!!")
-                else enhance(newTransaction)
+                if (newTransaction == null) {
+                    twig("somehow, new transaction was null!!!")
+                } else {
+                    enhance(newTransaction)
+                }
             }
             twig("Done enhancing transaction details")
-            ERROR_CODE_NONE
+            BlockProcessingResult.Success
         } catch (t: Throwable) {
             twig("Failed to enhance due to $t")
             t.printStackTrace()
-            ERROR_CODE_FAILED_ENHANCE
+            BlockProcessingResult.FailedEnhance
         } finally {
             Twig.clip("enhancing")
         }
@@ -374,8 +425,11 @@ class PirateCompactBlockProcessor(
         } catch (t: Throwable) {
             twig("Warning: failure on transaction: error: $t\ttransaction: $transaction")
             onProcessorError(
-                if (downloaded) PirateEnhanceTxDecryptError(transaction.minedHeight, t)
-                else PirateEnhanceTxDownloadError(transaction.minedHeight, t)
+                if (downloaded) {
+                    PirateEnhanceTxDecryptError(transaction.minedBlockHeight, t)
+                } else {
+                    PirateEnhanceTxDownloadError(transaction.minedBlockHeight, t)
+                }
             )
         }
     }
@@ -391,11 +445,19 @@ class PirateCompactBlockProcessor(
             else -> {
                 // verify that the server is correct
                 downloader.getServerInfo().let { info ->
-                    val clientBranch = "%x".format(rustBackend.getBranchIdForHeight(info.blockHeight.toInt()))
+                    val clientBranch =
+                        "%x".format(rustBackend.getBranchIdForHeight(BlockHeight(info.blockHeight)))
                     val network = rustBackend.network.networkName
                     when {
-                        !info.matchingNetwork(network) -> PirateMismatchedNetwork(clientNetwork = network, serverNetwork = info.chainName)
-                        !info.matchingConsensusBranchId(clientBranch) -> PirateMismatchedBranch(clientBranch = clientBranch, serverBranch = info.consensusBranchId, networkName = network)
+                        !info.matchingNetwork(network) -> PirateMismatchedNetwork(
+                            clientNetwork = network,
+                            serverNetwork = info.chainName
+                        )
+                        !info.matchingConsensusBranchId(clientBranch) -> PirateMismatchedBranch(
+                            clientBranch = clientBranch,
+                            serverBranch = info.consensusBranchId,
+                            networkName = network
+                        )
                         else -> null
                     }
                 }
@@ -426,30 +488,35 @@ class PirateCompactBlockProcessor(
     }
 
     var failedUtxoFetches = 0
-    internal suspend fun refreshUtxos(tAddress: String, startHeight: Int): Int? = withContext(IO) {
-        var count: Int? = null
-        // todo: cleanup the way that we prevent this from running excessively
-        //       For now, try for about 3 blocks per app launch. If the service fails it is
-        //       probably disabled on ligthtwalletd, so then stop trying until the next app launch.
-        if (failedUtxoFetches < 9) { // there are 3 attempts per block
-            try {
-                retryUpTo(3) {
-                    val result = downloader.lightWalletService.fetchUtxos(tAddress, startHeight)
-                    count = processUtxoResult(result, tAddress, startHeight)
+    internal suspend fun refreshUtxos(tAddress: String, startHeight: BlockHeight): Int? =
+        withContext(IO) {
+            var count: Int? = null
+            // todo: cleanup the way that we prevent this from running excessively
+            //       For now, try for about 3 blocks per app launch. If the service fails it is
+            //       probably disabled on ligthtwalletd, so then stop trying until the next app launch.
+            if (failedUtxoFetches < 9) { // there are 3 attempts per block
+                try {
+                    retryUpTo(3) {
+                        val result = downloader.lightWalletService.fetchUtxos(tAddress, startHeight)
+                        count = processUtxoResult(result, tAddress, startHeight)
+                    }
+                } catch (e: Throwable) {
+                    failedUtxoFetches++
+                    twig("Warning: Fetching UTXOs is repeatedly failing! We will only try about ${(9 - failedUtxoFetches + 2) / 3} more times then give up for this session.")
                 }
-            } catch (e: Throwable) {
-                failedUtxoFetches++
-                twig("Warning: Fetching UTXOs is repeatedly failing! We will only try about ${(9 - failedUtxoFetches + 2) / 3} more times then give up for this session.")
+            } else {
+                twig("Warning: gave up on fetching UTXOs for this session. It seems to unavailable on lightwalletd.")
             }
-        } else {
-            twig("Warning: gave up on fetching UTXOs for this session. It seems to unavailable on lightwalletd.")
+            count
         }
-        count
-    }
 
-    internal suspend fun processUtxoResult(result: List<Service.GetAddressUtxosReply>, tAddress: String, startHeight: Int): Int = withContext(IO) {
+    internal suspend fun processUtxoResult(
+        result: List<Service.GetAddressUtxosReply>,
+        tAddress: String,
+        startHeight: BlockHeight
+    ): Int = withContext(IO) {
         var skipped = 0
-        val aboveHeight = startHeight - 1
+        val aboveHeight = startHeight
         twig("Clearing utxos above height $aboveHeight", -1)
         rustBackend.clearUtxos(tAddress, aboveHeight)
         twig("Checking for UTXOs above height $aboveHeight")
@@ -462,7 +529,7 @@ class PirateCompactBlockProcessor(
                     utxo.index,
                     utxo.script.toByteArray(),
                     utxo.valueZat,
-                    utxo.height.toInt()
+                    BlockHeight(utxo.height)
                 )
             } catch (t: Throwable) {
                 // TODO: more accurately track the utxos that were skipped (in theory, this could fail for other reasons)
@@ -480,75 +547,81 @@ class PirateCompactBlockProcessor(
      * @param range the range of blocks to download.
      */
     @VisibleForTesting // allow mocks to verify how this is called, rather than the downloader, which is more complex
-    internal suspend fun downloadNewBlocks(range: IntRange) = withContext<Unit>(IO) {
-        if (range.isEmpty()) {
-            twig("no blocks to download")
-        } else {
-            _state.send(Downloading)
-            Twig.sprout("downloading")
-            twig("downloading blocks in range $range", -1)
+    internal suspend fun downloadNewBlocks(range: ClosedRange<BlockHeight>?) =
+        withContext<Unit>(IO) {
+            if (null == range || range.isEmpty()) {
+                twig("no blocks to download")
+            } else {
+                _state.send(Downloading)
+                Twig.sprout("downloading")
+                twig("downloading blocks in range $range", -1)
 
-            var downloadedBlockHeight = range.first
-            val missingBlockCount = range.last - range.first + 1
-            val batches = (
-                missingBlockCount / DOWNLOAD_BATCH_SIZE +
-                    (if (missingBlockCount.rem(DOWNLOAD_BATCH_SIZE) == 0) 0 else 1)
-                )
-            var progress: Int
-            twig("found $missingBlockCount missing blocks, downloading in $batches batches of $DOWNLOAD_BATCH_SIZE...")
-            for (i in 1..batches) {
-                retryUpTo(RETRIES, { PirateCompactBlockProcessorException.PirateFailedDownload(it) }) {
-                    val end = min((range.first + (i * DOWNLOAD_BATCH_SIZE)) - 1, range.last) // subtract 1 on the first value because the range is inclusive
-                    var count = 0
-                    twig("downloaded $downloadedBlockHeight..$end (batch $i of $batches) [${downloadedBlockHeight..end}]") {
-                        count = downloader.downloadBlockRange(downloadedBlockHeight..end)
+                var downloadedBlockHeight = range.start
+                val missingBlockCount = range.endInclusive.value - range.start.value + 1
+                val batches = (
+                    missingBlockCount / DOWNLOAD_BATCH_SIZE +
+                        (if (missingBlockCount.rem(DOWNLOAD_BATCH_SIZE) == 0L) 0 else 1)
+                    )
+                var progress: Int
+                twig("found $missingBlockCount missing blocks, downloading in $batches batches of $DOWNLOAD_BATCH_SIZE...")
+                for (i in 1..batches) {
+                    retryUpTo(RETRIES, { PirateCompactBlockProcessorException.PirateFailedDownload(it) }) {
+                        val end = BlockHeight.new(
+                            network,
+                            min(
+                                (range.start.value + (i * DOWNLOAD_BATCH_SIZE)) - 1,
+                                range.endInclusive.value
+                            )
+                        ) // subtract 1 on the first value because the range is inclusive
+                        var count = 0
+                        twig("downloaded $downloadedBlockHeight..$end (batch $i of $batches) [${downloadedBlockHeight..end}]") {
+                            count = downloader.downloadBlockRange(downloadedBlockHeight..end)
+                        }
+                        twig("downloaded $count blocks!")
+                        progress = (i / batches.toFloat() * 100).roundToInt()
+                        _progress.send(progress)
+                        val lastDownloadedHeight = downloader.getLastDownloadedHeight()
+                        updateProgress(lastDownloadedHeight = lastDownloadedHeight)
+                        downloadedBlockHeight = end + 1
                     }
-                    twig("downloaded $count blocks!")
-                    progress = (i / batches.toFloat() * 100).roundToInt()
-                    _progress.send(progress)
-                    val lastDownloadedHeight = downloader.getLastDownloadedHeight().takeUnless { it < network.saplingActivationHeight } ?: -1
-                    updateProgress(lastDownloadedHeight = lastDownloadedHeight)
-                    downloadedBlockHeight = end
                 }
+                Twig.clip("downloading")
             }
-            Twig.clip("downloading")
+            _progress.send(100)
         }
-        _progress.send(100)
-    }
 
     /**
      * Validate all blocks in the given range, ensuring that the blocks are in ascending order, with
      * no gaps and are also chain-sequential. This means every block's prevHash value matches the
-     * preceding block in the chain.
+     * preceding block in the chain. Validation starts at the back of the chain and works toward the tip.
      *
      *  @param range the range of blocks to validate.
-     *
-     *  @return [ERROR_CODE_NONE] when there is no problem. Otherwise, return the lowest height where an error was
-     *  found. In other words, validation starts at the back of the chain and works toward the tip.
      */
-    private suspend fun validateNewBlocks(range: IntRange?): Int {
-        if (range?.isEmpty() != false) {
+    private suspend fun validateNewBlocks(range: ClosedRange<BlockHeight>?): BlockProcessingResult {
+        if (null == range || range.isEmpty()) {
             twig("no blocks to validate: $range")
-            return ERROR_CODE_NONE
+            return BlockProcessingResult.NoBlocksToProcess
         }
         Twig.sprout("validating")
         twig("validating blocks in range $range in db: ${(rustBackend as PirateRustBackend).pathCacheDb}")
         val result = rustBackend.validateCombinedChain()
         Twig.clip("validating")
-        return result
+
+        return if (null == result) {
+            BlockProcessingResult.Success
+        } else {
+            BlockProcessingResult.Error(result)
+        }
     }
 
     /**
      * Scan all blocks in the given range, decrypting and persisting anything that matches our
-     * wallet.
+     * wallet. Scanning starts at the back of the chain and works toward the tip.
      *
      *  @param range the range of blocks to scan.
-     *
-     *  @return [ERROR_CODE_NONE] when there is no problem. Otherwise, return the lowest height where an error was
-     *  found. In other words, scanning starts at the back of the chain and works toward the tip.
      */
-    private suspend fun scanNewBlocks(range: IntRange?): Boolean = withContext(IO) {
-        if (range?.isEmpty() != false) {
+    private suspend fun scanNewBlocks(range: ClosedRange<BlockHeight>?): Boolean = withContext(IO) {
+        if (null == range || range.isEmpty()) {
             twig("no blocks to scan for range $range")
             true
         } else {
@@ -565,16 +638,18 @@ class PirateCompactBlockProcessor(
                     metrics.beginBatch()
                     result = rustBackend.scanBlocks(SCAN_BATCH_SIZE)
                     metrics.endBatch()
-                    val lastScannedHeight = range.start + metrics.cumulativeItems - 1
-                    val percentValue = (lastScannedHeight - range.first) / (range.last - range.first + 1).toFloat() * 100.0f
+                    val lastScannedHeight =
+                        BlockHeight.new(network, range.start.value + metrics.cumulativeItems - 1)
+                    val percentValue =
+                        (lastScannedHeight.value - range.start.value) / (range.endInclusive.value - range.start.value + 1).toFloat() * 100.0f
                     val percent = "%.0f".format(percentValue.coerceAtMost(100f).coerceAtLeast(0f))
-                    twig("batch scanned ($percent%): $lastScannedHeight/${range.last} | ${metrics.batchTime}ms, ${metrics.batchItems}blks, ${metrics.batchIps.format()}bps")
+                    twig("batch scanned ($percent%): $lastScannedHeight/${range.endInclusive} | ${metrics.batchTime}ms, ${metrics.batchItems}blks, ${metrics.batchIps.format()}bps")
                     if (currentInfo.lastScannedHeight != lastScannedHeight) {
                         scannedNewBlocks = true
                         updateProgress(lastScannedHeight = lastScannedHeight)
                     }
                     // if we made progress toward our scan, then keep trying
-                } while (result && scannedNewBlocks && lastScannedHeight < range.last)
+                } while (result && scannedNewBlocks && lastScannedHeight < range.endInclusive)
                 twig("batch scan complete! Total time: ${metrics.cumulativeTime}  Total blocks measured: ${metrics.cumulativeItems}  Cumulative bps: ${metrics.cumulativeIps.format()}")
             }
             Twig.clip("scanning")
@@ -600,12 +675,12 @@ class PirateCompactBlockProcessor(
      * blocks that we don't yet have.
      */
     private suspend fun updateProgress(
-        networkBlockHeight: Int = currentInfo.networkBlockHeight,
-        lastScannedHeight: Int = currentInfo.lastScannedHeight,
-        lastDownloadedHeight: Int = currentInfo.lastDownloadedHeight,
-        lastScanRange: IntRange = currentInfo.lastScanRange,
-        lastDownloadRange: IntRange = currentInfo.lastDownloadRange
-    ): Unit = withContext(IO) {
+        networkBlockHeight: BlockHeight? = currentInfo.networkBlockHeight,
+        lastScannedHeight: BlockHeight? = currentInfo.lastScannedHeight,
+        lastDownloadedHeight: BlockHeight? = currentInfo.lastDownloadedHeight,
+        lastScanRange: ClosedRange<BlockHeight>? = currentInfo.lastScanRange,
+        lastDownloadRange: ClosedRange<BlockHeight>? = currentInfo.lastDownloadRange
+    ) {
         currentInfo = currentInfo.copy(
             networkBlockHeight = networkBlockHeight,
             lastScannedHeight = lastScannedHeight,
@@ -613,11 +688,14 @@ class PirateCompactBlockProcessor(
             lastScanRange = lastScanRange,
             lastDownloadRange = lastDownloadRange
         )
-        _networkHeight.value = networkBlockHeight
-        _processorInfo.send(currentInfo)
+
+        withContext(IO) {
+            _networkHeight.value = networkBlockHeight
+            _processorInfo.send(currentInfo)
+        }
     }
 
-    private suspend fun handleChainError(errorHeight: Int) {
+    private suspend fun handleChainError(errorHeight: BlockHeight) {
         // TODO consider an error object containing hash information
         printValidationErrorInfo(errorHeight)
         determineLowerBound(errorHeight).let { lowerBound ->
@@ -627,14 +705,17 @@ class PirateCompactBlockProcessor(
         }
     }
 
-    suspend fun getNearestRewindHeight(height: Int): Int {
+    suspend fun getNearestRewindHeight(height: BlockHeight): BlockHeight {
         // TODO: add a concept of original checkpoint height to the processor. For now, derive it
-        val originalCheckpoint = lowerBoundHeight + MAX_REORG_SIZE + 2 // add one because we already have the checkpoint. Add one again because we delete ABOVE the block
+        val originalCheckpoint =
+            lowerBoundHeight + MAX_REORG_SIZE + 2 // add one because we already have the checkpoint. Add one again because we delete ABOVE the block
         return if (height < originalCheckpoint) {
             originalCheckpoint
         } else {
             // tricky: subtract one because we delete ABOVE this block
-            rustBackend.getNearestRewindHeight(height) - 1
+            // This could create an invalid height if if height was saplingActivationHeight
+            val rewindHeight = BlockHeight(height.value - 1)
+            rustBackend.getNearestRewindHeight(rewindHeight)
         }
     }
 
@@ -644,7 +725,10 @@ class PirateCompactBlockProcessor(
     suspend fun quickRewind() {
         val height = max(currentInfo.lastScannedHeight, repository.lastScannedHeight())
         val blocksPerDay = 60 * 60 * 24 * 1000 / PirateSdk.BLOCK_INTERVAL_MILLIS.toInt()
-        val twoWeeksBack = (height - blocksPerDay * 14).coerceAtLeast(lowerBoundHeight)
+        val twoWeeksBack = BlockHeight.new(
+            network,
+            (height.value - blocksPerDay * 14).coerceAtLeast(lowerBoundHeight.value)
+        )
         rewindToNearestHeight(twoWeeksBack, false)
     }
 
@@ -652,45 +736,73 @@ class PirateCompactBlockProcessor(
      * @param alsoClearBlockCache when true, also clear the block cache which forces a redownload of
      * blocks. Otherwise, the cached blocks will be used in the rescan, which in most cases, is fine.
      */
-    suspend fun rewindToNearestHeight(height: Int, alsoClearBlockCache: Boolean = false) = withContext(IO) {
-        processingMutex.withLockLogged("rewindToHeight") {
-            val lastScannedHeight = currentInfo.lastScannedHeight
-            val lastLocalBlock = repository.lastScannedHeight()
-            val targetHeight = getNearestRewindHeight(height)
-            twig("Rewinding from $lastScannedHeight to requested height: $height using target height: $targetHeight with last local block: $lastLocalBlock")
-            if (targetHeight < lastScannedHeight || (lastScannedHeight == -1 && (targetHeight < lastLocalBlock))) {
-                rustBackend.rewindToHeight(targetHeight)
-            } else {
-                twig("not rewinding dataDb because the last scanned height is $lastScannedHeight and the last local block is $lastLocalBlock both of which are less than the target height of $targetHeight")
-            }
+    suspend fun rewindToNearestHeight(
+        height: BlockHeight,
+        alsoClearBlockCache: Boolean = false
+    ) =
+        withContext(IO) {
+            processingMutex.withLockLogged("rewindToHeight") {
+                val lastScannedHeight = currentInfo.lastScannedHeight
+                val lastLocalBlock = repository.lastScannedHeight()
+                val targetHeight = getNearestRewindHeight(height)
+                twig("Rewinding from $lastScannedHeight to requested height: $height using target height: $targetHeight with last local block: $lastLocalBlock")
+                if ((null == lastScannedHeight && targetHeight < lastLocalBlock) || (null != lastScannedHeight && targetHeight < lastScannedHeight)) {
+                    rustBackend.rewindToHeight(targetHeight)
+                } else {
+                    twig("not rewinding dataDb because the last scanned height is $lastScannedHeight and the last local block is $lastLocalBlock both of which are less than the target height of $targetHeight")
+                }
 
-            if (alsoClearBlockCache) {
-                twig("Also clearing block cache back to $targetHeight. These rewound blocks will download in the next scheduled scan")
-                downloader.rewindToHeight(targetHeight)
-                // communicate that the wallet is no longer synced because it might remain this way for 20+ seconds because we only download on 20s time boundaries so we can't trigger any immediate action
-                setState(Downloading)
-                updateProgress(
-                    lastScannedHeight = targetHeight,
-                    lastDownloadedHeight = targetHeight,
-                    lastScanRange = (targetHeight + 1)..currentInfo.networkBlockHeight,
-                    lastDownloadRange = (targetHeight + 1)..currentInfo.networkBlockHeight
-                )
-                _progress.send(0)
-            } else {
-                updateProgress(
-                    lastScannedHeight = targetHeight,
-                    lastScanRange = (targetHeight + 1)..currentInfo.networkBlockHeight
-                )
-                _progress.send(0)
-                val range = (targetHeight + 1)..lastScannedHeight
-                twig("We kept the cache blocks in place so we don't need to wait for the next scheduled download to rescan. Instead we will rescan and validate blocks ${range.first}..${range.last}")
-                if (validateAndScanNewBlocks(range) == ERROR_CODE_NONE) enhanceTransactionDetails(range)
+                val currentNetworkBlockHeight = currentInfo.networkBlockHeight
+
+                if (alsoClearBlockCache) {
+                    twig("Also clearing block cache back to $targetHeight. These rewound blocks will download in the next scheduled scan")
+                    downloader.rewindToHeight(targetHeight)
+                    // communicate that the wallet is no longer synced because it might remain this way for 20+ seconds because we only download on 20s time boundaries so we can't trigger any immediate action
+                    setState(Downloading)
+                    if (null == currentNetworkBlockHeight) {
+                        updateProgress(
+                            lastScannedHeight = targetHeight,
+                            lastDownloadedHeight = targetHeight,
+                            lastScanRange = null,
+                            lastDownloadRange = null
+                        )
+                    } else {
+                        updateProgress(
+                            lastScannedHeight = targetHeight,
+                            lastDownloadedHeight = targetHeight,
+                            lastScanRange = (targetHeight + 1)..currentNetworkBlockHeight,
+                            lastDownloadRange = (targetHeight + 1)..currentNetworkBlockHeight
+                        )
+                    }
+                    _progress.send(0)
+                } else {
+                    if (null == currentNetworkBlockHeight) {
+                        updateProgress(
+                            lastScannedHeight = targetHeight,
+                            lastScanRange = null
+                        )
+                    } else {
+                        updateProgress(
+                            lastScannedHeight = targetHeight,
+                            lastScanRange = (targetHeight + 1)..currentNetworkBlockHeight
+                        )
+                    }
+
+                    _progress.send(0)
+
+                    if (null != lastScannedHeight) {
+                        val range = (targetHeight + 1)..lastScannedHeight
+                        twig("We kept the cache blocks in place so we don't need to wait for the next scheduled download to rescan. Instead we will rescan and validate blocks ${range.start}..${range.endInclusive}")
+                        if (validateAndScanNewBlocks(range) == BlockProcessingResult.Success) {
+                            enhanceTransactionDetails(range)
+                        }
+                    }
+                }
             }
         }
-    }
 
     /** insightful function for debugging these critical errors */
-    private suspend fun printValidationErrorInfo(errorHeight: Int, count: Int = 11) {
+    private suspend fun printValidationErrorInfo(errorHeight: BlockHeight, count: Int = 11) {
         // Note: blocks are public information so it's okay to print them but, still, let's not unless we're debugging something
         if (!BuildConfig.DEBUG) return
 
@@ -699,19 +811,25 @@ class PirateCompactBlockProcessor(
         errorInfo = fetchValidationErrorInfo(errorHeight + 1)
         twig("The next block block: ${errorInfo.errorHeight} which had hash ${errorInfo.actualPrevHash} but the expected hash was ${errorInfo.expectedPrevHash}")
 
-        twig("=================== BLOCKS [$errorHeight..${errorHeight + count - 1}]: START ========")
+        twig("=================== BLOCKS [$errorHeight..${errorHeight.value + count - 1}]: START ========")
         repeat(count) { i ->
             val height = errorHeight + i
             val block = downloader.compactBlockStore.findCompactBlock(height)
             // sometimes the initial block was inserted via checkpoint and will not appear in the cache. We can get the hash another way but prevHash is correctly null.
-            val hash = block?.hash?.toByteArray() ?: (repository as PiratePagedTransactionRepository).findBlockHash(height)
-            twig("block: $height\thash=${hash?.toHexReversed()} \tprevHash=${block?.prevHash?.toByteArray()?.toHexReversed()}")
+            val hash = block?.hash?.toByteArray()
+                ?: (repository as PiratePagedTransactionRepository).findBlockHash(height)
+            twig(
+                "block: $height\thash=${hash?.toHexReversed()} \tprevHash=${
+                block?.prevHash?.toByteArray()?.toHexReversed()
+                }"
+            )
         }
-        twig("=================== BLOCKS [$errorHeight..${errorHeight + count - 1}]: END ========")
+        twig("=================== BLOCKS [$errorHeight..${errorHeight.value + count - 1}]: END ========")
     }
 
-    private suspend fun fetchValidationErrorInfo(errorHeight: Int): PirateValidationErrorInfo {
-        val hash = (repository as PiratePagedTransactionRepository).findBlockHash(errorHeight + 1)?.toHexReversed()
+    private suspend fun fetchValidationErrorInfo(errorHeight: BlockHeight): PirateValidationErrorInfo {
+        val hash = (repository as PiratePagedTransactionRepository).findBlockHash(errorHeight + 1)
+            ?.toHexReversed()
         val prevHash = repository.findBlockHash(errorHeight)?.toHexReversed()
 
         val compactBlock = downloader.compactBlockStore.findCompactBlock(errorHeight + 1)
@@ -729,9 +847,9 @@ class PirateCompactBlockProcessor(
         return onProcessorErrorListener?.invoke(throwable) ?: true
     }
 
-    private fun determineLowerBound(errorHeight: Int): Int {
-        val offset = Math.min(MAX_REORG_SIZE, REWIND_DISTANCE * (consecutiveChainErrors.get() + 1))
-        return Math.max(errorHeight - offset, lowerBoundHeight).also {
+    private fun determineLowerBound(errorHeight: BlockHeight): BlockHeight {
+        val offset = min(MAX_REORG_SIZE, REWIND_DISTANCE * (consecutiveChainErrors.get() + 1))
+        return BlockHeight(max(errorHeight.value - offset, lowerBoundHeight.value)).also {
             twig("offset = min($MAX_REORG_SIZE, $REWIND_DISTANCE * (${consecutiveChainErrors.get() + 1})) = $offset")
             twig("lowerBound = max($errorHeight - $offset, $lowerBoundHeight) = $it")
         }
@@ -754,19 +872,28 @@ class PirateCompactBlockProcessor(
         return deltaToNextInteral
     }
 
-    suspend fun calculateBirthdayHeight(): Int {
-        var oldestTransactionHeight = 0
+    suspend fun calculateBirthdayHeight(): BlockHeight {
+        var oldestTransactionHeight: BlockHeight? = null
         try {
-            oldestTransactionHeight = repository.receivedTransactions.first().lastOrNull()?.minedHeight ?: lowerBoundHeight
+            val tempOldestTransactionHeight = repository.receivedTransactions
+                .first()
+                .lastOrNull()
+                ?.minedBlockHeight
+                ?: lowerBoundHeight
             // to be safe adjust for reorgs (and generally a little cushion is good for privacy)
             // so we round down to the nearest 100 and then subtract 100 to ensure that the result is always at least 100 blocks away
-            oldestTransactionHeight = PirateSdk.MAX_REORG_SIZE.let { boundary ->
-                oldestTransactionHeight.let { it - it.rem(boundary) - boundary }
-            }
+            oldestTransactionHeight = BlockHeight.new(
+                network,
+                tempOldestTransactionHeight.value - tempOldestTransactionHeight.value.rem(PirateSdk.MAX_REORG_SIZE) - PirateSdk.MAX_REORG_SIZE.toLong()
+            )
         } catch (t: Throwable) {
             twig("failed to calculate birthday due to: $t")
         }
-        return maxOf(lowerBoundHeight, oldestTransactionHeight, rustBackend.network.saplingActivationHeight)
+        return buildList<BlockHeight> {
+            add(lowerBoundHeight)
+            add(rustBackend.network.saplingActivationHeight)
+            oldestTransactionHeight?.let { add(it) }
+        }.maxOf { it }
     }
 
     /**
@@ -819,7 +946,8 @@ class PirateCompactBlockProcessor(
             }
         }
 
-    suspend fun getUtxoCacheBalance(address: String): PirateWalletBalance = rustBackend.getDownloadedUtxoBalance(address)
+    suspend fun getUtxoCacheBalance(address: String): PirateWalletBalance =
+        rustBackend.getDownloadedUtxoBalance(address)
 
     /**
      * Transmits the given state for this processor.
@@ -864,7 +992,7 @@ class PirateCompactBlockProcessor(
         /**
          * [PirateState] for when we are done decrypting blocks, for now.
          */
-        class PirateScanned(val scannedRange: IntRange) : Connected, Syncing, PirateState()
+        class PirateScanned(val scannedRange: ClosedRange<BlockHeight>?) : Connected, Syncing, PirateState()
 
         /**
          * [PirateState] for when transaction details are being retrieved. This typically means the wallet
@@ -907,11 +1035,11 @@ class PirateCompactBlockProcessor(
      * @param lastScanRange inclusive range to scan.
      */
     data class ProcessorInfo(
-        val networkBlockHeight: Int = -1,
-        val lastScannedHeight: Int = -1,
-        val lastDownloadedHeight: Int = -1,
-        val lastDownloadRange: IntRange = 0..-1, // empty range
-        val lastScanRange: IntRange = 0..-1 // empty range
+        val networkBlockHeight: BlockHeight?,
+        val lastScannedHeight: BlockHeight?,
+        val lastDownloadedHeight: BlockHeight?,
+        val lastDownloadRange: ClosedRange<BlockHeight>?,
+        val lastScanRange: ClosedRange<BlockHeight>?
     ) {
 
         /**
@@ -919,19 +1047,24 @@ class PirateCompactBlockProcessor(
          *
          * @return false when all values match their defaults.
          */
-        val hasData get() = networkBlockHeight != -1 ||
-            lastScannedHeight != -1 ||
-            lastDownloadedHeight != -1 ||
-            lastDownloadRange != 0..-1 ||
-            lastScanRange != 0..-1
+        val hasData
+            get() = networkBlockHeight != null ||
+                lastScannedHeight != null ||
+                lastDownloadedHeight != null ||
+                lastDownloadRange != null ||
+                lastScanRange != null
 
         /**
          * Determines whether this instance is actively downloading compact blocks.
          *
          * @return true when there are more than zero blocks remaining to download.
          */
-        val isDownloading: Boolean get() = !lastDownloadRange.isEmpty() &&
-            lastDownloadedHeight < lastDownloadRange.last
+        val isDownloading: Boolean
+            get() =
+                lastDownloadedHeight != null &&
+                    lastDownloadRange != null &&
+                    !lastDownloadRange.isEmpty() &&
+                    lastDownloadedHeight < lastDownloadRange.endInclusive
 
         /**
          * Determines whether this instance is actively scanning or validating compact blocks.
@@ -939,32 +1072,39 @@ class PirateCompactBlockProcessor(
          * @return true when downloading has completed and there are more than zero blocks remaining
          * to be scanned.
          */
-        val isScanning: Boolean get() = !isDownloading &&
-            !lastScanRange.isEmpty() &&
-            lastScannedHeight < lastScanRange.last
+        val isScanning: Boolean
+            get() =
+                !isDownloading &&
+                    lastScannedHeight != null &&
+                    lastScanRange != null &&
+                    !lastScanRange.isEmpty() &&
+                    lastScannedHeight < lastScanRange.endInclusive
 
         /**
          * The amount of scan progress from 0 to 100.
          */
-        val scanProgress get() = when {
-            lastScannedHeight <= -1 -> 0
-            lastScanRange.isEmpty() -> 100
-            lastScannedHeight >= lastScanRange.last -> 100
-            else -> {
-                // when lastScannedHeight == lastScanRange.first, we have scanned one block, thus the offsets
-                val blocksScanned = (lastScannedHeight - lastScanRange.first + 1).coerceAtLeast(0)
-                // we scan the range inclusively so 100..100 is one block to scan, thus the offset
-                val numberOfBlocks = lastScanRange.last - lastScanRange.first + 1
-                // take the percentage then convert and round
-                ((blocksScanned.toFloat() / numberOfBlocks) * 100.0f).let { percent ->
-                    percent.coerceAtMost(100.0f).roundToInt()
+        val scanProgress
+            get() = when {
+                lastScannedHeight == null -> 0
+                lastScanRange == null -> 100
+                lastScannedHeight >= lastScanRange.endInclusive -> 100
+                else -> {
+                    // when lastScannedHeight == lastScanRange.first, we have scanned one block, thus the offsets
+                    val blocksScanned =
+                        (lastScannedHeight.value - lastScanRange.start.value + 1).coerceAtLeast(0)
+                    // we scan the range inclusively so 100..100 is one block to scan, thus the offset
+                    val numberOfBlocks =
+                        lastScanRange.endInclusive.value - lastScanRange.start.value + 1
+                    // take the percentage then convert and round
+                    ((blocksScanned.toFloat() / numberOfBlocks) * 100.0f).let { percent ->
+                        percent.coerceAtMost(100.0f).roundToInt()
+                    }
                 }
             }
-        }
     }
 
     data class PirateValidationErrorInfo(
-        val errorHeight: Int,
+        val errorHeight: BlockHeight,
         val hash: String?,
         val expectedPrevHash: String?,
         val actualPrevHash: String?
@@ -1002,10 +1142,12 @@ class PirateCompactBlockProcessor(
         }
         twig("$name MUTEX: withLock complete", -1)
     }
+}
 
-    companion object {
-        const val ERROR_CODE_NONE = -1
-        const val ERROR_CODE_RECONNECT = 20
-        const val ERROR_CODE_FAILED_ENHANCE = 40
-    }
+private fun max(a: BlockHeight?, b: BlockHeight) = if (null == a) {
+    b
+} else if (a.value > b.value) {
+    a
+} else {
+    b
 }

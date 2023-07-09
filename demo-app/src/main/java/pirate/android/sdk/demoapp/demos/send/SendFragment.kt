@@ -66,7 +66,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
 
         runBlocking {
             PirateInitializer.new(requireApplicationContext()) {
-                runBlocking { it.importWallet(seed, network = PirateNetwork.fromResources(requireApplicationContext())) }
+                runBlocking { it.newWallet(seed, network = PirateNetwork.fromResources(requireApplicationContext())) }
                 it.setNetwork(PirateNetwork.fromResources(requireApplicationContext()))
             }
         }.let { initializer ->

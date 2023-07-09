@@ -12,12 +12,13 @@ import pirate.android.sdk.internal.db.PirateDerivedDataDb
 import pirate.android.sdk.internal.ext.android.toFlowPagedList
 import pirate.android.sdk.internal.ext.android.toRefreshable
 import pirate.android.sdk.internal.ext.tryWarn
+import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
+import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateWalletBirthday
+import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 
@@ -28,7 +29,8 @@ import kotlinx.coroutines.withContext
  *
  * @param pageSize transactions per page. This influences pre-fetch and memory configuration.
  */
-class PiratePagedTransactionRepository private constructor(
+internal class PiratePagedTransactionRepository private constructor(
+    private val zcashNetwork: PirateNetwork,
     private val db: PirateDerivedDataDb,
     private val pageSize: Int
 ) : TransactionRepository {
@@ -62,20 +64,20 @@ class PiratePagedTransactionRepository private constructor(
 
     override fun invalidate() = allTransactionsFactory.refresh()
 
-    override suspend fun lastScannedHeight() = blocks.lastScannedHeight()
+    override suspend fun lastScannedHeight() = BlockHeight.new(zcashNetwork, blocks.lastScannedHeight())
 
-    override suspend fun firstScannedHeight() = blocks.firstScannedHeight()
+    override suspend fun firstScannedHeight() = BlockHeight.new(zcashNetwork, blocks.firstScannedHeight())
 
     override suspend fun isInitialized() = blocks.count() > 0
 
     override suspend fun findEncodedTransactionById(txId: Long) =
         transactions.findEncodedTransactionById(txId)
 
-    override suspend fun findNewTransactions(blockHeightRange: IntRange): List<PirateConfirmedTransaction> =
-        transactions.findAllTransactionsByRange(blockHeightRange.first, blockHeightRange.last)
+    override suspend fun findNewTransactions(blockHeightRange: ClosedRange<BlockHeight>): List<PirateConfirmedTransaction> =
+        transactions.findAllTransactionsByRange(blockHeightRange.start.value, blockHeightRange.endInclusive.value)
 
     override suspend fun findMinedHeight(rawTransactionId: ByteArray) =
-        transactions.findMinedHeight(rawTransactionId)
+        transactions.findMinedHeight(rawTransactionId)?.let { BlockHeight.new(zcashNetwork, it) }
 
     override suspend fun findMatchingTransactionId(rawTransactionId: ByteArray): Long? =
         transactions.findMatchingTransactionId(rawTransactionId)
@@ -84,8 +86,8 @@ class PiratePagedTransactionRepository private constructor(
         transactions.cleanupCancelledTx(rawTransactionId)
 
     // let expired transactions linger in the UI for a little while
-    override suspend fun deleteExpired(lastScannedHeight: Int) =
-        transactions.deleteExpired(lastScannedHeight - (PirateSdk.EXPIRY_OFFSET / 2))
+    override suspend fun deleteExpired(lastScannedHeight: BlockHeight) =
+        transactions.deleteExpired(lastScannedHeight.value - (PirateSdk.EXPIRY_OFFSET / 2))
 
     override suspend fun count() = transactions.count()
 
@@ -103,26 +105,27 @@ class PiratePagedTransactionRepository private constructor(
     }
 
     // TODO: begin converting these into Data Access API. For now, just collect the desired operations and iterate/refactor, later
-    suspend fun findBlockHash(height: Int): ByteArray? = blocks.findHashByHeight(height)
+    suspend fun findBlockHash(height: BlockHeight): ByteArray? = blocks.findHashByHeight(height.value)
     suspend fun getTransactionCount(): Int = transactions.count()
 
     // TODO: convert this into a wallet repository rather than "transaction repository"
 
     companion object {
-        suspend fun new(
+        internal suspend fun new(
             appContext: Context,
+            zcashNetwork: PirateNetwork,
             pageSize: Int = 10,
             rustBackend: PirateRustBackend,
-            birthday: PirateWalletBirthday,
+            birthday: Checkpoint,
             viewingKeys: List<PirateUnifiedViewingKey>,
-            overwriteVks: Boolean = false,
+            overwriteVks: Boolean = false
         ): PiratePagedTransactionRepository {
             initMissingDatabases(rustBackend, birthday, viewingKeys)
 
             val db = buildDatabase(appContext.applicationContext, rustBackend.pathDataDb)
             applyKeyMigrations(rustBackend, overwriteVks, viewingKeys)
 
-            return PiratePagedTransactionRepository(db, pageSize)
+            return PiratePagedTransactionRepository(zcashNetwork, db, pageSize)
         }
 
         /**
@@ -155,8 +158,8 @@ class PiratePagedTransactionRepository private constructor(
          */
         private suspend fun initMissingDatabases(
             rustBackend: PirateRustBackend,
-            birthday: PirateWalletBirthday,
-            viewingKeys: List<PirateUnifiedViewingKey>,
+            birthday: Checkpoint,
+            viewingKeys: List<PirateUnifiedViewingKey>
         ) {
             maybeCreateDataDb(rustBackend)
             maybeInitBlocksTable(rustBackend, birthday)
@@ -178,20 +181,15 @@ class PiratePagedTransactionRepository private constructor(
          */
         private suspend fun maybeInitBlocksTable(
             rustBackend: PirateRustBackend,
-            birthday: PirateWalletBirthday
+            checkpoint: Checkpoint
         ) {
             // TODO: consider converting these to typed exceptions in the welding layer
             tryWarn(
                 "Warning: did not initialize the blocks table. It probably was already initialized.",
                 ifContains = "table is not empty"
             ) {
-                rustBackend.initBlocksTable(
-                    birthday.height,
-                    birthday.hash,
-                    birthday.time,
-                    birthday.tree
-                )
-                twig("seeded the database with sapling tree at height ${birthday.height}")
+                rustBackend.initBlocksTable(checkpoint)
+                twig("seeded the database with sapling tree at height ${checkpoint.height}")
             }
             twig("database file: ${rustBackend.pathDataDb}")
         }

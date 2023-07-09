@@ -4,6 +4,7 @@ import pirate.android.sdk.internal.ext.retryUpTo
 import pirate.android.sdk.internal.ext.tryWarn
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.BlockHeight
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.CoroutineScope
@@ -43,10 +44,9 @@ open class PirateCompactBlockDownloader private constructor(val compactBlockStor
      *
      * @return the number of blocks that were returned in the results from the lightwalletService.
      */
-    suspend fun downloadBlockRange(heightRange: IntRange): Int = withContext(IO) {
+    suspend fun downloadBlockRange(heightRange: ClosedRange<BlockHeight>): Int = withContext(IO) {
         val result = lightWalletService.getBlockRange(heightRange)
         compactBlockStore.write(result)
-        result.size
     }
 
     /**
@@ -55,7 +55,7 @@ open class PirateCompactBlockDownloader private constructor(val compactBlockStor
      *
      * @param height the height to which the data will rewind.
      */
-    suspend fun rewindToHeight(height: Int) =
+    suspend fun rewindToHeight(height: BlockHeight) =
         // TODO: cancel anything in flight
         compactBlockStore.rewindTo(height)
 

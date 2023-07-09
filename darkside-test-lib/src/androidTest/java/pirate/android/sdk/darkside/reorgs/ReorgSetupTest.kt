@@ -3,6 +3,8 @@ package pirate.android.sdk.darkside.reorgs
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import pirate.android.sdk.darkside.test.DarksideTestCoordinator
 import pirate.android.sdk.darkside.test.ScopedTest
+import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.type.PirateNetwork
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
@@ -11,8 +13,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class ReorgSetupTest : ScopedTest() {
 
-    private val birthdayHeight = 663150
-    private val targetHeight = 663250
+    private val birthdayHeight = BlockHeight.new(PirateNetwork.Mainnet, 663150)
+    private val targetHeight = BlockHeight.new(PirateNetwork.Mainnet, 663250)
 
     @Before
     fun setup() {
