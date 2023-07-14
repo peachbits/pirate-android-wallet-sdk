@@ -2,8 +2,8 @@ package pirate.android.sdk.internal.transaction
 
 import android.content.Context
 import androidx.paging.PagedList
-import androidx.room.Room
 import androidx.room.RoomDatabase
+import pirate.android.sdk.db.commonDatabaseBuilder
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.SdkDispatchers
@@ -16,11 +16,12 @@ import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import java.io.File
 
 /**
  * Example of a repository that leverages the Room paging library to return a [PagedList] of
@@ -29,6 +30,7 @@ import kotlinx.coroutines.withContext
  *
  * @param pageSize transactions per page. This influences pre-fetch and memory configuration.
  */
+@Suppress("TooManyFunctions")
 internal class PiratePagedTransactionRepository private constructor(
     private val zcashNetwork: PirateNetwork,
     private val db: PirateDerivedDataDb,
@@ -104,13 +106,18 @@ internal class PiratePagedTransactionRepository private constructor(
         }
     }
 
-    // TODO: begin converting these into Data Access API. For now, just collect the desired operations and iterate/refactor, later
+    // TODO [#681]: begin converting these into Data Access API. For now, just collect the desired
+    //  operations and iterate/refactor, later
+    // TODO [#681]: https://github.com/zcash/zcash-android-wallet-sdk/issues/681
     suspend fun findBlockHash(height: BlockHeight): ByteArray? = blocks.findHashByHeight(height.value)
     suspend fun getTransactionCount(): Int = transactions.count()
 
-    // TODO: convert this into a wallet repository rather than "transaction repository"
+    // TODO [#681]: convert this into a wallet repository rather than "transaction repository"
+    // TODO [#681]: https://github.com/zcash/zcash-android-wallet-sdk/issues/681
 
     companion object {
+
+        @Suppress("LongParameterList")
         internal suspend fun new(
             appContext: Context,
             zcashNetwork: PirateNetwork,
@@ -122,7 +129,7 @@ internal class PiratePagedTransactionRepository private constructor(
         ): PiratePagedTransactionRepository {
             initMissingDatabases(rustBackend, birthday, viewingKeys)
 
-            val db = buildDatabase(appContext.applicationContext, rustBackend.pathDataDb)
+            val db = buildDatabase(appContext.applicationContext, rustBackend.dataDbFile)
             applyKeyMigrations(rustBackend, overwriteVks, viewingKeys)
 
             return PiratePagedTransactionRepository(zcashNetwork, db, pageSize)
@@ -131,9 +138,13 @@ internal class PiratePagedTransactionRepository private constructor(
         /**
          * Build the database and apply migrations.
          */
-        private suspend fun buildDatabase(context: Context, databasePath: String): PirateDerivedDataDb {
+        private suspend fun buildDatabase(context: Context, databaseFile: File): PirateDerivedDataDb {
             twig("Building dataDb and applying migrations")
-            return Room.databaseBuilder(context, PirateDerivedDataDb::class.java, databasePath)
+            return commonDatabaseBuilder(
+                context,
+                PirateDerivedDataDb::class.java,
+                databaseFile
+            )
                 .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
                 .setQueryExecutor(SdkExecutors.DATABASE_IO)
                 .setTransactionExecutor(SdkExecutors.DATABASE_IO)
@@ -143,8 +154,12 @@ internal class PiratePagedTransactionRepository private constructor(
                 .addMigrations(PirateDerivedDataDb.MIGRATION_5_6)
                 .addMigrations(PirateDerivedDataDb.MIGRATION_6_7)
                 .build().also {
-                    // TODO: document why we do this. My guess is to catch database issues early or to trigger migrations--I forget why it was added but there was a good reason?
+                    // TODO [#681]: document why we do this. My guess is to catch database issues early or to trigger
+                    //  migrations--I forget why it was added but there was a good reason?
+                    // TODO [#681]: https://github.com/zcash/zcash-android-wallet-sdk/issues/681
                     withContext(SdkDispatchers.DATABASE_IO) {
+                        // TODO [#649]: StrictMode policy violation: LeakedClosableViolation
+                        // TODO [#649]: https://github.com/zcash/zcash-android-wallet-sdk/issues/649
                         it.openHelper.writableDatabase.beginTransaction()
                         it.openHelper.writableDatabase.endTransaction()
                     }
@@ -172,7 +187,7 @@ internal class PiratePagedTransactionRepository private constructor(
         private suspend fun maybeCreateDataDb(rustBackend: PirateRustBackend) {
             tryWarn("Warning: did not create dataDb. It probably already exists.") {
                 rustBackend.initDataDb()
-                twig("Initialized wallet for first run file: ${rustBackend.pathDataDb}")
+                twig("Initialized wallet for first run file: ${rustBackend.dataDbFile}")
             }
         }
 
@@ -183,7 +198,8 @@ internal class PiratePagedTransactionRepository private constructor(
             rustBackend: PirateRustBackend,
             checkpoint: Checkpoint
         ) {
-            // TODO: consider converting these to typed exceptions in the welding layer
+            // TODO [#681]: consider converting these to typed exceptions in the welding layer
+            // TODO [#681]: https://github.com/zcash/zcash-android-wallet-sdk/issues/681
             tryWarn(
                 "Warning: did not initialize the blocks table. It probably was already initialized.",
                 ifContains = "table is not empty"
@@ -191,7 +207,7 @@ internal class PiratePagedTransactionRepository private constructor(
                 rustBackend.initBlocksTable(checkpoint)
                 twig("seeded the database with sapling tree at height ${checkpoint.height}")
             }
-            twig("database file: ${rustBackend.pathDataDb}")
+            twig("database file: ${rustBackend.dataDbFile}")
         }
 
         /**
@@ -201,11 +217,13 @@ internal class PiratePagedTransactionRepository private constructor(
             rustBackend: PirateRustBackend,
             viewingKeys: List<PirateUnifiedViewingKey>
         ) {
-            // TODO: consider converting these to typed exceptions in the welding layer
+            // TODO [#681]: consider converting these to typed exceptions in the welding layer
+            // TODO [#681]: https://github.com/zcash/zcash-android-wallet-sdk/issues/681
             tryWarn(
                 "Warning: did not initialize the accounts table. It probably was already initialized.",
                 ifContains = "table is not empty"
             ) {
+                @Suppress("SpreadOperator")
                 rustBackend.initAccountsTable(*viewingKeys.toTypedArray())
                 twig("Initialized the accounts table with ${viewingKeys.size} viewingKey(s)")
             }

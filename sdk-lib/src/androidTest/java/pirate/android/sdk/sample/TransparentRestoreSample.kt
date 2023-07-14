@@ -5,8 +5,7 @@ import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.Arrrtoshi
-import pirate.android.sdk.type.PirateNetwork
-import pirate.android.sdk.type.PirateNetwork.Testnet
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.util.TestWallet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -90,7 +89,7 @@ class TransparentRestoreSample {
         val wallet0 = TestWallet(
             TestWallet.Backups.SAMPLE_WALLET.seedPhrase,
             "tmpabc",
-            Testnet,
+            PirateNetwork.Testnet,
             startHeight = BlockHeight.new(
                 PirateNetwork.Testnet,
                 1330190
@@ -117,7 +116,15 @@ class TransparentRestoreSample {
      */
 //    @Test
     fun hasFunds() = runBlocking<Unit> {
-        val walletSandbox = TestWallet(TestWallet.Backups.SAMPLE_WALLET.seedPhrase, "WalletC", Testnet, startHeight = BlockHeight.new(PirateNetwork.Testnet, 1330190))
+        val walletSandbox = TestWallet(
+            TestWallet.Backups.SAMPLE_WALLET.seedPhrase,
+            "WalletC",
+            PirateNetwork.Testnet,
+            startHeight = BlockHeight.new(
+                PirateNetwork.Testnet,
+                1330190
+            )
+        )
         //        val job = walletA.walletScope.launch {
         //            twig("Syncing WalletA")
         //            walletA.sync()

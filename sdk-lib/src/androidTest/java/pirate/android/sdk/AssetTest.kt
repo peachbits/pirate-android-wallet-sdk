@@ -3,8 +3,8 @@ package pirate.android.sdk
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.filters.SmallTest
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.CheckpointTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -76,14 +76,15 @@ class AssetTest {
 
             val expectedNetworkName = when (network) {
                 PirateNetwork.Mainnet -> "main"
-                PirateNetwork.Testnet -> "test"
+                PiratehNetwork.Testnet -> "test"
+                else -> IllegalArgumentException("Unsupported network $network")
             }
             assertEquals("File: ${it.filename}", expectedNetworkName, jsonObject.getString("network"))
 
             assertEquals(
                 "File: ${it.filename}",
-                CheckpointTool.checkpointHeightFromFilename(network, it.filename),
-                jsonObject.getInt("height")
+                CheckpointTool.checkpointHeightFromFilename(network, it.filename).value,
+                jsonObject.getLong("height")
             )
 
             // In the future, additional validation of the JSON can be added
@@ -93,9 +94,9 @@ class AssetTest {
     private data class JsonFile(val jsonObject: JSONObject, val filename: String)
 
     companion object {
-        fun listAssets(network: PirateNetwork) = runBlocking {
+        fun listAssets(network: PirateNetwork): Array<String>? = runBlocking {
             CheckpointTool.listCheckpointDirectoryContents(
-                ApplicationProvider.getApplicationContext<Context>(),
+                ApplicationProvider.getApplicationContext(),
                 CheckpointTool.checkpointDirectory(network)
             )
         }

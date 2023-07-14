@@ -1,8 +1,6 @@
 package pirate.android.sdk.jni
 
-
-import pirate.android.sdk.ext.PirateSdk.OUTPUT_PARAM_FILE_NAME
-import pirate.android.sdk.ext.PirateSdk.SPEND_PARAM_FILE_NAME
+import pirate.android.sdk.internal.PirateSaplingParamTool
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.model.Checkpoint
@@ -10,9 +8,9 @@ import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.withContext
 import java.io.File
 
@@ -21,22 +19,23 @@ import java.io.File
  * not be called directly by code outside of the SDK. Instead, one of the higher-level components
  * should be used such as Wallet.kt or PirateCompactBlockProcessor.kt.
  */
+@Suppress("TooManyFunctions")
 internal class PirateRustBackend private constructor(
     override val network: PirateNetwork,
     val birthdayHeight: BlockHeight,
-    val pathDataDb: String,
-    val pathCacheDb: String,
-    val pathParamsDir: String
+    val dataDbFile: File,
+    val cacheDbFile: File,
+    override val saplingParamDir: File
 ) : PirateRustBackendWelding {
 
     suspend fun clear(clearCacheDb: Boolean = true, clearDataDb: Boolean = true) {
         if (clearCacheDb) {
             twig("Deleting the cache database!")
-            File(pathCacheDb).deleteSuspend()
+            cacheDbFile.deleteSuspend()
         }
         if (clearDataDb) {
             twig("Deleting the data database!")
-            File(pathDataDb).deleteSuspend()
+            dataDbFile.deleteSuspend()
         }
     }
 
@@ -46,7 +45,7 @@ internal class PirateRustBackend private constructor(
 
     override suspend fun initDataDb() = withContext(SdkDispatchers.DATABASE_IO) {
         initDataDb(
-            pathDataDb,
+            dataDbFile.absolutePath,
             networkId = network.id
         )
     }
@@ -60,7 +59,7 @@ internal class PirateRustBackend private constructor(
         }
         return withContext(SdkDispatchers.DATABASE_IO) {
             initAccountsTableWithKeys(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 extfvks,
                 extpubs,
                 networkId = network.id
@@ -73,6 +72,7 @@ internal class PirateRustBackend private constructor(
         numberOfAccounts: Int
     ): Array<PirateUnifiedViewingKey> {
         return PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network, numberOfAccounts).apply {
+            @Suppress("SpreadOperator")
             initAccountsTable(*this)
         }
     }
@@ -82,7 +82,7 @@ internal class PirateRustBackend private constructor(
     ): Boolean {
         return withContext(SdkDispatchers.DATABASE_IO) {
             initBlocksTable(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 checkpoint.height.value,
                 checkpoint.hash,
                 checkpoint.epochSeconds,
@@ -95,20 +95,23 @@ internal class PirateRustBackend private constructor(
     override suspend fun getShieldedAddress(account: Int) =
         withContext(SdkDispatchers.DATABASE_IO) {
             getShieldedAddress(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 account,
                 networkId = network.id
             )
         }
 
     override suspend fun getTransparentAddress(account: Int, index: Int): String {
-        throw NotImplementedError("TODO: implement this at the zcash_client_sqlite level. But for now, use PirateDerivationTool, instead to derive addresses from seeds")
+        throw NotImplementedError(
+            "TODO: implement this at the zcash_client_sqlite level. But for now, use " +
+                "PirateDerivationTool, instead to derive addresses from seeds"
+        )
     }
 
     override suspend fun getBalance(account: Int): Arrrtoshi {
         val longValue = withContext(SdkDispatchers.DATABASE_IO) {
             getBalance(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 account,
                 networkId = network.id
             )
@@ -120,7 +123,7 @@ internal class PirateRustBackend private constructor(
     override suspend fun getVerifiedBalance(account: Int): Arrrtoshi {
         val longValue = withContext(SdkDispatchers.DATABASE_IO) {
             getVerifiedBalance(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 account,
                 networkId = network.id
             )
@@ -132,7 +135,7 @@ internal class PirateRustBackend private constructor(
     override suspend fun getReceivedMemoAsUtf8(idNote: Long) =
         withContext(SdkDispatchers.DATABASE_IO) {
             getReceivedMemoAsUtf8(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 idNote,
                 networkId = network.id
             )
@@ -140,7 +143,7 @@ internal class PirateRustBackend private constructor(
 
     override suspend fun getSentMemoAsUtf8(idNote: Long) = withContext(SdkDispatchers.DATABASE_IO) {
         getSentMemoAsUtf8(
-            pathDataDb,
+            dataDbFile.absolutePath,
             idNote,
             networkId = network.id
         )
@@ -148,8 +151,8 @@ internal class PirateRustBackend private constructor(
 
     override suspend fun validateCombinedChain() = withContext(SdkDispatchers.DATABASE_IO) {
         val validationResult = validateCombinedChain(
-            pathCacheDb,
-            pathDataDb,
+            cacheDbFile.absolutePath,
+            dataDbFile.absolutePath,
             networkId = network.id
         )
 
@@ -165,7 +168,7 @@ internal class PirateRustBackend private constructor(
             BlockHeight.new(
                 network,
                 getNearestRewindHeight(
-                    pathDataDb,
+                    dataDbFile.absolutePath,
                     height.value,
                     networkId = network.id
                 )
@@ -180,7 +183,7 @@ internal class PirateRustBackend private constructor(
     override suspend fun rewindToHeight(height: BlockHeight) =
         withContext(SdkDispatchers.DATABASE_IO) {
             rewindToHeight(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 height.value,
                 networkId = network.id
             )
@@ -190,8 +193,8 @@ internal class PirateRustBackend private constructor(
         return if (limit > 0) {
             withContext(SdkDispatchers.DATABASE_IO) {
                 scanBlockBatch(
-                    pathCacheDb,
-                    pathDataDb,
+                    cacheDbFile.absolutePath,
+                    dataDbFile.absolutePath,
                     limit,
                     networkId = network.id
                 )
@@ -199,8 +202,8 @@ internal class PirateRustBackend private constructor(
         } else {
             withContext(SdkDispatchers.DATABASE_IO) {
                 scanBlocks(
-                    pathCacheDb,
-                    pathDataDb,
+                    cacheDbFile.absolutePath,
+                    dataDbFile.absolutePath,
                     networkId = network.id
                 )
             }
@@ -210,7 +213,7 @@ internal class PirateRustBackend private constructor(
     override suspend fun decryptAndStoreTransaction(tx: ByteArray) =
         withContext(SdkDispatchers.DATABASE_IO) {
             decryptAndStoreTransaction(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 tx,
                 networkId = network.id
             )
@@ -225,15 +228,15 @@ internal class PirateRustBackend private constructor(
         memo: ByteArray?
     ): Long = withContext(SdkDispatchers.DATABASE_IO) {
         createToAddress(
-            pathDataDb,
+            dataDbFile.absolutePath,
             consensusBranchId,
             account,
             extsk,
             to,
             value,
             memo ?: ByteArray(0),
-            "$pathParamsDir/$SPEND_PARAM_FILE_NAME",
-            "$pathParamsDir/$OUTPUT_PARAM_FILE_NAME",
+            File(saplingParamDir, PirateSaplingParamTool.SPEND_PARAM_FILE_NAME).absolutePath,
+            File(saplingParamDir, PirateSaplingParamTool.OUTPUT_PARAM_FILE_NAME).absolutePath,
             networkId = network.id
         )
     }
@@ -243,16 +246,16 @@ internal class PirateRustBackend private constructor(
         tsk: String,
         memo: ByteArray?
     ): Long {
-        twig("TMP: shieldToAddress with db path: $pathDataDb, ${memo?.size}")
+        twig("TMP: shieldToAddress with db path: $dataDbFile, ${memo?.size}")
         return withContext(SdkDispatchers.DATABASE_IO) {
             shieldToAddress(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 0,
                 extsk,
                 tsk,
                 memo ?: ByteArray(0),
-                "$pathParamsDir/$SPEND_PARAM_FILE_NAME",
-                "$pathParamsDir/$OUTPUT_PARAM_FILE_NAME",
+                File(saplingParamDir, PirateSaplingParamTool.SPEND_PARAM_FILE_NAME).absolutePath,
+                File(saplingParamDir, PirateSaplingParamTool.OUTPUT_PARAM_FILE_NAME).absolutePath,
                 networkId = network.id
             )
         }
@@ -267,7 +270,7 @@ internal class PirateRustBackend private constructor(
         height: BlockHeight
     ): Boolean = withContext(SdkDispatchers.DATABASE_IO) {
         putUtxo(
-            pathDataDb,
+            dataDbFile.absolutePath,
             tAddress,
             txId,
             index,
@@ -283,7 +286,7 @@ internal class PirateRustBackend private constructor(
         aboveHeightInclusive: BlockHeight
     ): Boolean = withContext(SdkDispatchers.DATABASE_IO) {
         clearUtxos(
-            pathDataDb,
+            dataDbFile.absolutePath,
             tAddress,
             // The Kotlin API is inclusive, but the Rust API is exclusive.
             // This can create invalid BlockHeights if the height is saplingActivationHeight.
@@ -295,14 +298,14 @@ internal class PirateRustBackend private constructor(
     override suspend fun getDownloadedUtxoBalance(address: String): PirateWalletBalance {
         val verified = withContext(SdkDispatchers.DATABASE_IO) {
             getVerifiedTransparentBalance(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 address,
                 networkId = network.id
             )
         }
         val total = withContext(SdkDispatchers.DATABASE_IO) {
             getTotalTransparentBalance(
-                pathDataDb,
+                dataDbFile.absolutePath,
                 address,
                 networkId = network.id
             )
@@ -328,15 +331,18 @@ internal class PirateRustBackend private constructor(
 //     * We're able to keep the "unsafe" byteArray functions private and wrap them in typeSafe
 //     * equivalents and, eventually, surface any parse errors (for now, errors are only logged).
 //     */
-//    override fun parseTransactionDataList(tdl: LocalRpcTypes.TransactionDataList): LocalRpcTypes.TransparentTransactionList {
-//        return try {
-//            // serialize the list, send it over to rust and get back a serialized set of results that we parse out and return
-//            return LocalRpcTypes.TransparentTransactionList.parseFrom(parseTransactionDataList(tdl.toByteArray()))
-//        } catch (t: Throwable) {
-//            twig("ERROR: failed to parse transaction data list due to: $t caused by: ${t.cause}")
-//            LocalRpcTypes.TransparentTransactionList.newBuilder().build()
-//        }
-//    }
+//     override fun parseTransactionDataList(
+//         tdl: LocalRpcTypes.TransactionDataList
+//     ): LocalRpcTypes.TransparentTransactionList {
+//         return try {
+//             // serialize the list, send it over to rust and get back a serialized set of results that we parse out
+//             // and return
+//             return LocalRpcTypes.TransparentTransactionList.parseFrom(parseTransactionDataList(tdl.toByteArray()))
+//         } catch (t: Throwable) {
+//             twig("ERROR: failed to parse transaction data list due to: $t caused by: ${t.cause}")
+//             LocalRpcTypes.TransparentTransactionList.newBuilder().build()
+//         }
+//     }
 
     /**
      * Exposes all of the librustzcash functions along with helpers for loading the static library.
@@ -349,9 +355,9 @@ internal class PirateRustBackend private constructor(
          * function once, it is idempotent.
          */
         suspend fun init(
-            cacheDbPath: String,
-            dataDbPath: String,
-            paramsPath: String,
+            cacheDbFile: File,
+            dataDbFile: File,
+            saplingParamsDir: File,
             zcashNetwork: PirateNetwork,
             birthdayHeight: BlockHeight
         ): PirateRustBackend {
@@ -360,9 +366,9 @@ internal class PirateRustBackend private constructor(
             return PirateRustBackend(
                 zcashNetwork,
                 birthdayHeight,
-                pathDataDb = dataDbPath,
-                pathCacheDb = cacheDbPath,
-                pathParamsDir = paramsPath
+                dataDbFile = dataDbFile,
+                cacheDbFile = cacheDbFile,
+                saplingParamDir = saplingParamsDir
             )
         }
 
@@ -394,6 +400,7 @@ internal class PirateRustBackend private constructor(
         ): Boolean
 
         @JvmStatic
+        @Suppress("LongParameterList")
         private external fun initBlocksTable(
             dbDataPath: String,
             height: Long,
@@ -484,6 +491,7 @@ internal class PirateRustBackend private constructor(
         )
 
         @JvmStatic
+        @Suppress("LongParameterList")
         private external fun createToAddress(
             dbDataPath: String,
             consensusBranchId: Long,
@@ -498,6 +506,7 @@ internal class PirateRustBackend private constructor(
         ): Long
 
         @JvmStatic
+        @Suppress("LongParameterList")
         private external fun shieldToAddress(
             dbDataPath: String,
             account: Int,
@@ -516,6 +525,7 @@ internal class PirateRustBackend private constructor(
         private external fun branchIdForHeight(height: Long, networkId: Int): Long
 
         @JvmStatic
+        @Suppress("LongParameterList")
         private external fun putUtxo(
             dbDataPath: String,
             tAddress: String,

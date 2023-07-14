@@ -5,7 +5,7 @@ import pirate.android.sdk.darkside.test.DarksideTestCoordinator
 import pirate.android.sdk.darkside.test.ScopedTest
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import org.junit.BeforeClass
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,9 +43,9 @@ class InboundTxTests : ScopedTest() {
     }
 
     private fun addTransactions(targetHeight: BlockHeight, vararg txs: String) {
-        val overwriteBlockCount = 5
+        // val overwriteBlockCount = 5
         chainMaker
-//            .stageEmptyBlocks(targetHeight, overwriteBlockCount)
+            // .stageEmptyBlocks(targetHeight, overwriteBlockCount)
             .stageTransactions(targetHeight, *txs)
             .applyTipHeight(targetHeight)
     }

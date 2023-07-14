@@ -7,12 +7,12 @@ import pirate.android.sdk.internal.from
 import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.IOException
-import java.util.*
+import java.util.Locale
 
 /**
  * Tool for loading checkpoints for the wallet, based on the height at which the wallet was born.
@@ -34,7 +34,8 @@ internal object CheckpointTool {
         network: PirateNetwork,
         birthdayHeight: BlockHeight?
     ): Checkpoint {
-        // TODO: potentially pull from shared preferences first
+        // TODO [#684]: potentially pull from shared preferences first
+        // TODO [#684]: https://github.com/zcash/zcash-android-wallet-sdk/issues/684
         return loadCheckpointFromAssets(context, network, birthdayHeight)
     }
 
@@ -65,11 +66,7 @@ internal object CheckpointTool {
      */
     @VisibleForTesting
     internal fun checkpointDirectory(network: PirateNetwork) =
-        "co.electriccoin.zcash/checkpoint/${
-        (network.networkName as java.lang.String).toLowerCase(
-            Locale.ROOT
-        )
-        }"
+        "piratesaplingtree/${network.networkName.lowercase(Locale.ROOT)}"
 
     internal fun checkpointHeightFromFilename(zcashNetwork: PirateNetwork, fileName: String) =
         BlockHeight.new(zcashNetwork, fileName.split('.').first().toLong())
@@ -129,7 +126,8 @@ internal object CheckpointTool {
     }
 
     /**
-     * @param treeFiles A list of files, sorted in descending order based on `int` value of the first part of the filename.
+     * @param treeFiles A list of files, sorted in descending order based on `int` value of the first part of
+     * the filename.
      */
     @VisibleForTesting
     internal suspend fun getFirstValidWalletBirthday(
@@ -140,6 +138,7 @@ internal object CheckpointTool {
     ): Checkpoint {
         var lastException: Exception? = null
         treeFiles.forEach { treefile ->
+            @Suppress("TooGenericExceptionCaught")
             try {
                 val jsonString = withContext(Dispatchers.IO) {
                     context.assets.open("$directory/$treefile").use { inputStream ->
@@ -161,7 +160,8 @@ internal object CheckpointTool {
                 lastException = exception
 
                 if (IS_FALLBACK_ON_FAILURE) {
-                    // TODO: If we ever add crash analytics hooks, this would be something to report
+                    // TODO [#684]: If we ever add crash analytics hooks, this would be something to report
+                    // TODO [#684]: https://github.com/zcash/zcash-android-wallet-sdk/issues/684
                     twig("Malformed birthday file $t")
                 } else {
                     throw exception

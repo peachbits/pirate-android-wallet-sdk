@@ -20,10 +20,14 @@ import androidx.viewbinding.ViewBinding
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.defaultForNetwork
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 
+@Suppress("TooManyFunctions")
 class MainActivity :
     AppCompatActivity(),
     ClipboardManager.OnPrimaryClipChangedListener,
@@ -39,7 +43,7 @@ class MainActivity :
      * this object because it would utilize the synchronizer, instead, which exposes APIs that
      * automatically sync with the server.
      */
-    var lightwalletService: LightWalletService? = null
+    var lightWalletService: LightWalletService? = null
         private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,8 +55,8 @@ class MainActivity :
         setSupportActionBar(toolbar)
 
         val fab: FloatingActionButton = findViewById(R.id.fab)
-        fab.setOnClickListener { view ->
-            onFabClicked(view)
+        fab.setOnClickListener {
+            onFabClicked()
         }
         val drawerLayout: DrawerLayout = findViewById(R.id.drawer_layout)
         val navView: NavigationView = findViewById(R.id.nav_view)
@@ -76,7 +80,7 @@ class MainActivity :
 
     override fun onDestroy() {
         super.onDestroy()
-        lightwalletService?.shutdown()
+        lightWalletService?.shutdown()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -105,13 +109,17 @@ class MainActivity :
     //
 
     private fun initService() {
-        if (lightwalletService != null) {
-            lightwalletService?.shutdown()
+        if (lightWalletService != null) {
+            lightWalletService?.shutdown()
         }
-        lightwalletService = PirateLightWalletGrpcService(applicationContext, PirateNetwork.fromResources(applicationContext))
+        val network = PirateNetwork.fromResources(applicationContext)
+        lightWalletService = PirateLightWalletGrpcService.new(
+            applicationContext,
+            LightWalletEndpoint.defaultForNetwork(network)
+        )
     }
 
-    private fun onFabClicked(view: View) {
+    private fun onFabClicked() {
         fabListener?.onActionButtonClicked()
     }
 
@@ -120,8 +128,10 @@ class MainActivity :
     //
 
     fun getClipboardText(): String? {
-        return with(clipboard) {
-            if (!hasPrimaryClip()) return null
+        with(clipboard) {
+            if (!hasPrimaryClip()) {
+                return null
+            }
             return primaryClip!!.getItemAt(0)?.coerceToText(this@MainActivity)?.toString()
         }
     }
@@ -146,16 +156,20 @@ class MainActivity :
 
     /* DrawerListener implementation */
 
+    @Suppress("EmptyFunctionBlock")
     override fun onDrawerStateChanged(newState: Int) {
     }
 
+    @Suppress("EmptyFunctionBlock")
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
     }
 
     override fun onDrawerClosed(drawerView: View) {
+        twig("Drawer closed.")
     }
 
     override fun onDrawerOpened(drawerView: View) {
+        twig("Drawer opened.")
         hideKeyboard()
     }
 }

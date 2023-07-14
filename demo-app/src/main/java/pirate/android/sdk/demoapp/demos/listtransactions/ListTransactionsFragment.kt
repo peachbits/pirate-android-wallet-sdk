@@ -3,6 +3,7 @@ package pirate.android.sdk.demoapp.demos.listtransactions
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import cash.z.ecc.android.bip39.Mnemonics
@@ -17,8 +18,10 @@ import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.defaultForNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -28,10 +31,11 @@ import kotlinx.coroutines.runBlocking
  * By default, the SDK uses a PiratePagedTransactionRepository to provide transaction contents from the
  * database in a paged format that works natively with RecyclerViews.
  */
+@Suppress("TooManyFunctions")
 class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBinding>() {
     private lateinit var initializer: PirateInitializer
     private lateinit var synchronizer: Synchronizer
-    private lateinit var adapter: TransactionAdapter<PirateConfirmedTransaction>
+    private lateinit var adapter: TransactionAdapter
     private lateinit var address: String
     private var status: Synchronizer.PirateStatus? = null
     private val isSynced get() = status == Synchronizer.PirateStatus.SYNCED
@@ -51,11 +55,13 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
         initializer = PirateInitializer.newBlocking(
             requireApplicationContext(),
             PirateInitializer.PirateConfig {
+                val network = PirateNetwork.fromResources(requireApplicationContext())
                 runBlocking {
                     it.importWallet(
                         seed,
                         birthday = null,
-                        network = PirateNetwork.fromResources(requireApplicationContext())
+                        network = network,
+                        lightWalletEndpoint = LightWalletEndpoint.defaultForNetwork(network)
                     )
                 }
             }
@@ -92,6 +98,7 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
         if (info.isScanning) binding.textInfo.text = "Scanning blocks...${info.scanProgress}%"
     }
 
+    @Suppress("MagicNumber")
     private fun onProgress(i: Int) {
         if (i < 100) binding.textInfo.text = "Downloading blocks...$i%"
     }
@@ -130,9 +137,14 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
     // Android Lifecycle overrides
     //
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = super.onCreateView(inflater, container, savedInstanceState)
         setup()
+        return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

@@ -2,7 +2,7 @@
 
 # clearedTransactions
 
-`val clearedTransactions: Flow<PagedList<`[`ConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>`
+`val clearedTransactions: Flow<PagedList<`[`PirateConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>`
 
 A flow of all the transactions that are on the blockchain.
 

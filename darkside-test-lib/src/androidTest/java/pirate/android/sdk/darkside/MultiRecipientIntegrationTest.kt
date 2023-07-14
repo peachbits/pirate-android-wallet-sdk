@@ -3,7 +3,7 @@ package pirate.android.sdk.darkside // package pirate.android.sdk.integration
 // import pirate.android.sdk.test.ScopedTest
 // import pirate.android.sdk.internal.twig
 // import pirate.android.sdk.internal.twigTask
-// import pirate.android.sdk.internal.service.LightWalletGrpcService
+// import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 // import pirate.android.sdk.darkside.test.DarksideTestCoordinator
 // import pirate.android.sdk.util.SimpleMnemonics
 // import pirate.wallet.sdk.rpc.CompactFormats
@@ -60,7 +60,7 @@ package pirate.android.sdk.darkside // package pirate.android.sdk.integration
 //
 // //    private fun sendToMyHomies() {
 // //        twig("uno")
-// //        val rustPoc = LightWalletGrpcService(localChannel)
+// //        val rustPoc = PirateLightWalletGrpcService(localChannel)
 // //        twig("dos")
 // //        val pong: Int = rustPoc.getLatestBlockHeight()
 // //        twig("tres")

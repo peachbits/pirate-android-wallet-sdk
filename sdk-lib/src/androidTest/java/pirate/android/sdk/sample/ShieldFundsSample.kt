@@ -2,7 +2,7 @@ package pirate.android.sdk.sample
 
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.model.Arrrtoshi
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.util.TestWallet
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert

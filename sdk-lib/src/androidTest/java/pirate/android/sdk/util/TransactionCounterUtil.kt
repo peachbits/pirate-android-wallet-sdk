@@ -6,7 +6,9 @@ import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.Mainnet
+import pirate.android.sdk.model.PirateNetwork
 import org.junit.Ignore
 import org.junit.Test
 
@@ -14,7 +16,7 @@ class TransactionCounterUtil {
 
     private val network = PirateNetwork.Mainnet
     private val context = InstrumentationRegistry.getInstrumentation().context
-    private val service = PirateLightWalletGrpcService(context, network)
+    private val service = PirateLightWalletGrpcService.new(context, LightWalletEndpoint.Mainnet)
 
     init {
         Twig.plant(PirateTroubleshootingTwig())

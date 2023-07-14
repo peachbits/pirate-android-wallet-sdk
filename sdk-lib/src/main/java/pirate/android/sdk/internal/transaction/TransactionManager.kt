@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
  * particularly after failed attempts or dropped connectivity. The intent is to help see outbound
  * transactions through to completion.
  */
+@Suppress("TooManyFunctions")
 interface OutboundTransactionManager {
     /**
      * Initialize a spend with the main purpose of creating an idea to use for tracking it until
@@ -109,9 +110,11 @@ interface OutboundTransactionManager {
     /**
      * Delete the given transaction but return 0 if it did not exist.
      *
+     * @param transaction the transaction to be processed.
+     *
      * @return the total number of transactions successfully removed from storage.
      */
-    suspend fun abort(it: PendingTransaction): Int
+    suspend fun abort(transaction: PendingTransaction): Int
 
     /**
      * Get all pending transactions known to this wallet as a flow that is updated anytime the list

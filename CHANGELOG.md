@@ -1,8 +1,34 @@
 Change Log
 ==========
 
+Version 1.9.0-beta05
+------------------------------------
+- The minimum version of Android supported is now API 21
+- Fixed R8/ProGuard consumer rule, which eliminates a runtime crash for minified apps
+
+Version 1.9.0-beta04
+------------------------------------
+- The SDK now stores sapling param files in `no_backup/co.electricoin.zcash` folder instead of the `cache/params` 
+  folder. Besides that, `PirateSaplingParamTool` also does validation of downloaded sapling param file hash and size.
+**No action required from client app**.
+
+Version 1.9.0-beta03
+------------------------------------
+- No changes; this release is a test of a new deployment process
+
+Version 1.9.0-beta02
+------------------------------------
+- The SDK now stores database files in `no_backup/co.electricoin.zcash` folder instead of the `database` folder. **No action required from client app**.
+
+Version 1.9.0-beta01
+------------------------------------
+ - Split `PirateNetwork` into `PirateNetwork` and `LightWalletEndpoint` to decouple network and server configuration
+ - Gradle 7.5.1
+ - Updated checkpoints
+
 Version 1.8.0-beta01
 ------------------------------------
+- Enabled automated unit tests run on the CI server 
 - Added `BlockHeight` typesafe object to represent block heights
 - Significantly reduced memory usage, fixing potential OutOfMemoryError during block download
 - Kotlin 1.7.10
@@ -122,7 +148,7 @@ Version 1.3.0-beta05
 - Major: Integrates with latest Librustzcash including full Data Access API support.
 - Major: Move off of JCenter and onto Maven Central.
 - New: Adds Ktlint [Credit: @nighthawk24]
-- Fix: Added SaplingParamTool and ability to clear param files from cache [Credit: @herou]
+- Fix: Added PirateSaplingParamTool and ability to clear param files from cache [Credit: @herou]
 - New: Added responsible disclosure document for vulnerabilities [Credit: @zebambam]
 - New: UnifiedViewingKey concept.
 - New: Adds support for autoshielding, including database migrations.
@@ -162,7 +188,7 @@ Version 1.2.1-beta01
 - New: Added latest checkpoints for testnet and mainnet.
 - New: Added display name for Canopy.
 - New: Update to the latest lightwalletd service definition.
-- Fix: Convert Initializer.Builder to Initializer.Config to simplify the constructors.
+- Fix: Convert PirateInitializer.Builder to PirateInitializer.Config to simplify the constructors.
 
 Version 1.2.0-beta01
 ------------------------------------
@@ -181,7 +207,7 @@ Version 1.1.0-beta08
 Version 1.1.0-beta05
 ------------------------------------
 - New: Synchronizer can now be started with just a viewing key.
-- New: Initializer improvements.
+- New: PirateInitializer improvements.
 - New: Added tool for loading checkpoints.
 - New: Added tool for deriving keys and addresses, statically.
 - New: Updated and revamped the demo apps.

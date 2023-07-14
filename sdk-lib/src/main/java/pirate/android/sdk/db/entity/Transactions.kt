@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package pirate.android.sdk.db.entity
 
 import android.text.format.DateUtils
@@ -5,6 +7,8 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
+import androidx.room.RoomWarnings
+import pirate.android.sdk.internal.transaction.PiratePersistentTransactionManager
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.Arrrtoshi
 
@@ -23,6 +27,7 @@ import pirate.android.sdk.model.Arrrtoshi
         )
     ]
 )
+@SuppressWarnings(RoomWarnings.MISSING_INDEX_ON_FOREIGN_KEY_CHILD)
 data class PirateTransactionEntity(
     @ColumnInfo(name = "id_tx")
     val id: Long?,
@@ -101,6 +106,7 @@ data class PiratePendingTransactionEntity(
     val valueArrrtoshi: Arrrtoshi
         get() = Arrrtoshi(value)
 
+    @Suppress("ComplexMethod")
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is PiratePendingTransactionEntity) return false
@@ -181,6 +187,7 @@ data class PirateConfirmedTransaction(
             BlockHeight(minedHeight)
         }
 
+    @Suppress("ComplexMethod")
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is PirateConfirmedTransaction) return false
@@ -350,21 +357,35 @@ fun PendingTransaction.isSubmitted(): Boolean {
 }
 
 fun PendingTransaction.isExpired(latestHeight: BlockHeight?, saplingActivationHeight: BlockHeight): Boolean {
-    // TODO: test for off-by-one error here. Should we use <= or <
-    if (latestHeight == null || latestHeight.value < saplingActivationHeight.value || expiryHeight < saplingActivationHeight.value) return false
+    // TODO [#687]: test for off-by-one error here. Should we use <= or <
+    // TODO [#687]: https://github.com/zcash/zcash-android-wallet-sdk/issues/687
+    if (latestHeight == null ||
+        latestHeight.value < saplingActivationHeight.value ||
+        expiryHeight < saplingActivationHeight.value
+    ) {
+        return false
+    }
     return expiryHeight < latestHeight.value
 }
 
 // if we don't have info on a pendingtx after 100 blocks then it's probably safe to stop polling!
+@Suppress("MagicNumber")
 fun PendingTransaction.isLongExpired(latestHeight: BlockHeight?, saplingActivationHeight: BlockHeight): Boolean {
-    if (latestHeight == null || latestHeight.value < saplingActivationHeight.value || expiryHeight < saplingActivationHeight.value) return false
+    if (latestHeight == null ||
+        latestHeight.value < saplingActivationHeight.value ||
+        expiryHeight < saplingActivationHeight.value
+    ) {
+        return false
+    }
     return (latestHeight.value - expiryHeight) > 100
 }
 
 fun PendingTransaction.isMarkedForDeletion(): Boolean {
-    return rawTransactionId == null && (errorCode ?: 0) == -9090
+    return rawTransactionId == null &&
+        (errorCode ?: 0) == PiratePersistentTransactionManager.SAFE_TO_DELETE_ERROR_CODE
 }
 
+@Suppress("MagicNumber")
 fun PendingTransaction.isSafeToDiscard(): Boolean {
     // invalid dates shouldn't happen or should be temporary
     if (createTime < 0) return false

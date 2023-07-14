@@ -9,18 +9,17 @@ import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.defaultForNetwork
+import pirate.android.sdk.test.readFileLinesInFlow
 import pirate.android.sdk.tool.CheckpointTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
-import okio.buffer
-import okio.source
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
-import java.io.IOException
 
 /**
  * A tool for checking transactions since the given birthday and printing balances. This was useful for the Zcon1 app to
@@ -75,15 +74,15 @@ class BalancePrinterUtil {
     @Test
     @Ignore("This test is broken")
     fun printBalances() = runBlocking {
-        readLines()
+        readFileLinesInFlow("/utils/seeds.txt")
             .map { seedPhrase ->
                 twig("checking balance for: $seedPhrase")
                 mnemonics.toSeed(seedPhrase.toCharArray())
             }.collect { seed ->
                 // TODO: clear the dataDb but leave the cacheDb
                 val initializer = PirateInitializer.new(context) { config ->
-                    runBlocking { config.importWallet(seed, birthdayHeight, network) }
-                    config.setNetwork(network)
+                    val endpoint = LightWalletEndpoint.defaultForNetwork(network)
+                    runBlocking { config.importWallet(seed, birthdayHeight, network, endpoint) }
                     config.alias = alias
                 }
                 /*
@@ -138,18 +137,6 @@ class BalancePrinterUtil {
 //        Thread.sleep(5000)
 //        assertEquals("foo", "bar")
 //    }
-
-    @Throws(IOException::class)
-    fun readLines() = flow<String> {
-        val seedFile = javaClass.getResourceAsStream("/utils/seeds.txt")!!
-        seedFile.source().buffer().use { source ->
-            var line: String? = source.readUtf8Line()
-            while (line != null) {
-                emit(line)
-                line = source.readUtf8Line()
-            }
-        }
-    }
 
 //    private fun initWallet(seed: String): Wallet {
 //        val spendingKeyProvider = Delegates.notNull<String>()

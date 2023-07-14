@@ -1,8 +1,9 @@
 package pirate.android.sdk.exception
 
+import pirate.android.sdk.internal.SaplingParameters
 import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.Status
 import io.grpc.Status.Code.UNAVAILABLE
@@ -68,7 +69,10 @@ sealed class PirateCompactBlockProcessorException(message: String, cause: Throwa
         "No data db file found at path $path. Verify " +
             "that the data DB has been initialized via `rustBackend.initDataDb(path)`"
     )
-    open class PirateConfigurationException(message: String, cause: Throwable?) : PirateCompactBlockProcessorException(message, cause)
+    open class PirateConfigurationException(
+        message: String,
+        cause: Throwable?
+    ) : PirateCompactBlockProcessorException(message, cause)
     class PirateFileInsteadOfPath(fileName: String) : PirateConfigurationException(
         "Invalid Path: the given path appears to be a" +
             " file name instead of a path: $fileName. The PirateRustBackend expects the absolutePath to the database rather" +
@@ -87,7 +91,8 @@ sealed class PirateCompactBlockProcessorException(message: String, cause: Throwa
             "likely means a block was missed or a reorg was mishandled. See logs for details.",
         cause
     )
-    class PirateDisconnected(cause: Throwable? = null) : PirateCompactBlockProcessorException("Disconnected Error. Unable to download blocks due to ${cause?.message}", cause)
+    class PirateDisconnected(cause: Throwable? = null) :
+        PirateCompactBlockProcessorException("Disconnected Error. Unable to download blocks due to ${cause?.message}", cause)
     object Uninitialized : PirateCompactBlockProcessorException(
         "Cannot process blocks because the wallet has not been" +
             " initialized. Verify that the seed phrase was properly created or imported. If so, then this problem" +
@@ -97,17 +102,41 @@ sealed class PirateCompactBlockProcessorException(message: String, cause: Throwa
         "Attempting to scan without an account. This is probably a setup error or a race condition."
     )
 
-    open class PirateEnhanceTransactionError(message: String, val height: BlockHeight?, cause: Throwable) : PirateCompactBlockProcessorException(message, cause) {
-        class PirateEnhanceTxDownloadError(height: BlockHeight?, cause: Throwable) : PirateEnhanceTransactionError("Error while attempting to download a transaction to enhance", height, cause)
-        class PirateEnhanceTxDecryptError(height: BlockHeight?, cause: Throwable) : PirateEnhanceTransactionError("Error while attempting to decrypt and store a transaction to enhance", height, cause)
+    open class PirateEnhanceTransactionError(
+        message: String,
+        val height: BlockHeight?,
+        cause: Throwable
+    ) : PirateCompactBlockProcessorException(message, cause) {
+        class PirateEnhanceTxDownloadError(
+            height: BlockHeight?,
+            cause: Throwable
+        ) : PirateEnhanceTransactionError(
+            "Error while attempting to download a transaction to enhance",
+            height,
+            cause
+        )
+        class PirateEnhanceTxDecryptError(
+            height: BlockHeight?,
+            cause: Throwable
+        ) : PirateEnhanceTransactionError(
+            "Error while attempting to decrypt and store a transaction to enhance",
+            height,
+            cause
+        )
     }
 
     class PirateMismatchedNetwork(clientNetwork: String?, serverNetwork: String?) : PirateCompactBlockProcessorException(
-        "Incompatible server: this client expects a server using $clientNetwork but it was $serverNetwork! Try updating the client or switching servers."
+        "Incompatible server: this client expects a server using $clientNetwork but it was $serverNetwork! Try " +
+            "updating the client or switching servers."
     )
 
-    class PirateMismatchedBranch(clientBranch: String?, serverBranch: String?, networkName: String?) : PirateCompactBlockProcessorException(
-        "Incompatible server: this client expects a server following consensus branch $clientBranch on $networkName but it was $serverBranch! Try updating the client or switching servers."
+    class PirateMismatchedBranch(
+        clientBranch: String?,
+        serverBranch: String?,
+        networkName: String?
+    ) : PirateCompactBlockProcessorException(
+        "Incompatible server: this client expects a server following consensus branch $clientBranch on $networkName " +
+            "but it was $serverBranch! Try updating the client or switching servers."
     )
 }
 
@@ -123,11 +152,16 @@ sealed class PirateBirthdayException(message: String, cause: Throwable? = null) 
     class PirateMissingBirthdayFilesException(directory: String) : PirateBirthdayException(
         "Cannot initialize wallet because no birthday files were found in the $directory directory."
     )
-    class PirateExactBirthdayNotFoundException internal constructor(birthday: BlockHeight, nearestMatch: Checkpoint? = null) : PirateBirthdayException(
+    class PirateExactBirthdayNotFoundException internal constructor(
+        birthday: BlockHeight,
+        nearestMatch: Checkpoint? = null
+    ) : PirateBirthdayException(
         "Unable to find birthday that exactly matches $birthday.${
         if (nearestMatch != null) {
             " An exact match was request but the nearest match found was ${nearestMatch.height}."
-        } else ""
+        } else {
+            ""
+        }
         }"
     )
     class PirateBirthdayFileNotFoundException(directory: String, height: BlockHeight?) : PirateBirthdayException(
@@ -207,7 +241,11 @@ sealed class PirateLightWalletException(message: String, cause: Throwable? = nul
         )
 
     open class PirateChangeServerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-        class PirateChainInfoNotMatching(val propertyNames: String, val expectedInfo: Service.LightdInfo, val actualInfo: Service.LightdInfo) : PirateChangeServerException(
+        class PirateChainInfoNotMatching(
+            val propertyNames: String,
+            val expectedInfo: Service.LightdInfo,
+            val actualInfo: Service.LightdInfo
+        ) : PirateChangeServerException(
             "Server change error: the $propertyNames values did not match."
         )
         class PirateStatusException(val status: Status, cause: Throwable? = null) : PirateSdkException(status.toMessage(), cause) {
@@ -215,7 +253,8 @@ sealed class PirateLightWalletException(message: String, cause: Throwable? = nul
                 private fun Status.toMessage(): String {
                     return when (this.code) {
                         UNAVAILABLE -> {
-                            "Error: the new server is unavailable. Verify that the host and port are correct. Failed with $this"
+                            "Error: the new server is unavailable. Verify that the host and port are correct. Failed " +
+                                "with $this"
                         }
                         else -> "Changing servers failed with status $this"
                     }
@@ -228,21 +267,30 @@ sealed class PirateLightWalletException(message: String, cause: Throwable? = nul
 /**
  * Potentially user-facing exceptions thrown while encoding transactions.
  */
-sealed class PirateTransactionEncoderException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
-    class PirateFetchParamsException(message: String) : PirateTransactionEncoderException("Failed to fetch params due to: $message")
-    object MissingParamsException : PirateTransactionEncoderException(
+sealed class PirateTransactionEncoderException(
+    message: String,
+    cause: Throwable? = null
+) : PirateSdkException(message, cause) {
+    class PirateFetchParamsException internal constructor(
+        internal val parameters: SaplingParameters,
+        message: String
+    ) : PirateTransactionEncoderException("Failed to fetch params: $parameters, due to: $message")
+    class ValidateParamsException internal constructor(
+        internal val parameters: SaplingParameters,
+        message: String
+    ) : PirateTransactionEncoderException("Failed to validate fetched params: $parameters, due to:$message")
+    object PirateMissingParamsException : PirateTransactionEncoderException(
         "Cannot send funds due to missing spend or output params and attempting to download them failed."
     )
     class PirateTransactionNotFoundException(transactionId: Long) : PirateTransactionEncoderException(
-        "Unable to find transactionId " +
-            "$transactionId in the repository. This means the wallet created a transaction and then returned a row ID " +
-            "that does not actually exist. This is a scenario where the wallet should have thrown an exception but failed " +
-            "to do so."
+        "Unable to find transactionId $transactionId in the repository. This means the wallet created a transaction " +
+            "and then returned a row ID that does not actually exist. This is a scenario where the wallet should " +
+            "have thrown an exception but failed to do so."
     )
     class PirateTransactionNotEncodedException(transactionId: Long) : PirateTransactionEncoderException(
         "The transaction returned by the wallet," +
-            " with id $transactionId, does not have any raw data. This is a scenario where the wallet should have thrown" +
-            " an exception but failed to do so."
+            " with id $transactionId, does not have any raw data. This is a scenario where the wallet should have " +
+            "thrown an exception but failed to do so."
     )
     class PirateIncompleteScanException(lastScannedHeight: BlockHeight) : PirateTransactionEncoderException(
         "Cannot" +

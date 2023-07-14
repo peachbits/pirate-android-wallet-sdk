@@ -4,8 +4,9 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
+import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.CheckpointTool.IS_FALLBACK_ON_FAILURE
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -16,7 +17,10 @@ class CheckpointToolTest {
     @Test
     @SmallTest
     fun birthday_height_from_filename() {
-        assertEquals(123, CheckpointTool.checkpointHeightFromFilename(PirateNetwork.Mainnet, "123.json"))
+        assertEquals(
+            BlockHeight.new(PirateNetwork.Mainnet, 1_230_000),
+            CheckpointTool.checkpointHeightFromFilename(PirateNetwork.Mainnet, "1230000.json")
+        )
     }
 
     @Test

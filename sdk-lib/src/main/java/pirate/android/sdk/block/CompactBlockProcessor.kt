@@ -46,10 +46,8 @@ import pirate.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
@@ -61,6 +59,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.time.Duration.Companion.days
 
 /**
  * Responsible for processing the compact blocks that are received from the lightwallet server. This class encapsulates
@@ -77,6 +76,7 @@ import kotlin.math.roundToInt
  * of the current wallet--the height before which we do not need to scan for transactions.
  */
 @PirateOpenForTesting
+@Suppress("TooManyFunctions", "LargeClass")
 class PirateCompactBlockProcessor internal constructor(
     val downloader: PirateCompactBlockDownloader,
     private val repository: TransactionRepository,
@@ -126,10 +126,9 @@ class PirateCompactBlockProcessor internal constructor(
         )
     )
 
-    private val _state: ConflatedBroadcastChannel<PirateState> = ConflatedBroadcastChannel(Initialized)
-    private val _progress = ConflatedBroadcastChannel(0)
-    private val _processorInfo =
-        ConflatedBroadcastChannel(ProcessorInfo(null, null, null, null, null))
+    private val _state: MutableStateFlow<PirateState> = MutableStateFlow(Initialized)
+    private val _progress = MutableStateFlow(0)
+    private val _processorInfo = MutableStateFlow(ProcessorInfo(null, null, null, null, null))
     private val _networkHeight = MutableStateFlow<BlockHeight?>(null)
     private val processingMutex = Mutex()
 
@@ -161,19 +160,19 @@ class PirateCompactBlockProcessor internal constructor(
      * The flow of state values so that a wallet can monitor the state of this class without needing
      * to poll.
      */
-    val state = _state.asFlow()
+    val state = _state.asStateFlow()
 
     /**
      * The flow of progress values so that a wallet can monitor how much downloading remains
      * without needing to poll.
      */
-    val progress = _progress.asFlow()
+    val progress = _progress.asStateFlow()
 
     /**
      * The flow of detailed processorInfo like the range of blocks that shall be downloaded and
      * scanned. This gives the wallet a lot of insight into the work of this processor.
      */
-    val processorInfo = _processorInfo.asFlow()
+    val processorInfo = _processorInfo.asStateFlow()
 
     /**
      * The flow of network height. This value is updated at the same time that [currentInfo] is
@@ -207,12 +206,15 @@ class PirateCompactBlockProcessor internal constructor(
                 when (result) {
                     BlockProcessingResult.Reconnecting -> {
                         val napTime = calculatePollInterval(true)
-                        twig("Unable to process new blocks because we are disconnected! Attempting to reconnect in ${napTime}ms")
+                        twig(
+                            "Unable to process new blocks because we are disconnected! Attempting to " +
+                                "reconnect in ${napTime}ms"
+                        )
                         delay(napTime)
                     }
                     BlockProcessingResult.NoBlocksToProcess, BlockProcessingResult.FailedEnhance -> {
-                        val noWorkDone =
-                            currentInfo.lastDownloadRange?.isEmpty() ?: true && currentInfo.lastScanRange?.isEmpty() ?: true
+                        val noWorkDone = currentInfo.lastDownloadRange?.isEmpty()
+                            ?: true && currentInfo.lastScanRange?.isEmpty() ?: true
                         val summary = if (noWorkDone) {
                             "Nothing to process: no new blocks to download or scan"
                         } else {
@@ -220,13 +222,22 @@ class PirateCompactBlockProcessor internal constructor(
                         }
                         consecutiveChainErrors.set(0)
                         val napTime = calculatePollInterval()
-                        twig("$summary${if (result == BlockProcessingResult.FailedEnhance) " (but there were enhancement errors! We ignore those, for now. Memos in this block range are probably missing! This will be improved in a future release.)" else ""}! Sleeping for ${napTime}ms (latest height: ${currentInfo.networkBlockHeight}).")
+                        twig(
+                            "$summary${if (result == BlockProcessingResult.FailedEnhance) {
+                                " (but there were" +
+                                    " enhancement errors! We ignore those, for now. Memos in this block range are" +
+                                    " probably missing! This will be improved in a future release.)"
+                            } else {
+                                ""
+                            }}! Sleeping" +
+                                " for ${napTime}ms (latest height: ${currentInfo.networkBlockHeight})."
+                        )
                         delay(napTime)
                     }
                     is BlockProcessingResult.Error -> {
                         if (consecutiveChainErrors.get() >= RETRIES) {
-                            val errorMessage =
-                                "ERROR: unable to resolve reorg at height $result after ${consecutiveChainErrors.get()} correction attempts!"
+                            val errorMessage = "ERROR: unable to resolve reorg at height $result after " +
+                                "${consecutiveChainErrors.get()} correction attempts!"
                             fail(PirateCompactBlockProcessorException.PirateFailedReorgRepair(errorMessage))
                         } else {
                             handleChainError(result.failedAtHeight)
@@ -238,7 +249,7 @@ class PirateCompactBlockProcessor internal constructor(
                     }
                 }
             }
-        } while (isActive && !_state.isClosedForSend && _state.value !is Stopped)
+        } while (isActive && _state.value !is Stopped)
         twig("processor complete")
         stop()
     }
@@ -301,9 +312,10 @@ class PirateCompactBlockProcessor internal constructor(
      */
     private suspend fun updateRanges(): Boolean = withContext(IO) {
         try {
-            // TODO: rethink this and make it easier to understand what's happening. Can we reduce this
-            // so that we only work with actual changing info rather than periodic snapshots? Do we need
-            // to calculate these derived values every time?
+            // TODO [#683]: rethink this and make it easier to understand what's happening. Can we reduce this
+            //  so that we only work with actual changing info rather than periodic snapshots? Do we need
+            //  to calculate these derived values every time?
+            // TODO [#683]: https://github.com/zcash/zcash-android-wallet-sdk/issues/683
             ProcessorInfo(
                 networkBlockHeight = downloader.getLatestBlockHeight(),
                 lastScannedHeight = getLastScannedHeight(),
@@ -323,7 +335,10 @@ class PirateCompactBlockProcessor internal constructor(
                     networkBlockHeight = initialInfo.networkBlockHeight,
                     lastScannedHeight = initialInfo.lastScannedHeight,
                     lastDownloadedHeight = initialInfo.lastDownloadedHeight,
-                    lastScanRange = if (initialInfo.lastScannedHeight != null && initialInfo.networkBlockHeight != null) {
+                    lastScanRange = if (
+                        initialInfo.lastScannedHeight != null &&
+                        initialInfo.networkBlockHeight != null
+                    ) {
                         initialInfo.lastScannedHeight + 1..initialInfo.networkBlockHeight
                     } else {
                         null
@@ -380,6 +395,7 @@ class PirateCompactBlockProcessor internal constructor(
         Twig.sprout("enhancing")
         twig("Enhancing transaction details for blocks $lastScanRange")
         setState(Enhancing)
+        @Suppress("TooGenericExceptionCaught")
         return try {
             val newTxs = repository.findNewTransactions(lastScanRange)
             if (newTxs.isEmpty()) {
@@ -393,27 +409,25 @@ class PirateCompactBlockProcessor internal constructor(
                 }
             }
 
-            newTxs?.onEach { newTransaction ->
-                if (newTransaction == null) {
-                    twig("somehow, new transaction was null!!!")
-                } else {
-                    enhance(newTransaction)
-                }
+            newTxs.onEach { newTransaction ->
+                enhance(newTransaction)
             }
             twig("Done enhancing transaction details")
             BlockProcessingResult.Success
         } catch (t: Throwable) {
-            twig("Failed to enhance due to $t")
-            t.printStackTrace()
+            twig("Failed to enhance due to: ${t.message} caused by: ${t.cause}")
             BlockProcessingResult.FailedEnhance
         } finally {
             Twig.clip("enhancing")
         }
     }
 
-    // TODO: we still need a way to identify those transactions that failed to be enhanced
+    // TODO [#683]: we still need a way to identify those transactions that failed to be enhanced
+    // TODO [#683]: https://github.com/zcash/zcash-android-wallet-sdk/issues/683
+
     private suspend fun enhance(transaction: PirateConfirmedTransaction) = withContext(Dispatchers.IO) {
         var downloaded = false
+        @Suppress("TooGenericExceptionCaught")
         try {
             twig("START: enhancing transaction (id:${transaction.id}  block:${transaction.minedHeight})")
             downloader.fetchTransaction(transaction.rawTransactionId)?.let { tx ->
@@ -470,12 +484,16 @@ class PirateCompactBlockProcessor internal constructor(
             if (onSetupErrorListener?.invoke(error) != true) {
                 throw error
             } else {
-                twig("Warning: An ${error::class.java.simpleName} was encountered while verifying setup but it was ignored by the onSetupErrorHandler. Ignoring message: ${error.message}")
+                twig(
+                    "Warning: An ${error::class.java.simpleName} was encountered while verifying setup but " +
+                        "it was ignored by the onSetupErrorHandler. Ignoring message: ${error.message}"
+                )
             }
         }
     }
 
     private suspend fun updateBirthdayHeight() {
+        @Suppress("TooGenericExceptionCaught")
         try {
             val betterBirthday = calculateBirthdayHeight()
             if (betterBirthday > birthdayHeight) {
@@ -488,13 +506,17 @@ class PirateCompactBlockProcessor internal constructor(
     }
 
     var failedUtxoFetches = 0
+
+    @Suppress("MagicNumber")
     internal suspend fun refreshUtxos(tAddress: String, startHeight: BlockHeight): Int? =
         withContext(IO) {
             var count: Int? = null
-            // todo: cleanup the way that we prevent this from running excessively
+            // TODO [683]: cleanup the way that we prevent this from running excessively
             //       For now, try for about 3 blocks per app launch. If the service fails it is
             //       probably disabled on ligthtwalletd, so then stop trying until the next app launch.
+            // TODO [#683]: https://github.com/zcash/zcash-android-wallet-sdk/issues/683
             if (failedUtxoFetches < 9) { // there are 3 attempts per block
+                @Suppress("TooGenericExceptionCaught")
                 try {
                     retryUpTo(3) {
                         val result = downloader.lightWalletService.fetchUtxos(tAddress, startHeight)
@@ -502,10 +524,17 @@ class PirateCompactBlockProcessor internal constructor(
                     }
                 } catch (e: Throwable) {
                     failedUtxoFetches++
-                    twig("Warning: Fetching UTXOs is repeatedly failing! We will only try about ${(9 - failedUtxoFetches + 2) / 3} more times then give up for this session.")
+                    twig(
+                        "Warning: Fetching UTXOs is repeatedly failing! We will only try about " +
+                            "${(9 - failedUtxoFetches + 2) / 3} more times then give up for this session. " +
+                            "Exception message: ${e.message}, caused by: ${e.cause}."
+                    )
                 }
             } else {
-                twig("Warning: gave up on fetching UTXOs for this session. It seems to unavailable on lightwalletd.")
+                twig(
+                    "Warning: gave up on fetching UTXOs for this session. It seems to unavailable on " +
+                        "lightwalletd."
+                )
             }
             count
         }
@@ -522,6 +551,7 @@ class PirateCompactBlockProcessor internal constructor(
         twig("Checking for UTXOs above height $aboveHeight")
         result.forEach { utxo: Service.GetAddressUtxosReply ->
             twig("Found UTXO at height ${utxo.height.toInt()} with ${utxo.valueZat} zatoshi")
+            @Suppress("TooGenericExceptionCaught")
             try {
                 rustBackend.putUtxo(
                     tAddress,
@@ -532,9 +562,14 @@ class PirateCompactBlockProcessor internal constructor(
                     BlockHeight(utxo.height)
                 )
             } catch (t: Throwable) {
-                // TODO: more accurately track the utxos that were skipped (in theory, this could fail for other reasons)
+                // TODO [#683]: more accurately track the utxos that were skipped (in theory, this could fail for other
+                //  reasons)
+                // TODO [#683]: https://github.com/zcash/zcash-android-wallet-sdk/issues/683
                 skipped++
-                twig("Warning: Ignoring transaction at height ${utxo.height} @ index ${utxo.index} because it already exists")
+                twig(
+                    "Warning: Ignoring transaction at height ${utxo.height} @ index ${utxo.index} because " +
+                        "it already exists. Exception message: ${t.message}, caused by: ${t.cause}."
+                )
             }
         }
         // return the number of UTXOs that were downloaded
@@ -546,13 +581,15 @@ class PirateCompactBlockProcessor internal constructor(
      *
      * @param range the range of blocks to download.
      */
-    @VisibleForTesting // allow mocks to verify how this is called, rather than the downloader, which is more complex
+    @VisibleForTesting
+    // allow mocks to verify how this is called, rather than the downloader, which is more complex
+    @Suppress("MagicNumber")
     internal suspend fun downloadNewBlocks(range: ClosedRange<BlockHeight>?) =
         withContext<Unit>(IO) {
             if (null == range || range.isEmpty()) {
                 twig("no blocks to download")
             } else {
-                _state.send(Downloading)
+                _state.value = Downloading
                 Twig.sprout("downloading")
                 twig("downloading blocks in range $range", -1)
 
@@ -563,7 +600,10 @@ class PirateCompactBlockProcessor internal constructor(
                         (if (missingBlockCount.rem(DOWNLOAD_BATCH_SIZE) == 0L) 0 else 1)
                     )
                 var progress: Int
-                twig("found $missingBlockCount missing blocks, downloading in $batches batches of $DOWNLOAD_BATCH_SIZE...")
+                twig(
+                    "found $missingBlockCount missing blocks, downloading in $batches batches of " +
+                        "$DOWNLOAD_BATCH_SIZE..."
+                )
                 for (i in 1..batches) {
                     retryUpTo(RETRIES, { PirateCompactBlockProcessorException.PirateFailedDownload(it) }) {
                         val end = BlockHeight.new(
@@ -574,12 +614,15 @@ class PirateCompactBlockProcessor internal constructor(
                             )
                         ) // subtract 1 on the first value because the range is inclusive
                         var count = 0
-                        twig("downloaded $downloadedBlockHeight..$end (batch $i of $batches) [${downloadedBlockHeight..end}]") {
+                        twig(
+                            "downloaded $downloadedBlockHeight..$end (batch $i of $batches) " +
+                                "[${downloadedBlockHeight..end}]"
+                        ) {
                             count = downloader.downloadBlockRange(downloadedBlockHeight..end)
                         }
                         twig("downloaded $count blocks!")
                         progress = (i / batches.toFloat() * 100).roundToInt()
-                        _progress.send(progress)
+                        _progress.value = progress
                         val lastDownloadedHeight = downloader.getLastDownloadedHeight()
                         updateProgress(lastDownloadedHeight = lastDownloadedHeight)
                         downloadedBlockHeight = end + 1
@@ -587,7 +630,7 @@ class PirateCompactBlockProcessor internal constructor(
                 }
                 Twig.clip("downloading")
             }
-            _progress.send(100)
+            _progress.value = 100
         }
 
     /**
@@ -603,7 +646,7 @@ class PirateCompactBlockProcessor internal constructor(
             return BlockProcessingResult.NoBlocksToProcess
         }
         Twig.sprout("validating")
-        twig("validating blocks in range $range in db: ${(rustBackend as PirateRustBackend).pathCacheDb}")
+        twig("validating blocks in range $range in db: ${(rustBackend as PirateRustBackend).cacheDbFile.absolutePath}")
         val result = rustBackend.validateCombinedChain()
         Twig.clip("validating")
 
@@ -620,6 +663,7 @@ class PirateCompactBlockProcessor internal constructor(
      *
      *  @param range the range of blocks to scan.
      */
+    @Suppress("MagicNumber")
     private suspend fun scanNewBlocks(range: ClosedRange<BlockHeight>?): Boolean = withContext(IO) {
         if (null == range || range.isEmpty()) {
             twig("no blocks to scan for range $range")
@@ -641,16 +685,26 @@ class PirateCompactBlockProcessor internal constructor(
                     val lastScannedHeight =
                         BlockHeight.new(network, range.start.value + metrics.cumulativeItems - 1)
                     val percentValue =
-                        (lastScannedHeight.value - range.start.value) / (range.endInclusive.value - range.start.value + 1).toFloat() * 100.0f
-                    val percent = "%.0f".format(percentValue.coerceAtMost(100f).coerceAtLeast(0f))
-                    twig("batch scanned ($percent%): $lastScannedHeight/${range.endInclusive} | ${metrics.batchTime}ms, ${metrics.batchItems}blks, ${metrics.batchIps.format()}bps")
+                        (lastScannedHeight.value - range.start.value) /
+                            (range.endInclusive.value - range.start.value + 1).toFloat() * 100.0f
+                    val percent = "%.0f".format(
+                        percentValue.coerceAtMost(100f)
+                            .coerceAtLeast(0f)
+                    )
+                    twig(
+                        "batch scanned ($percent%): $lastScannedHeight/${range.endInclusive} | " +
+                            "${metrics.batchTime}ms, ${metrics.batchItems}blks, ${metrics.batchIps.format()}bps"
+                    )
                     if (currentInfo.lastScannedHeight != lastScannedHeight) {
                         scannedNewBlocks = true
                         updateProgress(lastScannedHeight = lastScannedHeight)
                     }
                     // if we made progress toward our scan, then keep trying
                 } while (result && scannedNewBlocks && lastScannedHeight < range.endInclusive)
-                twig("batch scan complete! Total time: ${metrics.cumulativeTime}  Total blocks measured: ${metrics.cumulativeItems}  Cumulative bps: ${metrics.cumulativeIps.format()}")
+                twig(
+                    "batch scan complete! Total time: ${metrics.cumulativeTime}  Total blocks measured: " +
+                        "${metrics.cumulativeItems}  Cumulative bps: ${metrics.cumulativeIps.format()}"
+                )
             }
             Twig.clip("scanning")
             result
@@ -691,12 +745,13 @@ class PirateCompactBlockProcessor internal constructor(
 
         withContext(IO) {
             _networkHeight.value = networkBlockHeight
-            _processorInfo.send(currentInfo)
+            _processorInfo.value = currentInfo
         }
     }
 
     private suspend fun handleChainError(errorHeight: BlockHeight) {
-        // TODO consider an error object containing hash information
+        // TODO [#683]: consider an error object containing hash information
+        // TODO [#683]: https://github.com/zcash/zcash-android-wallet-sdk/issues/683
         printValidationErrorInfo(errorHeight)
         determineLowerBound(errorHeight).let { lowerBound ->
             twig("handling chain error at $errorHeight by rewinding to block $lowerBound")
@@ -706,9 +761,10 @@ class PirateCompactBlockProcessor internal constructor(
     }
 
     suspend fun getNearestRewindHeight(height: BlockHeight): BlockHeight {
-        // TODO: add a concept of original checkpoint height to the processor. For now, derive it
-        val originalCheckpoint =
-            lowerBoundHeight + MAX_REORG_SIZE + 2 // add one because we already have the checkpoint. Add one again because we delete ABOVE the block
+        // TODO [#683]: add a concept of original checkpoint height to the processor. For now, derive it
+        //  add one because we already have the checkpoint. Add one again because we delete ABOVE the block
+        // TODO [#683]: https://github.com/zcash/zcash-android-wallet-sdk/issues/683
+        val originalCheckpoint = lowerBoundHeight + MAX_REORG_SIZE + 2
         return if (height < originalCheckpoint) {
             originalCheckpoint
         } else {
@@ -724,10 +780,10 @@ class PirateCompactBlockProcessor internal constructor(
      */
     suspend fun quickRewind() {
         val height = max(currentInfo.lastScannedHeight, repository.lastScannedHeight())
-        val blocksPerDay = 60 * 60 * 24 * 1000 / PirateSdk.BLOCK_INTERVAL_MILLIS.toInt()
+        val blocksPer14Days = 14.days.inWholeMilliseconds / PirateSdk.BLOCK_INTERVAL_MILLIS.toInt()
         val twoWeeksBack = BlockHeight.new(
             network,
-            (height.value - blocksPerDay * 14).coerceAtLeast(lowerBoundHeight.value)
+            (height.value - blocksPer14Days).coerceAtLeast(lowerBoundHeight.value)
         )
         rewindToNearestHeight(twoWeeksBack, false)
     }
@@ -736,6 +792,7 @@ class PirateCompactBlockProcessor internal constructor(
      * @param alsoClearBlockCache when true, also clear the block cache which forces a redownload of
      * blocks. Otherwise, the cached blocks will be used in the rescan, which in most cases, is fine.
      */
+    @Suppress("LongMethod")
     suspend fun rewindToNearestHeight(
         height: BlockHeight,
         alsoClearBlockCache: Boolean = false
@@ -745,19 +802,36 @@ class PirateCompactBlockProcessor internal constructor(
                 val lastScannedHeight = currentInfo.lastScannedHeight
                 val lastLocalBlock = repository.lastScannedHeight()
                 val targetHeight = getNearestRewindHeight(height)
-                twig("Rewinding from $lastScannedHeight to requested height: $height using target height: $targetHeight with last local block: $lastLocalBlock")
-                if ((null == lastScannedHeight && targetHeight < lastLocalBlock) || (null != lastScannedHeight && targetHeight < lastScannedHeight)) {
+
+                twig(
+                    "Rewinding from $lastScannedHeight to requested height: $height using target height: " +
+                        "$targetHeight with last local block: $lastLocalBlock"
+                )
+
+                if (null == lastScannedHeight && targetHeight < lastLocalBlock) {
+                    twig("Rewinding because targetHeight is less than lastLocalBlock.")
+                    rustBackend.rewindToHeight(targetHeight)
+                } else if (null != lastScannedHeight && targetHeight < lastScannedHeight) {
+                    twig("Rewinding because targetHeight is less than lastScannedHeight.")
                     rustBackend.rewindToHeight(targetHeight)
                 } else {
-                    twig("not rewinding dataDb because the last scanned height is $lastScannedHeight and the last local block is $lastLocalBlock both of which are less than the target height of $targetHeight")
+                    twig(
+                        "not rewinding dataDb because the last scanned height is $lastScannedHeight and the" +
+                            " last local block is $lastLocalBlock both of which are less than the target height of " +
+                            "$targetHeight"
+                    )
                 }
 
                 val currentNetworkBlockHeight = currentInfo.networkBlockHeight
 
                 if (alsoClearBlockCache) {
-                    twig("Also clearing block cache back to $targetHeight. These rewound blocks will download in the next scheduled scan")
+                    twig(
+                        "Also clearing block cache back to $targetHeight. These rewound blocks will " +
+                            "download in the next scheduled scan"
+                    )
                     downloader.rewindToHeight(targetHeight)
-                    // communicate that the wallet is no longer synced because it might remain this way for 20+ seconds because we only download on 20s time boundaries so we can't trigger any immediate action
+                    // communicate that the wallet is no longer synced because it might remain this way for 20+
+                    // seconds because we only download on 20s time boundaries so we can't trigger any immediate action
                     setState(Downloading)
                     if (null == currentNetworkBlockHeight) {
                         updateProgress(
@@ -774,7 +848,7 @@ class PirateCompactBlockProcessor internal constructor(
                             lastDownloadRange = (targetHeight + 1)..currentNetworkBlockHeight
                         )
                     }
-                    _progress.send(0)
+                    _progress.value = 0
                 } else {
                     if (null == currentNetworkBlockHeight) {
                         updateProgress(
@@ -788,11 +862,15 @@ class PirateCompactBlockProcessor internal constructor(
                         )
                     }
 
-                    _progress.send(0)
+                    _progress.value = 0
 
                     if (null != lastScannedHeight) {
                         val range = (targetHeight + 1)..lastScannedHeight
-                        twig("We kept the cache blocks in place so we don't need to wait for the next scheduled download to rescan. Instead we will rescan and validate blocks ${range.start}..${range.endInclusive}")
+                        twig(
+                            "We kept the cache blocks in place so we don't need to wait for the next " +
+                                "scheduled download to rescan. Instead we will rescan and validate blocks " +
+                                "${range.start}..${range.endInclusive}"
+                        )
                         if (validateAndScanNewBlocks(range) == BlockProcessingResult.Success) {
                             enhanceTransactionDetails(range)
                         }
@@ -803,19 +881,27 @@ class PirateCompactBlockProcessor internal constructor(
 
     /** insightful function for debugging these critical errors */
     private suspend fun printValidationErrorInfo(errorHeight: BlockHeight, count: Int = 11) {
-        // Note: blocks are public information so it's okay to print them but, still, let's not unless we're debugging something
+        // Note: blocks are public information so it's okay to print them but, still, let's not unless we're
+        // debugging something
         if (!BuildConfig.DEBUG) return
 
         var errorInfo = fetchValidationErrorInfo(errorHeight)
-        twig("validation failed at block ${errorInfo.errorHeight} which had hash ${errorInfo.actualPrevHash} but the expected hash was ${errorInfo.expectedPrevHash}")
+        twig(
+            "validation failed at block ${errorInfo.errorHeight} which had hash " +
+                "${errorInfo.actualPrevHash} but the expected hash was ${errorInfo.expectedPrevHash}"
+        )
         errorInfo = fetchValidationErrorInfo(errorHeight + 1)
-        twig("The next block block: ${errorInfo.errorHeight} which had hash ${errorInfo.actualPrevHash} but the expected hash was ${errorInfo.expectedPrevHash}")
+        twig(
+            "The next block block: ${errorInfo.errorHeight} which had hash ${errorInfo.actualPrevHash} but " +
+                "the expected hash was ${errorInfo.expectedPrevHash}"
+        )
 
         twig("=================== BLOCKS [$errorHeight..${errorHeight.value + count - 1}]: START ========")
         repeat(count) { i ->
             val height = errorHeight + i
             val block = downloader.compactBlockStore.findCompactBlock(height)
-            // sometimes the initial block was inserted via checkpoint and will not appear in the cache. We can get the hash another way but prevHash is correctly null.
+            // sometimes the initial block was inserted via checkpoint and will not appear in the cache. We can get
+            // the hash another way but prevHash is correctly null.
             val hash = block?.hash?.toByteArray()
                 ?: (repository as PiratePagedTransactionRepository).findBlockHash(height)
             twig(
@@ -850,7 +936,10 @@ class PirateCompactBlockProcessor internal constructor(
     private fun determineLowerBound(errorHeight: BlockHeight): BlockHeight {
         val offset = min(MAX_REORG_SIZE, REWIND_DISTANCE * (consecutiveChainErrors.get() + 1))
         return BlockHeight(max(errorHeight.value - offset, lowerBoundHeight.value)).also {
-            twig("offset = min($MAX_REORG_SIZE, $REWIND_DISTANCE * (${consecutiveChainErrors.get() + 1})) = $offset")
+            twig(
+                "offset = min($MAX_REORG_SIZE, $REWIND_DISTANCE * (${consecutiveChainErrors.get() + 1})) = " +
+                    "$offset"
+            )
             twig("lowerBound = max($errorHeight - $offset, $lowerBoundHeight) = $it")
         }
     }
@@ -864,6 +953,7 @@ class PirateCompactBlockProcessor internal constructor(
      * when we unexpectedly lose server connection or are waiting for an event to happen on the
      * chain. We can pass this desire along now and later figure out how to handle it, privately.
      ￼*/
+    @Suppress("UNUSED_PARAMETER")
     private fun calculatePollInterval(fastIntervalDesired: Boolean = false): Long {
         val interval = POLL_INTERVAL
         val now = System.currentTimeMillis()
@@ -874,6 +964,7 @@ class PirateCompactBlockProcessor internal constructor(
 
     suspend fun calculateBirthdayHeight(): BlockHeight {
         var oldestTransactionHeight: BlockHeight? = null
+        @Suppress("TooGenericExceptionCaught")
         try {
             val tempOldestTransactionHeight = repository.receivedTransactions
                 .first()
@@ -881,10 +972,12 @@ class PirateCompactBlockProcessor internal constructor(
                 ?.minedBlockHeight
                 ?: lowerBoundHeight
             // to be safe adjust for reorgs (and generally a little cushion is good for privacy)
-            // so we round down to the nearest 100 and then subtract 100 to ensure that the result is always at least 100 blocks away
+            // so we round down to the nearest 100 and then subtract 100 to ensure that the result is always at least
+            // 100 blocks away
             oldestTransactionHeight = BlockHeight.new(
                 network,
-                tempOldestTransactionHeight.value - tempOldestTransactionHeight.value.rem(PirateSdk.MAX_REORG_SIZE) - PirateSdk.MAX_REORG_SIZE.toLong()
+                tempOldestTransactionHeight.value -
+                    tempOldestTransactionHeight.value.rem(MAX_REORG_SIZE) - MAX_REORG_SIZE.toLong()
             )
         } catch (t: Throwable) {
             twig("failed to calculate birthday due to: $t")
@@ -934,6 +1027,7 @@ class PirateCompactBlockProcessor internal constructor(
      */
     suspend fun getBalanceInfo(accountIndex: Int = 0): PirateWalletBalance =
         twigTask("checking balance info", -1) {
+            @Suppress("TooGenericExceptionCaught")
             try {
                 val balanceTotal = rustBackend.getBalance(accountIndex)
                 twig("found total balance: $balanceTotal")
@@ -953,7 +1047,7 @@ class PirateCompactBlockProcessor internal constructor(
      * Transmits the given state for this processor.
      */
     private suspend fun setState(newState: PirateState) {
-        _state.send(newState)
+        _state.value = newState
     }
 
     /**
@@ -1083,6 +1177,7 @@ class PirateCompactBlockProcessor internal constructor(
         /**
          * The amount of scan progress from 0 to 100.
          */
+        @Suppress("MagicNumber")
         val scanProgress
             get() = when {
                 lastScannedHeight == null -> 0
@@ -1119,7 +1214,7 @@ class PirateCompactBlockProcessor internal constructor(
     }
 
     private fun Service.LightdInfo.matchingNetwork(network: String): Boolean {
-        fun String.toId() = toLowerCase(Locale.US).run {
+        fun String.toId() = lowercase(Locale.US).run {
             when {
                 contains("main") -> "mainnet"
                 contains("test") -> "testnet"
@@ -1140,7 +1235,6 @@ class PirateCompactBlockProcessor internal constructor(
                 twig("$name MUTEX: releasing lock", -1)
             }
         }
-        twig("$name MUTEX: withLock complete", -1)
     }
 }
 

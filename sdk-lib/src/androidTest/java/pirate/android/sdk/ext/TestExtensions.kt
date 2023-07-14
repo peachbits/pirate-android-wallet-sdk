@@ -1,13 +1,15 @@
 package pirate.android.sdk.ext
 
 import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.util.SimpleMnemonics
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import ru.gildor.coroutines.okhttp.await
+import java.net.HttpURLConnection
+import java.net.URL
+import kotlin.test.assertNotNull
 
 fun PirateInitializer.PirateConfig.seedPhrase(seedPhrase: String, network: PirateNetwork) {
     runBlocking { setSeed(SimpleMnemonics().toSeed(seedPhrase.toCharArray()), network) }
@@ -15,12 +17,12 @@ fun PirateInitializer.PirateConfig.seedPhrase(seedPhrase: String, network: Pirat
 
 object BlockExplorer {
     suspend fun fetchLatestHeight(): Long {
-        val client = OkHttpClient()
-        val request = Request.Builder()
-            .url("https://api.blockchair.com/zcash/blocks?limit=1")
-            .build()
-        val result = client.newCall(request).await()
-        val body = result.body?.string()
+        val url = URL("https://api.blockchair.com/zcash/blocks?limit=1")
+        val connection = withContext(Dispatchers.IO) {
+            url.openConnection()
+        } as HttpURLConnection
+        val body = connection.inputStream.bufferedReader().readText()
+        assertNotNull(body, "Body can not be null.")
         return JSONObject(body).getJSONArray("data").getJSONObject(0).getLong("id")
     }
 }

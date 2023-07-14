@@ -1,7 +1,7 @@
 package pirate.android.sdk.darkside.reorgs // package pirate.android.sdk.integration
 //
 // import androidx.test.platform.app.InstrumentationRegistry
-// import pirate.android.sdk.Initializer
+// import pirate.android.sdk.PirateInitializer
 // import pirate.android.sdk.SdkSynchronizer
 // import pirate.android.sdk.Synchronizer
 // import pirate.android.sdk.test.ScopedTest
@@ -114,7 +114,7 @@ package pirate.android.sdk.darkside.reorgs // package pirate.android.sdk.integra
 //        private const val targetHeight = 663200
 //        private const val seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 //        private val context = InstrumentationRegistry.getInstrumentation().context
-//        private val initializer = Initializer(context, host, port, "ReorgHandlingTests")
+//        private val initializer = PirateInitializer(context, host, port, "ReorgHandlingTests")
 //        private lateinit var synchronizer: Synchronizer
 //        private lateinit var sithLord: DarksideApi
 //

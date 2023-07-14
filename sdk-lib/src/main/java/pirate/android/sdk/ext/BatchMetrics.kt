@@ -4,14 +4,20 @@ import pirate.android.sdk.model.BlockHeight
 import kotlin.math.max
 import kotlin.math.min
 
-class PirateBatchMetrics(val range: ClosedRange<BlockHeight>, val batchSize: Int, private val onMetricComplete: ((PirateBatchMetrics, Boolean) -> Unit)? = null) {
+class PirateBatchMetrics(
+    val range: ClosedRange<BlockHeight>,
+    val batchSize: Int,
+    private val onMetricComplete: ((PirateBatchMetrics, Boolean) -> Unit)? = null
+) {
     private var completedBatches = 0
     private var rangeStartTime = 0L
     private var batchStartTime = 0L
     private var batchEndTime = 0L
     private var rangeSize = range.endInclusive.value - range.start.value + 1
-    private inline fun now() = System.currentTimeMillis()
-    private inline fun ips(blocks: Long, time: Long) = 1000.0f * blocks / time
+    private fun now() = System.currentTimeMillis()
+
+    @Suppress("MagicNumber")
+    private fun ips(blocks: Long, time: Long) = 1000.0f * blocks / time
 
     val isComplete get() = completedBatches * batchSize >= rangeSize
     val isBatchComplete get() = batchEndTime > batchStartTime
@@ -29,8 +35,6 @@ class PirateBatchMetrics(val range: ClosedRange<BlockHeight>, val batchSize: Int
     fun endBatch() {
         completedBatches++
         batchEndTime = now()
-        onMetricComplete?.let {
-            it.invoke(this, isComplete)
-        }
+        onMetricComplete?.invoke(this, isComplete)
     }
 }

@@ -2,7 +2,7 @@
 
 # sentTransactions
 
-`val sentTransactions: Flow<PagedList<`[`ConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>`
+`val sentTransactions: Flow<PagedList<`[`PirateConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>`
 
 A flow of all transactions related to sending funds.
 

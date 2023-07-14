@@ -9,9 +9,9 @@ import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentGetAddressBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -37,19 +37,31 @@ class GetAddressFragment : BaseDemoFragment<FragmentGetAddressBinding>() {
         seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
         // the derivation tool can be used for generating keys and addresses
-        viewingKey = runBlocking { PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
+        viewingKey = runBlocking {
+            PirateDerivationTool.derivePirateUnifiedViewingKeys(
+                seed,
+                PirateNetwork.fromResources(requireApplicationContext())
+            ).first()
+        }
     }
 
     private fun displayAddress() {
         // a full fledged app would just get the address from the synchronizer
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            val zaddress = PirateDerivationTool.deriveShieldedAddress(seed, PirateNetwork.fromResources(requireApplicationContext()))
-            val taddress = PirateDerivationTool.deriveTransparentAddress(seed, PirateNetwork.fromResources(requireApplicationContext()))
+            val zaddress = PirateDerivationTool.deriveShieldedAddress(
+                seed,
+                PirateNetwork.fromResources(requireApplicationContext())
+            )
+            val taddress = PirateDerivationTool.deriveTransparentAddress(
+                seed,
+                PirateNetwork.fromResources(requireApplicationContext())
+            )
             binding.textInfo.text = "z-addr:\n$zaddress\n\n\nt-addr:\n$taddress"
         }
     }
 
-    // TODO: show an example with the synchronizer
+    // TODO [#677]: Show an example with the synchronizer
+    // TODO [#677]: https://github.com/zcash/zcash-android-wallet-sdk/issues/677
 
     //
     // Android Lifecycle overrides

@@ -1,6 +1,14 @@
 Troubleshooting Migrations
 ==========
 
+Upcoming
+--------------------------------------
+`PirateNetwork` is no longer an enum. The prior enum values are now declared as object properties `PirateNetwork.Mainnet` and `PirateNetwork.Testnet`.  For the most part, this change should have minimal impact.  PirateNetwork was also moved from the package `cash.z.ecc.android.sdk.type` to `cash.z.ecc.android.sdk.model`, which will require a change to your import statements.  The server fields have been removed from `PirateNetwork`, allowing server and network configuration to be done independently.
+
+`LightWalletEndpoint` is a new object to represent server information.  Default values can be obtained from `LightWalletEndpoint.defaultForNetwork(PirateNetwork)`
+
+`Synchronizer` no longer allows changing the endpoint after construction.  Instead, construct a new `Synchronizer` with the desired endpoint.
+
 Migration to Version 1.8 from 1.7
 Various APIs used `Int` to represent network block heights.  Those APIs now use a typesafe `BlockHeight` type.  BlockHeight is constructed with a factory method `BlockHeight.new(PirateNetwork, Long)` which uses the network to validate the height is above the network's sapling activation height.
 
@@ -22,7 +30,7 @@ Migrating to Version 1.4.* from 1.3.*
 --------------------------------------
 The main entrypoint to the SDK has changed.
 
-Previously, a Synchronizer was initialized with `Synchronizer(initializer)` and now it is initialized with `Synchronizer.new(initializer)` which is also now a suspending function.  Helper methods `Synchronizer.newBlocking()` and `Initializer.newBlocking()` can be used to ease the transition.
+Previously, a Synchronizer was initialized with `Synchronizer(initializer)` and now it is initialized with `Synchronizer.new(initializer)` which is also now a suspending function.  Helper methods `Synchronizer.newBlocking()` and `PirateInitializer.newBlocking()` can be used to ease the transition.
 
 For clients needing more complex initialization, the previous default method arguments for `Synchronizer()` were moved to `DefaultSynchronizerFactory`.
 
@@ -55,6 +63,6 @@ val network: PirateNetwork = if (testMode) PirateNetwork.Testnet else PirateNetw
 | Unresolved reference: server  | This was replaced by `setNetwork` | instead of `config.server(host, port)`<br/>use `config.setNetwork(network, host, port)` |
 | Unresolved reference: balances  | 3 types of balances are now exposed | change `balances` to `saplingBalances` |
 | Unresolved reference: latestBalance  | There are now multiple balance types so this convenience function was removed in favor of forcing wallets to think about which balances they want to show.  | In most cases, just use `synchronizer.saplingBalances.value` directly, instead |
-| Type mismatch: inferred type is String but PirateNetwork was expected  | This function is now network aware | use `Initializer.erase(context, network, alias)` |
+| Type mismatch: inferred type is String but PirateNetwork was expected  | This function is now network aware | use `PirateInitializer.erase(context, network, alias)` |
 | Type mismatch: inferred type is Int? but PirateNetwork was expected | This function is now network aware | use `WalletBirthdayTool.loadNearest(context, network, height)` instead |
 | None of the following functions can be called with the arguments supplied: <br/>public open fun deriveShieldedAddress(seed: ByteArray, network: PirateNetwork, accountIndex: Int = ...): String defined in pirate.android.sdk.tool.DerivationTool.Companion<br/>public open fun deriveShieldedAddress(viewingKey: String, network: PirateNetwork): String defined in pirate.android.sdk.tool.DerivationTool.Companion | This function is now network aware | use `deriveShieldedAddress(seed, network)`|

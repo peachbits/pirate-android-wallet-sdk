@@ -1,16 +1,17 @@
 package pirate.android.sdk.internal.block
 
 import android.content.Context
-import androidx.room.Room
 import androidx.room.RoomDatabase
+import pirate.android.sdk.db.commonDatabaseBuilder
 import pirate.android.sdk.db.entity.PirateCompactBlockEntity
 import pirate.android.sdk.internal.SdkDispatchers
 import pirate.android.sdk.internal.SdkExecutors
 import pirate.android.sdk.internal.db.PirateCompactBlockDb
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import pirate.wallet.sdk.rpc.CompactFormats
 import kotlinx.coroutines.withContext
+import java.io.File
 
 /**
  * An implementation of CompactBlockStore that persists information to a database in the given
@@ -45,23 +46,27 @@ class PirateCompactBlockDbStore private constructor(
     companion object {
         /**
          * @param appContext the application context. This is used for creating the database.
-         * @property dbPath the absolute path to the database.
+         * @property databaseFile the database file.
          */
         fun new(
             appContext: Context,
             zcashNetwork: PirateNetwork,
-            dbPath: String
+            databaseFile: File
         ): PirateCompactBlockDbStore {
-            val cacheDb = createCompactBlockCacheDb(appContext.applicationContext, dbPath)
+            val cacheDb = createCompactBlockCacheDb(appContext.applicationContext, databaseFile)
 
             return PirateCompactBlockDbStore(zcashNetwork, cacheDb)
         }
 
         private fun createCompactBlockCacheDb(
             appContext: Context,
-            dbPath: String
+            databaseFile: File
         ): PirateCompactBlockDb {
-            return Room.databaseBuilder(appContext, PirateCompactBlockDb::class.java, dbPath)
+            return commonDatabaseBuilder(
+                appContext,
+                PirateCompactBlockDb::class.java,
+                databaseFile
+            )
                 .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
                 // this is a simple cache of blocks. destroying the db should be benign
                 .fallbackToDestructiveMigration()

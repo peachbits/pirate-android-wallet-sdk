@@ -4,7 +4,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import pirate.android.sdk.darkside.test.DarksideTestCoordinator
 import pirate.android.sdk.darkside.test.ScopedTest
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test

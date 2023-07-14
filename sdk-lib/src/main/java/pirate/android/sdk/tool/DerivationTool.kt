@@ -2,11 +2,13 @@ package pirate.android.sdk.tool
 
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateNetwork
 
+@Suppress("UtilityClassWithPublicConstructor")
 class PirateDerivationTool {
 
+    @Suppress("TooManyFunctions")
     companion object : PirateRustBackendWelding.Derivation {
 
         /**
@@ -18,7 +20,11 @@ class PirateDerivationTool {
          *
          * @return the viewing keys that correspond to the seed, formatted as Strings.
          */
-        override suspend fun derivePirateUnifiedViewingKeys(seed: ByteArray, network: PirateNetwork, numberOfAccounts: Int): Array<PirateUnifiedViewingKey> =
+        override suspend fun derivePirateUnifiedViewingKeys(
+            seed: ByteArray,
+            network: PirateNetwork,
+            numberOfAccounts: Int
+        ): Array<PirateUnifiedViewingKey> =
             withPirateRustBackendLoaded {
                 derivePirateUnifiedViewingKeysFromSeed(seed, numberOfAccounts, networkId = network.id).map {
                     PirateUnifiedViewingKey(it[0], it[1])
@@ -32,7 +38,10 @@ class PirateDerivationTool {
          *
          * @return the viewing key that corresponds to the spending key.
          */
-        override suspend fun deriveViewingKey(spendingKey: String, network: PirateNetwork): String = withPirateRustBackendLoaded {
+        override suspend fun deriveViewingKey(
+            spendingKey: String,
+            network: PirateNetwork
+        ): String = withPirateRustBackendLoaded {
             deriveExtendedFullViewingKey(spendingKey, networkId = network.id)
         }
 
@@ -45,10 +54,13 @@ class PirateDerivationTool {
          *
          * @return the spending keys that correspond to the seed, formatted as Strings.
          */
-        override suspend fun deriveSpendingKeys(seed: ByteArray, network: PirateNetwork, numberOfAccounts: Int): Array<String> =
-            withPirateRustBackendLoaded {
-                deriveExtendedSpendingKeys(seed, numberOfAccounts, networkId = network.id)
-            }
+        override suspend fun deriveSpendingKeys(
+            seed: ByteArray,
+            network: PirateNetwork,
+            numberOfAccounts: Int
+        ): Array<String> = withPirateRustBackendLoaded {
+            deriveExtendedSpendingKeys(seed, numberOfAccounts, networkId = network.id)
+        }
 
         /**
          * Given a seed and account index, return the associated address.
@@ -72,31 +84,51 @@ class PirateDerivationTool {
          *
          * @return the address that corresponds to the viewing key.
          */
-        override suspend fun deriveShieldedAddress(viewingKey: String, network: PirateNetwork): String = withPirateRustBackendLoaded {
+        override suspend fun deriveShieldedAddress(
+            viewingKey: String,
+            network: PirateNetwork
+        ): String = withPirateRustBackendLoaded {
             deriveShieldedAddressFromViewingKey(viewingKey, networkId = network.id)
         }
 
         // WIP probably shouldn't be used just yet. Why?
         //  - because we need the private key associated with this seed and this function doesn't return it.
         //  - the underlying implementation needs to be split out into a few lower-level calls
-        override suspend fun deriveTransparentAddress(seed: ByteArray, network: PirateNetwork, account: Int, index: Int): String = withPirateRustBackendLoaded {
+        override suspend fun deriveTransparentAddress(
+            seed: ByteArray,
+            network: PirateNetwork,
+            account: Int,
+            index: Int
+        ): String = withPirateRustBackendLoaded {
             deriveTransparentAddressFromSeed(seed, account, index, networkId = network.id)
         }
 
-        override suspend fun deriveTransparentAddressFromPublicKey(transparentPublicKey: String, network: PirateNetwork): String = withPirateRustBackendLoaded {
-            deriveTransparentAddressFromPubKey(transparentPublicKey, networkId = network.id)
+        override suspend fun deriveTransparentAddressFromPublicKey(
+            publicKey: String,
+            network: PirateNetwork
+        ): String = withPirateRustBackendLoaded {
+            deriveTransparentAddressFromPubKey(pk = publicKey, networkId = network.id)
         }
 
-        override suspend fun deriveTransparentAddressFromPrivateKey(transparentPrivateKey: String, network: PirateNetwork): String = withPirateRustBackendLoaded {
-            deriveTransparentAddressFromPrivKey(transparentPrivateKey, networkId = network.id)
+        override suspend fun deriveTransparentAddressFromPrivateKey(
+            privateKey: String,
+            network: PirateNetwork
+        ): String = withPirateRustBackendLoaded {
+            deriveTransparentAddressFromPrivKey(sk = privateKey, networkId = network.id)
         }
 
-        override suspend fun deriveTransparentSecretKey(seed: ByteArray, network: PirateNetwork, account: Int, index: Int): String = withPirateRustBackendLoaded {
+        override suspend fun deriveTransparentSecretKey(
+            seed: ByteArray,
+            network: PirateNetwork,
+            account: Int,
+            index: Int
+        ): String = withPirateRustBackendLoaded {
             deriveTransparentSecretKeyFromSeed(seed, account, index, networkId = network.id)
         }
 
+        @Suppress("UNUSED_PARAMETER")
         fun validatePirateUnifiedViewingKey(viewingKey: PirateUnifiedViewingKey, networkId: Int = PirateNetwork.Mainnet.id) {
-            // TODO
+            // TODO [#654] https://github.com/zcash/zcash-android-wallet-sdk/issues/654
         }
 
         /**
@@ -141,7 +173,12 @@ class PirateDerivationTool {
         private external fun deriveShieldedAddressFromViewingKey(key: String, networkId: Int): String
 
         @JvmStatic
-        private external fun deriveTransparentAddressFromSeed(seed: ByteArray, account: Int, index: Int, networkId: Int): String
+        private external fun deriveTransparentAddressFromSeed(
+            seed: ByteArray,
+            account: Int,
+            index: Int,
+            networkId: Int
+        ): String
 
         @JvmStatic
         private external fun deriveTransparentAddressFromPubKey(pk: String, networkId: Int): String
@@ -150,6 +187,11 @@ class PirateDerivationTool {
         private external fun deriveTransparentAddressFromPrivKey(sk: String, networkId: Int): String
 
         @JvmStatic
-        private external fun deriveTransparentSecretKeyFromSeed(seed: ByteArray, account: Int, index: Int, networkId: Int): String
+        private external fun deriveTransparentSecretKeyFromSeed(
+            seed: ByteArray,
+            account: Int,
+            index: Int,
+            networkId: Int
+        ): String
     }
 }

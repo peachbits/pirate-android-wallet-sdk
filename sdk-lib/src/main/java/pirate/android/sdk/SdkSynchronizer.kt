@@ -17,6 +17,7 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.PirateSc
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanning
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Stopped
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Validating
+import pirate.android.sdk.db.DatabaseCoordinator
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.db.entity.hasRawTransactionId
 import pirate.android.sdk.db.entity.isCancelled
@@ -31,6 +32,7 @@ import pirate.android.sdk.db.entity.isSubmitted
 import pirate.android.sdk.exception.PirateSynchronizerException
 import pirate.android.sdk.ext.PirateConsensusBranchId
 import pirate.android.sdk.ext.PirateSdk
+import pirate.android.sdk.internal.PirateSaplingParamTool
 import pirate.android.sdk.internal.block.PirateCompactBlockDbStore
 import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.block.CompactBlockStore
@@ -50,27 +52,24 @@ import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateAddressType
 import pirate.android.sdk.type.PirateAddressType.Shielded
 import pirate.android.sdk.type.PirateAddressType.Transparent
 import pirate.android.sdk.type.PirateConsensusMatchType
-import pirate.android.sdk.type.PirateNetwork
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.ManagedChannel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.ConflatedBroadcastChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -95,8 +94,8 @@ import kotlin.coroutines.EmptyCoroutineContext
  * @property processor saves the downloaded compact blocks to the cache and then scans those blocks for
  * data related to this wallet.
  */
-@ExperimentalCoroutinesApi
 @FlowPreview
+@Suppress("TooManyFunctions")
 class PirateSdkSynchronizer internal constructor(
     private val storage: TransactionRepository,
     private val txManager: OutboundTransactionManager,
@@ -108,7 +107,7 @@ class PirateSdkSynchronizer internal constructor(
     private val _saplingBalances = MutableStateFlow<PirateWalletBalance?>(null)
     private val _transparentBalances = MutableStateFlow<PirateWalletBalance?>(null)
 
-    private val _status = ConflatedBroadcastChannel<Synchronizer.PirateStatus>(DISCONNECTED)
+    private val _status = MutableStateFlow<Synchronizer.PirateStatus>(DISCONNECTED)
 
     /**
      * The lifespan of this Synchronizer. This scope is initialized once the Synchronizer starts
@@ -170,7 +169,7 @@ class PirateSdkSynchronizer internal constructor(
      * processor is finished scanning, the synchronizer updates transaction and balance info and
      * then emits a [SYNCED] status.
      */
-    override val status = _status.asFlow()
+    override val status = _status.asStateFlow()
 
     /**
      * Indicates the download progress of the Synchronizer. When progress reaches 100, that
@@ -295,8 +294,8 @@ class PirateSdkSynchronizer internal constructor(
             processor.stop()
             twig("Synchronizer::stop: coroutineScope.cancel()")
             coroutineScope.cancel()
-            twig("Synchronizer::stop: _status.cancel()")
-            _status.cancel()
+            twig("Synchronizer::stop: _status.value = STOPPED")
+            _status.value = STOPPED
             twig("Synchronizer::stop: COMPLETE")
         }
     }
@@ -307,20 +306,6 @@ class PirateSdkSynchronizer internal constructor(
      * server(s) with which they operate.
      */
     override suspend fun getServerInfo(): Service.LightdInfo = processor.downloader.getServerInfo()
-
-    /**
-     * Changes the server that is being used to download compact blocks. This will throw an
-     * exception if it detects that the server change is invalid e.g. switching to testnet from
-     * mainnet.
-     */
-    override suspend fun changeServer(host: String, port: Int, errorHandler: (Throwable) -> Unit) {
-        val info =
-            (processor.downloader.lightWalletService as PirateLightWalletGrpcService).connectionInfo
-        processor.downloader.changeService(
-            PirateLightWalletGrpcService(info.appContext, host, port),
-            errorHandler
-        )
-    }
 
     override suspend fun getNearestRewindHeight(height: BlockHeight): BlockHeight =
         processor.getNearestRewindHeight(height)
@@ -337,7 +322,9 @@ class PirateSdkSynchronizer internal constructor(
     // Storage APIs
     //
 
-    // TODO: turn this section into the data access API. For now, just aggregate all the things that we want to do with the underlying data
+    // TODO [#682]: turn this section into the data access API. For now, just aggregate all the things that we want
+    //  to do with the underlying data
+    // TODO [#682]: https://github.com/zcash/zcash-android-wallet-sdk/issues/682
 
     suspend fun findBlockHash(height: BlockHeight): ByteArray? {
         return (storage as? PiratePagedTransactionRepository)?.findBlockHash(height)
@@ -371,7 +358,8 @@ class PirateSdkSynchronizer internal constructor(
     suspend fun refreshAllBalances() {
         refreshSaplingBalance()
         refreshTransparentBalance()
-        // TODO: refresh orchard balance
+        // TODO [#682]: refresh orchard balance
+        // TODO [#682]: https://github.com/zcash/zcash-android-wallet-sdk/issues/682
         twig("Warning: Orchard balance does not yet refresh. Only some of the plumbing is in place.")
     }
 
@@ -386,11 +374,7 @@ class PirateSdkSynchronizer internal constructor(
     }
 
     suspend fun isValidAddress(address: String): Boolean {
-        try {
-            return !validateAddress(address).isNotValid
-        } catch (t: Throwable) {
-        }
-        return false
+        return !validateAddress(address).isNotValid
     }
 
     private fun CoroutineScope.onReady() = launch(CoroutineExceptionHandler(::onCriticalError)) {
@@ -419,14 +403,16 @@ class PirateSdkSynchronizer internal constructor(
                 is Enhancing -> ENHANCING
             }.let { synchronizerStatus ->
                 //  ignore enhancing status for now
-                // TODO: clean this up and handle enhancing gracefully
-                if (synchronizerStatus != ENHANCING) _status.send(synchronizerStatus)
+                // TODO [#682]: clean this up and handle enhancing gracefully
+                // TODO [#682]: https://github.com/zcash/zcash-android-wallet-sdk/issues/682
+                if (synchronizerStatus != ENHANCING) _status.value = synchronizerStatus
             }
         }.launchIn(this)
         processor.start()
         twig("Synchronizer onReady complete. Processor start has exited!")
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun onCriticalError(unused: CoroutineContext?, error: Throwable) {
         twig("********")
         twig("********  ERROR: $error")
@@ -445,13 +431,6 @@ class PirateSdkSynchronizer internal constructor(
         }
 
         onCriticalErrorHandler?.invoke(error)
-    }
-
-    private fun onFailedSend(error: Throwable): Boolean {
-        twig("ERROR while submitting transaction: $error")
-        return onSubmissionErrorHandler?.invoke(error)?.also {
-            if (it) twig("submission error handler signaled that we should try again!")
-        } == true
     }
 
     private fun onProcessorError(error: Throwable): Boolean {
@@ -503,6 +482,7 @@ class PirateSdkSynchronizer internal constructor(
         // refresh anyway if:
         // - if it's the first time we finished scanning
         // - if we check for blocks 5 times and find nothing was mined
+        @Suppress("MagicNumber")
         val shouldRefresh = !scannedRange.isEmpty() || elapsedMillis > (PirateSdk.POLL_INTERVAL * 5)
         val reason = if (scannedRange.isEmpty()) "it's been a while" else "new blocks were scanned"
 
@@ -534,11 +514,12 @@ class PirateSdkSynchronizer internal constructor(
         }
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     private suspend fun refreshPendingTransactions() {
         twig("[cleanup] beginning to refresh and clean up pending transactions")
-        // TODO: this would be the place to clear out any stale pending transactions. Remove filter
-        //  logic and then delete any pending transaction with sufficient confirmations (all in one
-        //  db transaction).
+        // TODO [#682]: this would be the place to clear out any stale pending transactions. Remove filter logic and
+        //  then delete any pending transaction with sufficient confirmations (all in one db transaction).
+        // TODO [#682]: https://github.com/zcash/zcash-android-wallet-sdk/issues/682
         val allPendingTxs = txManager.getAll().first()
         val lastScannedHeight = storage.lastScannedHeight()
 
@@ -603,15 +584,23 @@ class PirateSdkSynchronizer internal constructor(
         }
             .forEach {
                 val result = txManager.abort(it)
-                twig("[cleanup] FOUND EXPIRED pendingTX (lastScanHeight: $lastScannedHeight  expiryHeight: ${it.expiryHeight}): and ${it.id} ${if (result > 0) "successfully removed" else "failed to remove"} it")
+                twig(
+                    "[cleanup] FOUND EXPIRED pendingTX (lastScanHeight: $lastScannedHeight " +
+                        " expiryHeight: ${it.expiryHeight}): and ${it.id} " +
+                        "${if (result > 0) "successfully removed" else "failed to remove"} it"
+                )
             }
 
         twig("[cleanup] deleting expired transactions from storage", -1)
         val expiredCount = storage.deleteExpired(lastScannedHeight)
-        if (expiredCount > 0) twig("[cleanup] deleted $expiredCount expired transaction(s)!")
+        if (expiredCount > 0) {
+            twig("[cleanup] deleted $expiredCount expired transaction(s)!")
+        }
         hasCleaned = hasCleaned || (expiredCount > 0)
 
-        if (hasCleaned) refreshAllBalances()
+        if (hasCleaned) {
+            refreshAllBalances()
+        }
         twig("[cleanup] done refreshing and cleaning up pending transactions", -1)
     }
 
@@ -654,8 +643,9 @@ class PirateSdkSynchronizer internal constructor(
                 // only submit if it wasn't cancelled. Otherwise cleanup, immediately for best UX.
                 if (encodedTx.isCancelled()) {
                     twig("[cleanup] this tx has been cancelled so we will cleanup instead of submitting")
-                    if (cleanupCancelledTx(encodedTx)) refreshAllBalances()
-                    encodedTx
+                    if (cleanupCancelledTx(encodedTx)) {
+                        refreshAllBalances()
+                    }
                 } else {
                     txManager.submit(encodedTx)
                 }
@@ -686,8 +676,9 @@ class PirateSdkSynchronizer internal constructor(
                 // only submit if it wasn't cancelled. Otherwise cleanup, immediately for best UX.
                 if (encodedTx.isCancelled()) {
                     twig("[cleanup] this shielding tx has been cancelled so we will cleanup instead of submitting")
-                    if (cleanupCancelledTx(encodedTx)) refreshAllBalances()
-                    encodedTx
+                    if (cleanupCancelledTx(encodedTx)) {
+                        refreshAllBalances()
+                    }
                 } else {
                     txManager.submit(encodedTx)
                 }
@@ -698,8 +689,8 @@ class PirateSdkSynchronizer internal constructor(
         txManager.monitorById(it.id)
     }.distinctUntilChanged()
 
-    override suspend fun refreshUtxos(address: String, startHeight: BlockHeight): Int? {
-        return processor.refreshUtxos(address, startHeight)
+    override suspend fun refreshUtxos(tAddr: String, since: BlockHeight): Int? {
+        return processor.refreshUtxos(tAddr, since)
     }
 
     override suspend fun getTransparentBalance(tAddr: String): PirateWalletBalance {
@@ -713,19 +704,28 @@ class PirateSdkSynchronizer internal constructor(
         txManager.isValidTransparentAddress(address)
 
     override suspend fun validateAddress(address: String): PirateAddressType {
+        @Suppress("TooGenericExceptionCaught")
         return try {
-            if (isValidShieldedAddr(address)) Shielded else Transparent
+            if (isValidShieldedAddr(address)) {
+                Shielded
+            } else {
+                Transparent
+            }
         } catch (zError: Throwable) {
-            var message = zError.message
+            val message = zError.message
             try {
-                if (isValidTransparentAddr(address)) Transparent else Shielded
+                if (isValidTransparentAddr(address)) {
+                    Transparent
+                } else {
+                    Shielded
+                }
             } catch (tError: Throwable) {
-                PirateAddressType.PirateInvalid(
-                    if (message != tError.message) "$message and ${tError.message}" else (
-                        message
-                            ?: "Invalid"
-                        )
-                )
+                val reason = if (message != tError.message) {
+                    "$message and ${tError.message}"
+                } else {
+                    message ?: "Invalid"
+                }
+                PirateAddressType.PirateInvalid(reason)
             }
         }
     }
@@ -783,7 +783,10 @@ object DefaultSynchronizerFactory {
         )
     }
 
-    // TODO [#242]: Don't hard code page size.  It is a workaround for Uncaught Exception: android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy can touch its views. and is probably related to FlowPagedList
+    // TODO [#242]: Don't hard code page size.  It is a workaround for Uncaught Exception:
+    //  android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy
+    //  can touch its views. and is probably related to FlowPagedList
+    // TODO [#242]: https://github.com/zcash/zcash-android-wallet-sdk/issues/242
     private const val DEFAULT_PAGE_SIZE = 1000
     suspend fun defaultTransactionRepository(initializer: PirateInitializer): TransactionRepository =
         PiratePagedTransactionRepository.new(
@@ -797,27 +800,43 @@ object DefaultSynchronizerFactory {
         )
 
     fun defaultBlockStore(initializer: PirateInitializer): CompactBlockStore =
-        PirateCompactBlockDbStore.new(initializer.context, initializer.network, initializer.rustBackend.pathCacheDb)
+        PirateCompactBlockDbStore.new(
+            initializer.context,
+            initializer.network,
+            initializer.rustBackend.cacheDbFile
+        )
 
     fun defaultService(initializer: PirateInitializer): LightWalletService =
-        PirateLightWalletGrpcService(initializer.context, initializer.host, initializer.port)
+        PirateLightWalletGrpcService.new(initializer.context, initializer.lightWalletEndpoint)
 
-    fun defaultEncoder(
+    internal fun defaultEncoder(
         initializer: PirateInitializer,
+        saplingParamTool: PirateSaplingParamTool,
         repository: TransactionRepository
-    ): TransactionEncoder = PirateWalletTransactionEncoder(initializer.rustBackend, repository)
+    ): TransactionEncoder = PirateWalletTransactionEncoder(initializer.rustBackend, saplingParamTool, repository)
 
     fun defaultDownloader(
         service: LightWalletService,
         blockStore: CompactBlockStore
     ): PirateCompactBlockDownloader = PirateCompactBlockDownloader(service, blockStore)
 
-    fun defaultTxManager(
+    suspend fun defaultTxManager(
         initializer: PirateInitializer,
         encoder: TransactionEncoder,
         service: LightWalletService
-    ): OutboundTransactionManager =
-        PiratePersistentTransactionManager(initializer.context, encoder, service)
+    ): OutboundTransactionManager {
+        val databaseFile = DatabaseCoordinator.getInstance(initializer.context).pendingTransactionsDbFile(
+            initializer.network,
+            initializer.alias
+        )
+
+        return PiratePersistentTransactionManager(
+            initializer.context,
+            encoder,
+            service,
+            databaseFile
+        )
+    }
 
     fun defaultProcessor(
         initializer: PirateInitializer,

@@ -2,7 +2,7 @@
 
 # receivedTransactions
 
-`abstract val receivedTransactions: Flow<PagedList<`[`ConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>`
+`abstract val receivedTransactions: Flow<PagedList<`[`PirateConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>`
 
 A flow of all transactions related to receiving funds.
 

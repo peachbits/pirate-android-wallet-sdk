@@ -5,7 +5,7 @@ import pirate.android.sdk.darkside.test.DarksideTestCoordinator
 import pirate.android.sdk.darkside.test.ScopedTest
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.BeforeClass

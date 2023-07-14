@@ -1,6 +1,8 @@
 package pirate.android.sdk.integration.service
 
+import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.SdkSuppress
 import androidx.test.filters.SmallTest
 import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
@@ -12,8 +14,11 @@ import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.Mainnet
+import pirate.android.sdk.model.Testnet
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.test.ScopedTest
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -29,19 +34,22 @@ import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import org.mockito.Spy
 
+@SdkSuppress(minSdkVersion = Build.VERSION_CODES.N)
 @MaintainedTest(TestPurpose.REGRESSION)
 @RunWith(AndroidJUnit4::class)
 @SmallTest
 class ChangeServiceTest : ScopedTest() {
 
     val network = PirateNetwork.Mainnet
+    val lightWalletEndpoint = LightWalletEndpoint.Mainnet
+    private val eccEndpoint = LightWalletEndpoint("lightd1.pirate.black", 443, true)
 
     @Mock
     lateinit var mockBlockStore: CompactBlockStore
     var mockCloseable: AutoCloseable? = null
 
     @Spy
-    val service = PirateLightWalletGrpcService(context, network)
+    val service = PirateLightWalletGrpcService.new(context, lightWalletEndpoint)
 
     lateinit var downloader: PirateCompactBlockDownloader
     lateinit var otherService: LightWalletService
@@ -50,7 +58,7 @@ class ChangeServiceTest : ScopedTest() {
     fun setup() {
         initMocks()
         downloader = PirateCompactBlockDownloader(service, mockBlockStore)
-        otherService = PirateLightWalletGrpcService(context, "lightwalletd.electriccoin.co")
+        otherService = PirateLightWalletGrpcService.new(context, eccEndpoint)
     }
 
     @After
@@ -64,14 +72,28 @@ class ChangeServiceTest : ScopedTest() {
 
     @Test
     fun testSanityCheck() {
-        val result = service.getLatestBlockHeight()
+        // Test the result, only if there is no server communication problem.
+        val result = runCatching {
+            return@runCatching service.getLatestBlockHeight()
+        }.onFailure {
+            twig(it)
+        }.getOrElse { return }
+
         assertTrue(result > network.saplingActivationHeight)
     }
 
     @Test
     fun testCleanSwitch() = runBlocking {
-        downloader.changeService(otherService)
-        val result = downloader.downloadBlockRange(BlockHeight.new(network, 900_000)..BlockHeight.new(network, 901_000))
+        // Test the result, only if there is no server communication problem.
+        val result = runCatching {
+            downloader.changeService(otherService)
+            return@runCatching downloader.downloadBlockRange(
+                BlockHeight.new(network, 900_000)..BlockHeight.new(network, 901_000)
+            )
+        }.onFailure {
+            twig(it)
+        }.getOrElse { return@runBlocking }
+
         assertEquals(1_001, result)
     }
 
@@ -106,9 +128,17 @@ class ChangeServiceTest : ScopedTest() {
     @Test
     fun testSwitchToInvalidServer() = runBlocking {
         var caughtException: Throwable? = null
-        downloader.changeService(PirateLightWalletGrpcService(context, "invalid.lightwalletd")) {
+
+        downloader.changeService(PirateLightWalletGrpcService.new(context, LightWalletEndpoint("invalid.lightwalletd", 9087, true))) {
             caughtException = it
         }
+
+        // the test can continue only if there is no server communication problem
+        if (caughtException is StatusException) {
+            twig("Server communication problem while testing.")
+            return@runBlocking
+        }
+
         assertNotNull("Using an invalid host should generate an exception.", caughtException)
         assertTrue(
             "Exception was of the wrong type.",
@@ -119,9 +149,17 @@ class ChangeServiceTest : ScopedTest() {
     @Test
     fun testSwitchToTestnetFails() = runBlocking {
         var caughtException: Throwable? = null
-        downloader.changeService(PirateLightWalletGrpcService(context, PirateNetwork.Testnet)) {
+
+        downloader.changeService(PirateLightWalletGrpcService.new(context, LightWalletEndpoint.Testnet)) {
             caughtException = it
         }
+
+        // the test can continue only if there is no server communication problem
+        if (caughtException is StatusException) {
+            twig("Server communication problem while testing.")
+            return@runBlocking
+        }
+
         assertNotNull("Using an invalid host should generate an exception.", caughtException)
         assertTrue(
             "Exception was of the wrong type. Expected ${PirateChainInfoNotMatching::class.simpleName} but was ${caughtException!!::class.simpleName}",

@@ -14,9 +14,11 @@ import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.ext.convertArrrtoshiToArrrString
+import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.defaultForNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.runBlocking
 
@@ -45,13 +47,22 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         val seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 
         // converting seed into viewingKey
-        val viewingKey = runBlocking { PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }
+        val viewingKey = runBlocking {
+            PirateDerivationTool.derivePirateUnifiedViewingKeys(
+                seed,
+                PirateNetwork.fromResources(requireApplicationContext())
+            ).first()
+        }
 
         // using the ViewingKey to initialize
         runBlocking {
             PirateInitializer.new(requireApplicationContext(), null) {
-                it.setNetwork(PirateNetwork.fromResources(requireApplicationContext()))
-                it.newWallet(viewingKey, network = PirateNetwork.fromResources(requireApplicationContext()))
+                val network = PirateNetwork.fromResources(requireApplicationContext())
+                it.newWallet(
+                    viewingKey,
+                    network = network,
+                    lightWalletEndpoint = LightWalletEndpoint.defaultForNetwork(network)
+                )
             }
         }.let { initializer ->
             synchronizer = Synchronizer.newBlocking(initializer)
@@ -72,6 +83,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         synchronizer.saplingBalances.filterNotNull().collectWith(lifecycleScope, ::onBalance)
     }
 
+    @Suppress("MagicNumber")
     private fun onBalance(balance: PirateWalletBalance) {
         binding.textBalance.text = """
                 Available balance: ${balance.available.convertArrrtoshiToArrrString(12)}
@@ -89,6 +101,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         }
     }
 
+    @Suppress("MagicNumber")
     private fun onProgress(i: Int) {
         if (i < 100) {
             binding.textStatus.text = "Downloading blocks...$i%"

@@ -1,10 +1,10 @@
 package pirate.android.sdk.demoapp
 
-import android.app.Application
+import androidx.multidex.MultiDexApplication
 import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 
-class App : Application() {
+class App : MultiDexApplication() {
 
     override fun onCreate() {
         super.onCreate()

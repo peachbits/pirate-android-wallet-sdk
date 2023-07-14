@@ -20,7 +20,7 @@ contract.
 | Name | Summary |
 |---|---|
 | [balances](balances.md) | A stream of balance values, separately reflecting both the available and total balance.`abstract val balances: Flow<WalletBalance>` |
-| [clearedTransactions](cleared-transactions.md) | A flow of all the transactions that are on the blockchain.`abstract val clearedTransactions: Flow<PagedList<`[`ConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>` |
+| [clearedTransactions](cleared-transactions.md) | A flow of all the transactions that are on the blockchain.`abstract val clearedTransactions: Flow<PagedList<`[`PirateConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>` |
 | [latestBalance](latest-balance.md) | An in-memory reference to the most recently calculated balance.`abstract val latestBalance: WalletBalance` |
 | [latestHeight](latest-height.md) | An in-memory reference to the latest height seen on the network.`abstract val latestHeight: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) |
 | [onChainErrorHandler](on-chain-error-handler.md) | A callback to invoke whenever a chain error is encountered. These occur whenever the processor detects a missing or non-chain-sequential block (i.e. a reorg).`abstract var onChainErrorHandler: ((`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`)?` |
@@ -30,8 +30,8 @@ contract.
 | [pendingTransactions](pending-transactions.md) | A flow of all the outbound pending transaction that have been sent but are awaiting confirmations.`abstract val pendingTransactions: Flow<`[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`PendingTransaction`](../../pirate.android.sdk.db.entity/-pending-transaction/index.md)`>>` |
 | [processorInfo](processor-info.md) | A flow of processor details, updated every time blocks are processed to include the latest block height, blocks downloaded and blocks scanned. Similar to the [progress](progress.md) flow but with a lot more detail.`abstract val processorInfo: Flow<ProcessorInfo>` |
 | [progress](progress.md) | A flow of progress values, typically corresponding to this Synchronizer downloading blocks. Typically, any non- zero value below 100 indicates that progress indicators can be shown and a value of 100 signals that progress is complete and any progress indicators can be hidden.`abstract val progress: Flow<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>` |
-| [receivedTransactions](received-transactions.md) | A flow of all transactions related to receiving funds.`abstract val receivedTransactions: Flow<PagedList<`[`ConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>` |
-| [sentTransactions](sent-transactions.md) | A flow of all transactions related to sending funds.`abstract val sentTransactions: Flow<PagedList<`[`ConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>` |
+| [receivedTransactions](received-transactions.md) | A flow of all transactions related to receiving funds.`abstract val receivedTransactions: Flow<PagedList<`[`PirateConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>` |
+| [sentTransactions](sent-transactions.md) | A flow of all transactions related to sending funds.`abstract val sentTransactions: Flow<PagedList<`[`PirateConfirmedTransaction`](../../pirate.android.sdk.db.entity/-confirmed-transaction/index.md)`>>` |
 | [status](status.md) | A flow of values representing the [Status](-status/index.md) of this Synchronizer. As the status changes, a new value will be emitted by this flow.`abstract val status: Flow<Status>` |
 
 ### Functions

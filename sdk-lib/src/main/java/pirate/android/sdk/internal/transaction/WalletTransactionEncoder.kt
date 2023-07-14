@@ -6,9 +6,9 @@ import pirate.android.sdk.ext.masked
 import pirate.android.sdk.internal.PirateSaplingParamTool
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
-import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
 import pirate.android.sdk.model.Arrrtoshi
+import java.io.IOException
 
 /**
  * Class responsible for encoding a transaction in a consistent way. This bridges the gap by
@@ -21,6 +21,7 @@ import pirate.android.sdk.model.Arrrtoshi
  */
 internal class PirateWalletTransactionEncoder(
     private val rustBackend: PirateRustBackendWelding,
+    private val saplingParamTool: PirateSaplingParamTool,
     private val repository: TransactionRepository
 ) : TransactionEncoder {
 
@@ -108,14 +109,12 @@ internal class PirateWalletTransactionEncoder(
         memo: ByteArray? = byteArrayOf(),
         fromAccountIndex: Int = 0
     ): Long {
-        return twigTask(
-            "creating transaction to spend $amount zatoshi to" +
-                " ${toAddress.masked()} with memo $memo"
-        ) {
+        return twigTask("Creating transaction to spend $amount zatoshi to ${toAddress.masked()} with memo $memo") {
+            saplingParamTool.ensureParams(rustBackend.saplingParamDir)
+            twig("Params exist! Attempting to send.")
             try {
                 val branchId = getConsensusBranchId()
-                PirateSaplingParamTool.ensureParams((rustBackend as PirateRustBackend).pathParamsDir)
-                twig("params exist! attempting to send with consensus branchId $branchId...")
+                twig("Attempting to send with consensus branchId $branchId...")
                 rustBackend.createToAddress(
                     branchId,
                     fromAccountIndex,
@@ -124,9 +123,15 @@ internal class PirateWalletTransactionEncoder(
                     amount.value,
                     memo
                 )
-            } catch (t: Throwable) {
-                twig("${t.message}")
-                throw t
+            } catch (e: IOException) {
+                twig("Caught IO exception while creating transaction ${e.message}, caused by: ${e.cause}.")
+                throw e
+            } catch (e: PirateTransactionEncoderException.PirateIncompleteScanException) {
+                twig(
+                    "Caught PirateTransactionEncoderException.PirateIncompleteScanException while creating transaction" +
+                        " ${e.message}, caused by: ${e.cause}."
+                )
+                throw e
             }
         }.also { result ->
             twig("result of sendToAddress: $result")
@@ -138,20 +143,21 @@ internal class PirateWalletTransactionEncoder(
         transparentSecretKey: String,
         memo: ByteArray? = byteArrayOf()
     ): Long {
-        return twigTask("creating transaction to shield all UTXOs") {
+        return twigTask("Creating transaction to shield all UTXOs.") {
+            saplingParamTool.ensureParams(rustBackend.saplingParamDir)
+            twig("Params exist! attempting to shield...")
             try {
-                PirateSaplingParamTool.ensureParams((rustBackend as PirateRustBackend).pathParamsDir)
-                twig("params exist! attempting to shield...")
                 rustBackend.shieldToAddress(
                     spendingKey,
                     transparentSecretKey,
                     memo
                 )
-            } catch (t: Throwable) {
-                // TODO: if this error matches: Insufficient balance (have 0, need 1000 including fee)
-                // then consider custom error that says no UTXOs existed to shield
-                twig("Shield failed due to: ${t.message}")
-                throw t
+            } catch (e: IOException) {
+                // TODO [#680]: if this error matches: Insufficient balance (have 0, need 1000 including fee)
+                //  then consider custom error that says no UTXOs existed to shield
+                // TODO [#680]: https://github.com/zcash/zcash-android-wallet-sdk/issues/680
+                twig("Caught IO exception - shield failed due to: ${e.message}, caused by: ${e.cause}.")
+                throw e
             }
         }.also { result ->
             twig("result of shieldToAddress: $result")

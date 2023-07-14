@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Query
 import androidx.room.RoomDatabase
+import androidx.room.RoomWarnings
 import androidx.room.Transaction
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -53,6 +54,7 @@ abstract class PirateDerivedDataDb : RoomDatabase() {
     // Migrations
     //
 
+    @Suppress("MagicNumber")
     companion object {
 
         val MIGRATION_3_4 = object : Migration(3, 4) {
@@ -247,6 +249,7 @@ interface AccountDao {
  * whether transactions are mined.
  */
 @Dao
+@Suppress("TooManyFunctions")
 interface TransactionDao {
     @Query("SELECT COUNT(id_tx) FROM transactions")
     suspend fun count(): Int
@@ -302,6 +305,7 @@ interface TransactionDao {
         LIMIT  :limit
         """
     )
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     fun getSentTransactions(limit: Int = Int.MAX_VALUE): DataSource.Factory<Int, PirateConfirmedTransaction>
 
     /**
@@ -328,6 +332,7 @@ interface TransactionDao {
         LIMIT  :limit
         """
     )
+    @SuppressWarnings(RoomWarnings.CURSOR_MISMATCH)
     fun getReceivedTransactions(limit: Int = Int.MAX_VALUE): DataSource.Factory<Int, PirateConfirmedTransaction>
 
     /**
@@ -362,7 +367,8 @@ interface TransactionDao {
                       ON transactions.id_tx = sent_notes.tx
                LEFT JOIN blocks
                       ON transactions.block = blocks.height
-        /* we want all received txs except those that are change and all sent transactions (even those that haven't been mined yet). Note: every entry in the 'send_notes' table has a non-null value for 'address' */
+        /* we want all received txs except those that are change and all sent transactions (even those that haven't been
+            mined yet). Note: every entry in the 'send_notes' table has a non-null value for 'address' */
         WHERE  ( sent_notes.address IS NULL
                  AND received_notes.is_change != 1 )
                 OR sent_notes.address IS NOT NULL
@@ -418,7 +424,11 @@ interface TransactionDao {
         LIMIT  :limit
         """
     )
-    suspend fun findAllTransactionsByRange(blockRangeStart: Long, blockRangeEnd: Long = blockRangeStart, limit: Int = Int.MAX_VALUE): List<PirateConfirmedTransaction>
+    suspend fun findAllTransactionsByRange(
+        blockRangeStart: Long,
+        blockRangeEnd: Long = blockRangeStart,
+        limit: Int = Int.MAX_VALUE
+    ): List<PirateConfirmedTransaction>
 
     // Experimental: cleanup cancelled transactions
     //               This should probably be a rust call but there's not a lot of bandwidth for this
@@ -428,9 +438,9 @@ interface TransactionDao {
     @Transaction
     suspend fun cleanupCancelledTx(rawTransactionId: ByteArray): Boolean {
         var success = false
+        @Suppress("TooGenericExceptionCaught")
         try {
             var hasInitialMatch = false
-            var hasFinalMatch = true
             twig("[cleanup] cleanupCancelledTx starting...")
             findUnminedTransactionIds(rawTransactionId).also {
                 twig("[cleanup] cleanupCancelledTx found ${it.size} matching transactions to cleanup")
@@ -438,7 +448,7 @@ interface TransactionDao {
                 hasInitialMatch = true
                 removeInvalidOutboundTransaction(transactionId)
             }
-            hasFinalMatch = findMatchingTransactionId(rawTransactionId) != null
+            val hasFinalMatch = findMatchingTransactionId(rawTransactionId) != null
             success = hasInitialMatch && !hasFinalMatch
             twig("[cleanup] cleanupCancelledTx Done. success? $success")
         } catch (t: Throwable) {
@@ -450,6 +460,7 @@ interface TransactionDao {
     @Transaction
     suspend fun removeInvalidOutboundTransaction(transactionId: Long): Boolean {
         var success = false
+        @Suppress("TooGenericExceptionCaught")
         try {
             twig("[cleanup] removing invalid transactionId:$transactionId")
             val result = unspendTransactionNotes(transactionId)
@@ -459,7 +470,8 @@ interface TransactionDao {
                 deleteSentNote(noteId)
             }
 
-            // delete the UTXOs because these are effectively cached and we don't have a good way of knowing whether they're spent
+            // delete the UTXOs because these are effectively cached and we don't have a good way of knowing whether
+            // they're spent
             deleteUtxos(transactionId).let { count ->
                 twig("[cleanup] removed $count UTXOs matching transactionId $transactionId")
             }

@@ -5,12 +5,10 @@ import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentHomeBinding
 import pirate.android.sdk.demoapp.util.mainActivity
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -18,9 +16,8 @@ import kotlinx.coroutines.launch
  * data just for sanity. The goal is for each demo to be self-contained so that the behavior is
  * repeatable and independent of pre-existing state.
  */
+@Suppress("TooManyFunctions")
 class HomeFragment : BaseDemoFragment<FragmentHomeBinding>() {
-
-    private val homeViewModel: HomeViewModel by viewModels()
 
     override fun inflateBinding(layoutInflater: LayoutInflater) =
         FragmentHomeBinding.inflate(layoutInflater)
@@ -49,12 +46,14 @@ class HomeFragment : BaseDemoFragment<FragmentHomeBinding>() {
         mainActivity()?.removeClipboardListener()
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun onEditSeedPhrase(unused: View) {
         setEditShown(true)
         binding.inputSeedPhrase.setText(sharedViewModel.seedPhrase.value)
         binding.textLayoutSeedPhrase.helperText = ""
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun onAcceptSeedPhrase(unused: View) {
         if (applySeedPhrase()) {
             setEditShown(false)
@@ -62,10 +61,12 @@ class HomeFragment : BaseDemoFragment<FragmentHomeBinding>() {
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun onCancelSeedPhrase(unused: View) {
         setEditShown(false)
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun onPasteSeedPhrase(unused: View) {
         mainActivity()?.getClipboardText().let { clipboardText ->
             binding.inputSeedPhrase.setText(clipboardText)
@@ -111,7 +112,9 @@ class HomeFragment : BaseDemoFragment<FragmentHomeBinding>() {
             val lastSpace = lastIndexOf(' ')
             return if (firstSpace != -1 && lastSpace >= firstSpace) {
                 "${take(firstSpace)}...${takeLast(length - 1 - lastSpace)}"
-            } else this
+            } else {
+                this
+            }
         }
     }
 }

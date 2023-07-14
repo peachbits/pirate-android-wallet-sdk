@@ -2,6 +2,8 @@ package pirate.android.sdk.demoapp.demos.getprivatekey
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.lifecycle.lifecycleScope
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
@@ -9,8 +11,8 @@ import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentGetPrivateKeyBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.launch
 
 /**
@@ -40,6 +42,7 @@ class GetPrivateKeyFragment : BaseDemoFragment<FragmentGetPrivateKeyBinding>() {
         // derive the keys from the seed:
         // demonstrate deriving spending keys for five accounts but only take the first one
         lifecycleScope.launchWhenStarted {
+            @Suppress("MagicNumber")
             val spendingKey = PirateDerivationTool.deriveSpendingKeys(
                 seed,
                 PirateNetwork.fromResources(requireApplicationContext()),
@@ -61,9 +64,14 @@ class GetPrivateKeyFragment : BaseDemoFragment<FragmentGetPrivateKeyBinding>() {
     // Android Lifecycle overrides
     //
 
-    override fun onActivityCreated(savedInstanceState: Bundle?) {
-        super.onActivityCreated(savedInstanceState)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = super.onCreateView(inflater, container, savedInstanceState)
         setup()
+        return view
     }
 
     override fun onResume() {

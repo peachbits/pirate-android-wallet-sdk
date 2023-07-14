@@ -2,7 +2,6 @@ package pirate.android.sdk.model
 
 import android.content.Context
 import pirate.android.sdk.tool.CheckpointTool
-import pirate.android.sdk.type.PirateNetwork
 
 /**
  * Represents a block height, which is a UInt32.  SDK clients use this class to represent the "birthday" of a wallet.
@@ -45,7 +44,8 @@ data class BlockHeight internal constructor(val value: Long) : Comparable<BlockH
 
         /**
          * @param zcashNetwork Network to use for the block height.
-         * @param blockHeight The block height.  Must be in range of a UInt32 AND must be greater than the network's sapling activation height.
+         * @param blockHeight The block height.  Must be in range of a UInt32 AND must be greater than the network's
+         * sapling activation height.
          */
         fun new(zcashNetwork: PirateNetwork, blockHeight: Long): BlockHeight {
             require(blockHeight >= zcashNetwork.saplingActivationHeight.value) {

@@ -11,8 +11,10 @@ import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.Mainnet
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -68,14 +70,14 @@ class SampleCodeTest {
             )
         }
         assertEquals(1, spendingKeys.size)
-        log("Spending Key: ${spendingKeys?.get(0)}")
+        log("Spending Key: ${spendingKeys[0]}")
     }
 
     // ///////////////////////////////////////////////////
     // Get Address
     @Test fun getAddress() = runBlocking {
         val address = synchronizer.getAddress()
-        assertFalse(address.isNullOrBlank())
+        assertFalse(address.isBlank())
         log("Address: $address")
     }
 
@@ -87,15 +89,18 @@ class SampleCodeTest {
     // ///////////////////////////////////////////////////
     // Query latest block height
     @Test fun getLatestBlockHeightTest() {
-        val lightwalletService = PirateLightWalletGrpcService(context, lightwalletdHost)
+        val lightwalletService = PirateLightWalletGrpcService.new(context, lightwalletdHost)
         log("Latest Block: ${lightwalletService.getLatestBlockHeight()}")
     }
 
     // ///////////////////////////////////////////////////
     // Download compact block range
     @Test fun getBlockRange() {
-        val blockRange = BlockHeight.new(PirateNetwork.Mainnet, 500_000)..BlockHeight.new(PirateNetwork.Mainnet, 500_009)
-        val lightwalletService = PirateLightWalletGrpcService(context, lightwalletdHost)
+        val blockRange = BlockHeight.new(PirateNetwork.Mainnet, 500_000)..BlockHeight.new(
+            PirateNetwork.Mainnet,
+            500_009
+        )
+        val lightwalletService = PirateLightWalletGrpcService.new(context, lightwalletdHost)
         val blocks = lightwalletService.getBlockRange(blockRange)
         assertEquals(blockRange.endInclusive.value - blockRange.start.value, blocks.count())
 
@@ -151,7 +156,7 @@ class SampleCodeTest {
 
     companion object {
         private val seed = "Insert seed for testing".toByteArray()
-        private val lightwalletdHost: String = PirateNetwork.Mainnet.defaultHost
+        private val lightwalletdHost = PirateLightWalletEndpoint.Mainnet
 
         private val context = InstrumentationRegistry.getInstrumentation().targetContext
         private val synchronizer: Synchronizer = run {

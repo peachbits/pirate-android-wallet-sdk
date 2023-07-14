@@ -2,7 +2,7 @@ package pirate.android.sdk.internal
 
 import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import org.json.JSONObject
 
 // Version is not returned from the server, so version 1 is implied.  A version is declared here

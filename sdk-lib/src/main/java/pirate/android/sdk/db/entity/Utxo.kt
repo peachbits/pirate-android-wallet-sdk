@@ -3,6 +3,7 @@ package pirate.android.sdk.db.entity
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.RoomWarnings
 
 @Entity(
     tableName = "utxos",
@@ -15,6 +16,7 @@ import androidx.room.ForeignKey
         )
     ]
 )
+@SuppressWarnings(RoomWarnings.MISSING_INDEX_ON_FOREIGN_KEY_CHILD)
 data class PirateUtxo(
     @ColumnInfo(name = "id_utxo")
     val id: Long? = 0L,

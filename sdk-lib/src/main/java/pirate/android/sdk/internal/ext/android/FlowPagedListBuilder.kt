@@ -1,6 +1,5 @@
 package pirate.android.sdk.internal.ext.android
 
-import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import androidx.paging.Config
@@ -29,7 +28,7 @@ class PirateFlowPagedListBuilder<Key, Value>(
      * Creates a PirateFlowPagedListBuilder with required parameters.
      *
      * @param dataSourceFactory DataSource factory providing DataSource generations.
-     * @param config Paging configuration.
+     * @param pageSize List page size.
      */
     constructor(dataSourceFactory: DataSource.Factory<Key, Value>, pageSize: Int) : this(
         dataSourceFactory,
@@ -44,7 +43,6 @@ class PirateFlowPagedListBuilder<Key, Value>(
      *
      * @return The Flow of PagedLists
      */
-    @SuppressLint("RestrictedApi")
     fun build(): Flow<List<Value>> {
         return object : PirateComputableFlow<List<Value>>(fetchContext) {
             private lateinit var dataSource: DataSource<Key, Value>
@@ -56,6 +54,7 @@ class PirateFlowPagedListBuilder<Key, Value>(
                 var initializeKey = initialLoadKey
                 if (::list.isInitialized) {
                     twig("list is initialized")
+                    @Suppress("UNCHECKED_CAST")
                     initializeKey = list.lastKey as Key
                 }
 
@@ -87,7 +86,7 @@ class PirateFlowPagedListBuilder<Key, Value>(
         return when (this) {
             is ExecutorCoroutineDispatcher -> executor
             is MainCoroutineDispatcher -> PirateMainThreadExecutor()
-            else -> throw IllegalStateException("Unable to create executor based on dispatcher: $this")
+            else -> error("Unable to create executor based on dispatcher: $this")
         }
     }
 

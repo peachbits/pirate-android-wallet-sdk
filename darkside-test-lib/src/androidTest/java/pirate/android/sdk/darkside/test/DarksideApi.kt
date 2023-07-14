@@ -1,11 +1,13 @@
 package pirate.android.sdk.darkside.test
 
 import android.content.Context
-import pirate.android.sdk.R
-import pirate.android.sdk.internal.service.LightWalletGrpcService
+
+import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.Darkside
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.PirateNetwork
 import pirate.wallet.sdk.rpc.Darkside
 import pirate.wallet.sdk.rpc.Darkside.DarksideTransactionsURL
 import pirate.wallet.sdk.rpc.DarksideStreamerGrpc
@@ -23,17 +25,11 @@ class DarksideApi(
 
     constructor(
         appContext: Context,
-        host: String,
-        port: Int = PirateNetwork.Mainnet.defaultPort,
-        usePlainText: Boolean = appContext.resources.getBoolean(
-            R.bool.lightwalletd_allow_very_insecure_connections
-        )
+        lightWalletEndpoint: LightWalletEndpoint
     ) : this(
-        LightWalletGrpcService.createDefaultChannel(
+        PirateLightWalletGrpcService.createDefaultChannel(
             appContext,
-            host,
-            port,
-            usePlainText
+            lightWalletEndpoint
         )
     )
 

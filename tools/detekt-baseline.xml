@@ -5,7 +5,7 @@
     <ID>ComplexCondition:CompactBlockProcessor.kt$CompactBlockProcessor$(null == lastScannedHeight &amp;&amp; targetHeight &lt; lastLocalBlock) || (null != lastScannedHeight &amp;&amp; targetHeight &lt; lastScannedHeight)</ID>
     <ID>ComplexMethod:SdkSynchronizer.kt$SdkSynchronizer$private suspend fun refreshPendingTransactions()</ID>
     <ID>ComplexMethod:SendFragment.kt$SendFragment$private fun onPendingTxUpdated(pendingTransaction: PendingTransaction?)</ID>
-    <ID>ComplexMethod:Transactions.kt$ConfirmedTransaction$override fun equals(other: Any?): Boolean</ID>
+    <ID>ComplexMethod:Transactions.kt$PirateConfirmedTransaction$override fun equals(other: Any?): Boolean</ID>
     <ID>ComplexMethod:Transactions.kt$PendingTransactionEntity$override fun equals(other: Any?): Boolean</ID>
     <ID>EmptyCatchBlock:SdkSynchronizer.kt$SdkSynchronizer${ }</ID>
     <ID>EmptyFunctionBlock:MainActivity.kt$MainActivity${ }</ID>
@@ -33,7 +33,7 @@
     <ID>ForbiddenComment:SampleCodeTest.kt$SampleCodeTest$// TODO: call: bip39::Seed::new(&amp;Mnemonic::from_entropy(&amp;seed_bytes, Language::English).unwrap(), "")</ID>
     <ID>ForbiddenComment:SampleCodeTest.kt$SampleCodeTest$// TODO: let mnemonic = Mnemonic::from_entropy(entropy, Language::English).unwrap();</ID>
     <ID>ForbiddenComment:SampleCodeTest.kt$SampleCodeTest$// TODO: log(seedPhrase.asRawEntropy().asBip39seed())</ID>
-    <ID>ForbiddenComment:SaplingParamTool.kt$SaplingParamTool.Companion$// TODO: add logging and timeouts</ID>
+    <ID>ForbiddenComment:PirateSaplingParamTool.kt$PirateSaplingParamTool.Companion$// TODO: add logging and timeouts</ID>
     <ID>ForbiddenComment:SdkSynchronizer.kt$SdkSynchronizer$// TODO: clean this up and handle enhancing gracefully</ID>
     <ID>ForbiddenComment:SdkSynchronizer.kt$SdkSynchronizer$// TODO: refresh orchard balance</ID>
     <ID>ForbiddenComment:SdkSynchronizer.kt$SdkSynchronizer$// TODO: this would be the place to clear out any stale pending transactions. Remove filter</ID>
@@ -50,9 +50,9 @@
     <ID>ImplicitDefaultLocale:Twig.kt$TroubleshootingTwig.Companion$String.format("$tag %1\$tD %1\$tI:%1\$tM:%1\$tS.%1\$tN", System.currentTimeMillis())</ID>
     <ID>LargeClass:CompactBlockProcessor.kt$CompactBlockProcessor</ID>
     <ID>LongMethod:SdkSynchronizer.kt$SdkSynchronizer$private suspend fun refreshPendingTransactions()</ID>
-    <ID>LongParameterList:Initializer.kt$Initializer$( val context: Context, val rustBackend: RustBackend, val network: PirateNetwork, val alias: String, val host: String, val port: Int, val viewingKeys: List&lt;UnifiedViewingKey>, val overwriteVks: Boolean, val birthday: WalletBirthday )</ID>
-    <ID>LongParameterList:Initializer.kt$Initializer.Config$( seed: ByteArray, birthdayHeight: Int? = null, network: PirateNetwork, host: String = network.defaultHost, port: Int = network.defaultPort, alias: String = PirateSdk.DEFAULT_ALIAS )</ID>
-    <ID>LongParameterList:Initializer.kt$Initializer.Config$( viewingKey: UnifiedViewingKey, birthdayHeight: Int? = null, network: PirateNetwork, host: String = network.defaultHost, port: Int = network.defaultPort, alias: String = PirateSdk.DEFAULT_ALIAS )</ID>
+    <ID>LongParameterList:PirateInitializer.kt$PirateInitializer$( val context: Context, val rustBackend: RustBackend, val network: PirateNetwork, val alias: String, val host: String, val port: Int, val viewingKeys: List&lt;UnifiedViewingKey>, val overwriteVks: Boolean, val birthday: WalletBirthday )</ID>
+    <ID>LongParameterList:PirateInitializer.kt$PirateInitializer.Config$( seed: ByteArray, birthdayHeight: Int? = null, network: PirateNetwork, host: String = network.defaultHost, port: Int = network.defaultPort, alias: String = PirateSdk.DEFAULT_ALIAS )</ID>
+    <ID>LongParameterList:PirateInitializer.kt$PirateInitializer.Config$( viewingKey: UnifiedViewingKey, birthdayHeight: Int? = null, network: PirateNetwork, host: String = network.defaultHost, port: Int = network.defaultPort, alias: String = PirateSdk.DEFAULT_ALIAS )</ID>
     <ID>LongParameterList:PagedTransactionRepository.kt$PagedTransactionRepository.Companion$( appContext: Context, pageSize: Int = 10, rustBackend: RustBackend, birthday: WalletBirthday, viewingKeys: List&lt;UnifiedViewingKey>, overwriteVks: Boolean = false, )</ID>
     <ID>LongParameterList:RustBackend.kt$RustBackend.Companion$( dbDataPath: String, account: Int, extsk: String, tsk: String, memo: ByteArray, spendParamsPath: String, outputParamsPath: String, networkId: Int, )</ID>
     <ID>LongParameterList:RustBackend.kt$RustBackend.Companion$( dbDataPath: String, consensusBranchId: Long, account: Int, extsk: String, to: String, value: Long, memo: ByteArray, spendParamsPath: String, outputParamsPath: String, networkId: Int, )</ID>
@@ -97,8 +97,8 @@
     <ID>MagicNumber:GetBlockRangeFragment.kt$GetBlockRangeFragment$1000</ID>
     <ID>MagicNumber:GetBlockRangeFragment.kt$GetBlockRangeFragment$1000.0</ID>
     <ID>MagicNumber:GetPrivateKeyFragment.kt$GetPrivateKeyFragment$5</ID>
-    <ID>MagicNumber:Initializer.kt$99</ID>
-    <ID>MagicNumber:LightWalletGrpcService.kt$LightWalletGrpcService$3000</ID>
+    <ID>MagicNumber:PirateInitializer.kt$99</ID>
+    <ID>MagicNumber:PirateLightWalletGrpcService.kt$PirateLightWalletGrpcService$3000</ID>
     <ID>MagicNumber:ListTransactionsFragment.kt$ListTransactionsFragment$100</ID>
     <ID>MagicNumber:ListUtxosFragment.kt$ListUtxosFragment$100</ID>
     <ID>MagicNumber:PersistentTransactionManager.kt$PersistentTransactionManager$9090</ID>
@@ -153,7 +153,7 @@
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$lastDownloadRange</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$lastScanRange</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$lowerBoundHeight + MAX_REORG_SIZE + 2</ID>
-    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$tempOldestTransactionHeight.value - tempOldestTransactionHeight.value.rem(ZcashSdk.MAX_REORG_SIZE) - ZcashSdk.MAX_REORG_SIZE.toLong()</ID>
+    <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$tempOldestTransactionHeight.value - tempOldestTransactionHeight.value.rem(PirateSdk.MAX_REORG_SIZE) - PirateSdk.MAX_REORG_SIZE.toLong()</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("$summary${if (result == BlockProcessingResult.FailedEnhance) " (but there were enhancement errors! We ignore those, for now. Memos in this block range are probably missing! This will be improved in a future release.)" else ""}! Sleeping for ${napTime}ms (latest height: ${currentInfo.networkBlockHeight}).")</ID>
     <ID>MaxLineLength:CompactBlockProcessor.kt$CompactBlockProcessor$twig("Also clearing block cache back to $targetHeight. These rewound blocks will download in the next scheduled scan")</ID>
@@ -201,13 +201,13 @@
     <ID>MaxLineLength:Exceptions.kt$CompactBlockProcessorException.MismatchedNetwork$"Incompatible server: this client expects a server using $clientNetwork but it was $serverNetwork! Try updating the client or switching servers."</ID>
     <ID>MaxLineLength:Exceptions.kt$LightWalletException.ChangeServerException.ChainInfoNotMatching$class</ID>
     <ID>MaxLineLength:Exceptions.kt$LightWalletException.ChangeServerException.StatusException.Companion$"Error: the new server is unavailable. Verify that the host and port are correct. Failed with $this"</ID>
-    <ID>MaxLineLength:Exceptions.kt$TransactionEncoderException.TransactionNotEncodedException$" with id $transactionId, does not have any raw data. This is a scenario where the wallet should have thrown"</ID>
-    <ID>MaxLineLength:Exceptions.kt$TransactionEncoderException.TransactionNotFoundException$"$transactionId in the repository. This means the wallet created a transaction and then returned a row ID "</ID>
-    <ID>MaxLineLength:Exceptions.kt$TransactionEncoderException.TransactionNotFoundException$"that does not actually exist. This is a scenario where the wallet should have thrown an exception but failed "</ID>
+    <ID>MaxLineLength:Exceptions.kt$PirateTransactionEncoderException.TransactionNotEncodedException$" with id $transactionId, does not have any raw data. This is a scenario where the wallet should have thrown"</ID>
+    <ID>MaxLineLength:Exceptions.kt$PirateTransactionEncoderException.TransactionNotFoundException$"$transactionId in the repository. This means the wallet created a transaction and then returned a row ID "</ID>
+    <ID>MaxLineLength:Exceptions.kt$PirateTransactionEncoderException.TransactionNotFoundException$"that does not actually exist. This is a scenario where the wallet should have thrown an exception but failed "</ID>
     <ID>MaxLineLength:GetAddressFragment.kt$GetAddressFragment$val taddress = DerivationTool.deriveTransparentAddress(seed, PirateNetwork.fromResources(requireApplicationContext()))</ID>
     <ID>MaxLineLength:GetAddressFragment.kt$GetAddressFragment$val zaddress = DerivationTool.deriveShieldedAddress(seed, PirateNetwork.fromResources(requireApplicationContext()))</ID>
-    <ID>MaxLineLength:GetAddressFragment.kt$GetAddressFragment$viewingKey = runBlocking { DerivationTool.deriveUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }</ID>
-    <ID>MaxLineLength:GetBalanceFragment.kt$GetBalanceFragment$val viewingKey = runBlocking { DerivationTool.deriveUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }</ID>
+    <ID>MaxLineLength:GetAddressFragment.kt$GetAddressFragment$viewingKey = runBlocking { DerivationTool.derivePirateUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }</ID>
+    <ID>MaxLineLength:GetBalanceFragment.kt$GetBalanceFragment$val viewingKey = runBlocking { DerivationTool.derivePirateUnifiedViewingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first() }</ID>
     <ID>MaxLineLength:InboundTxTests.kt$InboundTxTests.Companion$"https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/0821a89be7f2fc1311792c3fa1dd2171a8cdfb2effd98590cbd5ebcdcfcf491f.txt"</ID>
     <ID>MaxLineLength:InboundTxTests.kt$InboundTxTests.Companion$"https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/15a677b6770c5505fb47439361d3d3a7c21238ee1a6874fdedad18ae96850590.txt"</ID>
     <ID>MaxLineLength:InboundTxTests.kt$InboundTxTests.Companion$"https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/4dcc95dd0a2f1f51bd64bb9f729b423c6de1690664a1b6614c75925e781662f7.txt"</ID>
@@ -231,12 +231,12 @@
     <ID>MaxLineLength:InboundTxTests.kt$InboundTxTests.Companion$private const val tx663174 = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/0821a89be7f2fc1311792c3fa1dd2171a8cdfb2effd98590cbd5ebcdcfcf491f.txt"</ID>
     <ID>MaxLineLength:InboundTxTests.kt$InboundTxTests.Companion$private const val tx663188 = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/15a677b6770c5505fb47439361d3d3a7c21238ee1a6874fdedad18ae96850590.txt"</ID>
     <ID>MaxLineLength:InboundTxTests.kt$InboundTxTests.Companion$private const val txIndexReorg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-index-reorg/t1.txt"</ID>
-    <ID>MaxLineLength:InitializerTest.kt$InitializerTest$// "zxviews1qv886f6hqqqqpqy2ajg9sm22vs4gm4hhajthctfkfws34u45pjtut3qmz0eatpqzvllgsvlk3x0y35ktx5fnzqqzueyph20k3328kx46y3u5xs4750cwuwjuuccfp7la6rh8yt2vjz6tylsrwzy3khtjjzw7etkae6gw3vq608k7quka4nxkeqdxxsr9xxdagv2rhhwugs6w0cquu2ykgzgaln2vyv6ah3ram2h6lrpxuznyczt2xl3lyxcwlk4wfz5rh7wzfd7642c2ae5d7"</ID>
-    <ID>MaxLineLength:InitializerTest.kt$InitializerTest$// "zxviews1qvn6j50dqqqqpqxqkvqgx2sp63jccr4k5t8zefadpzsu0yy73vczfznwc794xz6lvy3yp5ucv43lww48zz95ey5vhrsq83dqh0ky9junq0cww2wjp9c3cd45n5l5x8l2g9atnx27e9jgyy8zasjy26gugjtefphan9al3tx208m8ekev5kkx3ug6pd0qk4gq4j4wfuxajn388pfpq54wklwktqkyjz9e6gam0n09xjc35ncd3yah5aa9ezj55lk4u7v7hn0v86vz7ygq4qj2v",</ID>
-    <ID>MaxLineLength:InitializerTest.kt$InitializerTest$// assertEquals("Height should equal sapling activation height when defaultToOldestHeight is true", PirateSdk.SAPLING_ACTIVATION_HEIGHT, initializer.birthday.height)</ID>
-    <ID>MaxLineLength:InitializerTest.kt$InitializerTest$// assertEquals("Incorrect height used for import.", PirateSdk.SAPLING_ACTIVATION_HEIGHT, initializer.birthday.height)</ID>
-    <ID>MaxLineLength:InitializerTest.kt$InitializerTest$// assertNotEquals("Height should not equal sapling activation height when defaultToOldestHeight is false", PirateSdk.SAPLING_ACTIVATION_HEIGHT, h)</ID>
-    <ID>MaxLineLength:LightWalletGrpcService.kt$LightWalletGrpcService$twig("getting channel isShutdown: ${channel.isShutdown} isTerminated: ${channel.isTerminated} getState: $state stateCount: $stateCount", -1)</ID>
+    <ID>MaxLineLength:PirateInitializerTest.kt$PirateInitializerTest$// "zxviews1qv886f6hqqqqpqy2ajg9sm22vs4gm4hhajthctfkfws34u45pjtut3qmz0eatpqzvllgsvlk3x0y35ktx5fnzqqzueyph20k3328kx46y3u5xs4750cwuwjuuccfp7la6rh8yt2vjz6tylsrwzy3khtjjzw7etkae6gw3vq608k7quka4nxkeqdxxsr9xxdagv2rhhwugs6w0cquu2ykgzgaln2vyv6ah3ram2h6lrpxuznyczt2xl3lyxcwlk4wfz5rh7wzfd7642c2ae5d7"</ID>
+    <ID>MaxLineLength:PirateInitializerTest.kt$PirateInitializerTest$// "zxviews1qvn6j50dqqqqpqxqkvqgx2sp63jccr4k5t8zefadpzsu0yy73vczfznwc794xz6lvy3yp5ucv43lww48zz95ey5vhrsq83dqh0ky9junq0cww2wjp9c3cd45n5l5x8l2g9atnx27e9jgyy8zasjy26gugjtefphan9al3tx208m8ekev5kkx3ug6pd0qk4gq4j4wfuxajn388pfpq54wklwktqkyjz9e6gam0n09xjc35ncd3yah5aa9ezj55lk4u7v7hn0v86vz7ygq4qj2v",</ID>
+    <ID>MaxLineLength:PirateInitializerTest.kt$PirateInitializerTest$// assertEquals("Height should equal sapling activation height when defaultToOldestHeight is true", PirateSdk.SAPLING_ACTIVATION_HEIGHT, initializer.birthday.height)</ID>
+    <ID>MaxLineLength:PirateInitializerTest.kt$PirateInitializerTest$// assertEquals("Incorrect height used for import.", PirateSdk.SAPLING_ACTIVATION_HEIGHT, initializer.birthday.height)</ID>
+    <ID>MaxLineLength:PirateInitializerTest.kt$PirateInitializerTest$// assertNotEquals("Height should not equal sapling activation height when defaultToOldestHeight is false", PirateSdk.SAPLING_ACTIVATION_HEIGHT, h)</ID>
+    <ID>MaxLineLength:PirateLightWalletGrpcService.kt$PirateLightWalletGrpcService$twig("getting channel isShutdown: ${channel.isShutdown} isTerminated: ${channel.isTerminated} getState: $state stateCount: $stateCount", -1)</ID>
     <ID>MaxLineLength:ListUtxosFragment.kt$ListUtxosFragment$binding.inputAddress.setText(DerivationTool.deriveTransparentAddress(seed, PirateNetwork.fromResources(requireApplicationContext())))</ID>
     <ID>MaxLineLength:ListUtxosFragment.kt$ListUtxosFragment$binding.inputRangeStart.setText(PirateNetwork.fromResources(requireApplicationContext()).saplingActivationHeight.toString())</ID>
     <ID>MaxLineLength:ListUtxosFragment.kt$ListUtxosFragment$val startToUse = binding.inputRangeStart.text.toString().toIntOrNull() ?: PirateNetwork.fromResources(requireApplicationContext()).saplingActivationHeight</ID>
@@ -377,7 +377,7 @@
     <ID>PrintStackTrace:PersistentTransactionManager.kt$PersistentTransactionManager$t</ID>
     <ID>ReturnCount:CurrencyFormatter.kt$ inline fun String?.safelyConvertToBigDecimal(): BigDecimal?</ID>
     <ID>ReturnCount:MainActivity.kt$MainActivity$fun getClipboardText(): String?</ID>
-    <ID>SpreadOperator:Initializer.kt$Initializer.Config$( *DerivationTool.deriveUnifiedViewingKeys( seed, network, numberOfAccounts ) )</ID>
+    <ID>SpreadOperator:PirateInitializer.kt$PirateInitializer.Config$( *DerivationTool.derivePirateUnifiedViewingKeys( seed, network, numberOfAccounts ) )</ID>
     <ID>SpreadOperator:PagedTransactionRepository.kt$PagedTransactionRepository.Companion$(*viewingKeys.toTypedArray())</ID>
     <ID>SpreadOperator:RustBackend.kt$RustBackend$(*this)</ID>
     <ID>SwallowedException:CompactBlockProcessor.kt$CompactBlockProcessor$e: Throwable</ID>
@@ -398,7 +398,7 @@
     <ID>TooGenericExceptionCaught:ListUtxosFragment.kt$ListUtxosFragment$t: Throwable</ID>
     <ID>TooGenericExceptionCaught:NativeLibraryLoader.kt$NativeLibraryLoader$e: Throwable</ID>
     <ID>TooGenericExceptionCaught:PersistentTransactionManager.kt$PersistentTransactionManager$t: Throwable</ID>
-    <ID>TooGenericExceptionCaught:SaplingParamTool.kt$SaplingParamTool.Companion$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:PirateSaplingParamTool.kt$PirateSaplingParamTool.Companion$e: Throwable</ID>
     <ID>TooGenericExceptionCaught:SdkSynchronizer.kt$SdkSynchronizer$t: Throwable</ID>
     <ID>TooGenericExceptionCaught:SdkSynchronizer.kt$SdkSynchronizer$tError: Throwable</ID>
     <ID>TooGenericExceptionCaught:SdkSynchronizer.kt$SdkSynchronizer$zError: Throwable</ID>
@@ -411,9 +411,9 @@
     <ID>TooManyFunctions:DerivationTool.kt$DerivationTool$Companion : Derivation</ID>
     <ID>TooManyFunctions:DerivedDataDb.kt$TransactionDao</ID>
     <ID>TooManyFunctions:HomeFragment.kt$HomeFragment : BaseDemoFragment</ID>
-    <ID>TooManyFunctions:Initializer.kt$Initializer$Companion : Erasable</ID>
-    <ID>TooManyFunctions:Initializer.kt$Initializer$Config</ID>
-    <ID>TooManyFunctions:LightWalletGrpcService.kt$LightWalletGrpcService : LightWalletService</ID>
+    <ID>TooManyFunctions:PirateInitializer.kt$PirateInitializer$Companion : Erasable</ID>
+    <ID>TooManyFunctions:PirateInitializer.kt$PirateInitializer$Config</ID>
+    <ID>TooManyFunctions:PirateLightWalletGrpcService.kt$PirateLightWalletGrpcService : LightWalletService</ID>
     <ID>TooManyFunctions:ListTransactionsFragment.kt$ListTransactionsFragment : BaseDemoFragment</ID>
     <ID>TooManyFunctions:ListUtxosFragment.kt$ListUtxosFragment : BaseDemoFragment</ID>
     <ID>TooManyFunctions:MainActivity.kt$MainActivity : AppCompatActivityOnPrimaryClipChangedListenerDrawerListener</ID>
@@ -452,8 +452,8 @@
     <ID>UnusedPrivateMember:InboundTxTests.kt$InboundTxTests.Companion$private const val txIndexReorg = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-index-reorg/t1.txt"</ID>
     <ID>UnusedPrivateMember:InboundTxTests.kt$InboundTxTests.Companion$private val txRecv = arrayOf( "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/8f064d23c66dc36e32445e5f3b50e0f32ac3ddb78cff21fb521eb6c19c07c99a.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/15a677b6770c5505fb47439361d3d3a7c21238ee1a6874fdedad18ae96850590.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/d2e7be14bbb308f9d4d68de424d622cbf774226d01cd63cc6f155fafd5cd212c.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/e6566be3a4f9a80035dab8e1d97e40832a639e3ea938fb7972ea2f8482ff51ce.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/0821a89be7f2fc1311792c3fa1dd2171a8cdfb2effd98590cbd5ebcdcfcf491f.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/e9527891b5d43d1ac72f2c0a3ac18a33dc5a0529aec04fa600616ed35f8123f8.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/4dcc95dd0a2f1f51bd64bb9f729b423c6de1690664a1b6614c75925e781662f7.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/75f2cdd2ff6a94535326abb5d9e663d53cbfa5f31ebb24b4d7e420e9440d41a2.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/7690c8ec740c1be3c50e2aedae8bf907ac81141ae8b6a134c1811706c73f49a6.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/71935e29127a7de0b96081f4c8a42a9c11584d83adedfaab414362a6f3d965cf.txt" )</ID>
     <ID>UnusedPrivateMember:InboundTxTests.kt$InboundTxTests.Companion$private val txSend = arrayOf( "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/t-shielded-spend.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/sent/c9e35e6ff444b071d63bf9bab6480409d6361760445c8a28d24179adb35c2495.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/sent/72a29d7db511025da969418880b749f7fc0fc910cdb06f52193b5fa5c0401d9d.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/sent/ff6ea36765dc29793775c7aa71de19fca039c5b5b873a0497866e9c4bc48af01.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/sent/34e507cab780546f980176f3ff2695cd404917508c7e5ee18cc1d2ff3858cb08.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/sent/6edf869063eccff3345676b0fed9f1aa6988fb2524e3d9ca7420a13cfadcd76c.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/sent/de97394ae220c28a33ba78b944e82dabec8cb404a4407650b134b3d5950358c0.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/sent/4eaa902279f8380914baf5bcc470d8b7c11d84fda809f67f517a7cb48912b87b.txt", "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/sent/73c5edf8ffba774d99155121ccf07e67fbcf14284458f7e732751fea60d3bcbc.txt" )</ID>
-    <ID>UnusedPrivateMember:Initializer.kt$Initializer.Companion$onCriticalErrorHandler: ((Throwable?) -> Boolean)?</ID>
-    <ID>UnusedPrivateMember:Initializer.kt$Initializer.Companion$private fun onCriticalError(onCriticalErrorHandler: ((Throwable?) -> Boolean)?, error: Throwable)</ID>
+    <ID>UnusedPrivateMember:PirateInitializer.kt$PirateInitializer.Companion$onCriticalErrorHandler: ((Throwable?) -> Boolean)?</ID>
+    <ID>UnusedPrivateMember:PirateInitializer.kt$PirateInitializer.Companion$private fun onCriticalError(onCriticalErrorHandler: ((Throwable?) -> Boolean)?, error: Throwable)</ID>
     <ID>UnusedPrivateMember:MainActivity.kt$MainActivity$view: View</ID>
     <ID>UnusedPrivateMember:PersistentTransactionManager.kt$PersistentTransactionManager$priority: Int = 0</ID>
     <ID>UnusedPrivateMember:SdkSynchronizer.kt$SdkSynchronizer$private fun onFailedSend(error: Throwable): Boolean</ID>
@@ -467,6 +467,6 @@
     <ID>UnusedPrivateMember:TestnetIntegrationTest.kt$TestnetIntegrationTest.Companion$private const val targetHeight = 663250</ID>
     <ID>UtilityClassWithPublicConstructor:DerivationTool.kt$DerivationTool</ID>
     <ID>UtilityClassWithPublicConstructor:Placeholders.kt$SeedGenerator</ID>
-    <ID>UtilityClassWithPublicConstructor:SaplingParamTool.kt$SaplingParamTool</ID>
+    <ID>UtilityClassWithPublicConstructor:PirateSaplingParamTool.kt$PirateSaplingParamTool</ID>
   </CurrentIssues>
 </SmellBaseline>

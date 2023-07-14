@@ -11,11 +11,14 @@ import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.Testnet
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
@@ -32,13 +35,13 @@ import java.util.concurrent.TimeoutException
  * A simple wallet that connects to testnet for integration testing. The intention is that it is
  * easy to drive and nice to use.
  */
+@OptIn(DelicateCoroutinesApi::class)
 class TestWallet(
     val seedPhrase: String,
     val alias: String = "TestWallet",
     val network: PirateNetwork = PirateNetwork.Testnet,
-    val host: String = network.defaultHost,
-    startHeight: BlockHeight? = null,
-    val port: Int = network.defaultPort
+    val endpoint: LightWalletEndpoint = LightWalletEndpoint.Testnet,
+    startHeight: BlockHeight? = null
 ) {
     constructor(
         backup: Backups,
@@ -66,7 +69,7 @@ class TestWallet(
         runBlocking { PirateDerivationTool.deriveTransparentSecretKey(seed, network = network) }
     val initializer = runBlocking {
         PirateInitializer.new(context) { config ->
-            runBlocking { config.importWallet(seed, startHeight, network, host, alias = alias) }
+            runBlocking { config.importWallet(seed, startHeight, network, endpoint, alias = alias) }
         }
     }
     val synchronizer: PirateSdkSynchronizer = Synchronizer.newBlocking(initializer) as PirateSdkSynchronizer
@@ -79,7 +82,6 @@ class TestWallet(
         runBlocking { PirateDerivationTool.deriveTransparentAddress(seed, network = network) }
     val birthdayHeight get() = synchronizer.latestBirthdayHeight
     val networkName get() = synchronizer.network.networkName
-    val connectionInfo get() = service.connectionInfo.toString()
 
     suspend fun transparentBalance(): PirateWalletBalance {
         synchronizer.refreshUtxos(transparentAddress, synchronizer.latestBirthdayHeight)
@@ -166,11 +168,46 @@ class TestWallet(
 
     enum class Backups(val seedPhrase: String, val testnetBirthday: BlockHeight, val mainnetBirthday: BlockHeight) {
         // TODO: get the proper birthday values for these wallets
-        DEFAULT("column rhythm acoustic gym cost fit keen maze fence seed mail medal shrimp tell relief clip cannon foster soldier shallow refuse lunar parrot banana", BlockHeight.new(PirateNetwork.Testnet, 1_355_928), BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)),
-        SAMPLE_WALLET("input frown warm senior anxiety abuse yard prefer churn reject people glimpse govern glory crumble swallow verb laptop switch trophy inform friend permit purpose", BlockHeight.new(PirateNetwork.Testnet, 1_330_190), BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)),
-        DEV_WALLET("still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread", BlockHeight.new(PirateNetwork.Testnet, 1_000_000), BlockHeight.new(PirateNetwork.Mainnet, 991645)),
-        ALICE("quantum whisper lion route fury lunar pelican image job client hundred sauce chimney barely life cliff spirit admit weekend message recipe trumpet impact kitten", BlockHeight.new(PirateNetwork.Testnet, 1_330_190), BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)),
-        BOB("canvas wine sugar acquire garment spy tongue odor hole cage year habit bullet make label human unit option top calm neutral try vocal arena", BlockHeight.new(PirateNetwork.Testnet, 1_330_190), BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)),
+        DEFAULT(
+            "column rhythm acoustic gym cost fit keen maze fence seed mail medal shrimp tell relief clip cannon foster soldier shallow refuse lunar parrot banana",
+            BlockHeight.new(
+                PirateNetwork.Testnet,
+                1_355_928
+            ),
+            BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
+        ),
+        SAMPLE_WALLET(
+            "input frown warm senior anxiety abuse yard prefer churn reject people glimpse govern glory crumble swallow verb laptop switch trophy inform friend permit purpose",
+            BlockHeight.new(
+                PirateNetwork.Testnet,
+                1_330_190
+            ),
+            BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
+        ),
+        DEV_WALLET(
+            "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread",
+            BlockHeight.new(
+                PirateNetwork.Testnet,
+                1_000_000
+            ),
+            BlockHeight.new(PirateNetwork.Mainnet, 991645)
+        ),
+        ALICE(
+            "quantum whisper lion route fury lunar pelican image job client hundred sauce chimney barely life cliff spirit admit weekend message recipe trumpet impact kitten",
+            BlockHeight.new(
+                PirateNetwork.Testnet,
+                1_330_190
+            ),
+            BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
+        ),
+        BOB(
+            "canvas wine sugar acquire garment spy tongue odor hole cage year habit bullet make label human unit option top calm neutral try vocal arena",
+            BlockHeight.new(
+                PirateNetwork.Testnet,
+                1_330_190
+            ),
+            BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
+        )
         ;
     }
 }

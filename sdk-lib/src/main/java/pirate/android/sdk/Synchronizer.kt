@@ -4,12 +4,13 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.db.entity.PendingTransaction
 import pirate.android.sdk.ext.PirateSdk
+import pirate.android.sdk.internal.PirateSaplingParamTool
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.type.PirateAddressType
 import pirate.android.sdk.type.PirateConsensusMatchType
-import pirate.android.sdk.type.PirateNetwork
 import pirate.wallet.sdk.rpc.Service
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.runBlocking
  * support for coroutines, we favor their use in the SDK and incorporate that choice into this
  * contract.
  */
+@Suppress("TooManyFunctions")
 interface Synchronizer {
 
     //
@@ -285,18 +287,6 @@ interface Synchronizer {
     suspend fun getServerInfo(): Service.LightdInfo
 
     /**
-     * Gracefully change the server that the Synchronizer is currently using. In some cases, this
-     * will require waiting until current network activity is complete. Ideally, this would protect
-     * against accidentally switching between testnet and mainnet, by comparing the service info of
-     * the existing server with that of the new one.
-     */
-    suspend fun changeServer(
-        host: String,
-        port: Int = network.defaultPort,
-        errorHandler: (Throwable) -> Unit = { throw it }
-    )
-
-    /**
      * Download all UTXOs for the given address and store any new ones in the database.
      *
      * @return the number of utxos that were downloaded and addded to the UTXO table.
@@ -444,10 +434,11 @@ interface Synchronizer {
         suspend fun new(
             initializer: PirateInitializer
         ): Synchronizer {
+            val saplingParamTool = PirateSaplingParamTool.new(initializer.context)
             val repository = DefaultSynchronizerFactory.defaultTransactionRepository(initializer)
             val blockStore = DefaultSynchronizerFactory.defaultBlockStore(initializer)
             val service = DefaultSynchronizerFactory.defaultService(initializer)
-            val encoder = DefaultSynchronizerFactory.defaultEncoder(initializer, repository)
+            val encoder = DefaultSynchronizerFactory.defaultEncoder(initializer, saplingParamTool, repository)
             val downloader = DefaultSynchronizerFactory.defaultDownloader(service, blockStore)
             val txManager =
                 DefaultSynchronizerFactory.defaultTxManager(initializer, encoder, service)

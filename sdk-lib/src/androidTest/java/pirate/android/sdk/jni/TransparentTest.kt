@@ -7,8 +7,8 @@ import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
 import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.BeforeClass

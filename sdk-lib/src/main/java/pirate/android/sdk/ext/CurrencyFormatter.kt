@@ -1,9 +1,10 @@
-@file:Suppress("NOTHING_TO_INLINE")
+@file:Suppress("TooManyFunctions", "MatchingDeclarationName")
 
 package pirate.android.sdk.ext
 
 import pirate.android.sdk.ext.Conversions.USD_FORMATTER
 import pirate.android.sdk.ext.Conversions.ARRR_FORMATTER
+import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.Arrrtoshi
 import java.math.BigDecimal
 import java.math.MathContext
@@ -18,8 +19,10 @@ import java.util.Locale
  * accurately rounded values to the user.
  */
 
-// TODO: provide a dynamic way to configure this globally for the SDK
-// For now, just make these vars so at least they could be modified in one place
+// TODO [#678]: provide a dynamic way to configure this globally for the SDK
+//  For now, just make these vars so at least they could be modified in one place
+// TODO [#678]: https://github.com/zcash/zcash-android-wallet-sdk/issues/678
+@Suppress("MagicNumber")
 object Conversions {
     var ONE_ARRR_IN_ZATOSHI = BigDecimal(Arrrtoshi.ZATOSHI_PER_ARRR, MathContext.DECIMAL128)
     var ARRR_FORMATTER = NumberFormat.getInstance(Locale.getDefault()).apply {
@@ -47,7 +50,7 @@ object Conversions {
  * @return this Arrrtoshi value represented as ARRR, in a string with at least [minDecimals] and at
  * most [maxDecimals]
  */
-inline fun Arrrtoshi?.convertArrrtoshiToArrrString(
+fun Arrrtoshi?.convertArrrtoshiToArrrString(
     maxDecimals: Int = ARRR_FORMATTER.maximumFractionDigits,
     minDecimals: Int = ARRR_FORMATTER.minimumFractionDigits
 ): String {
@@ -65,7 +68,7 @@ inline fun Arrrtoshi?.convertArrrtoshiToArrrString(
  * @return this Double ARRR value represented as a string with at least [minDecimals] and at most
  * [maxDecimals].
  */
-inline fun Double?.toArrrString(
+fun Double?.toArrrString(
     maxDecimals: Int = ARRR_FORMATTER.maximumFractionDigits,
     minDecimals: Int = ARRR_FORMATTER.minimumFractionDigits
 ): String {
@@ -83,7 +86,7 @@ inline fun Double?.toArrrString(
  * @return this BigDecimal ARRR value represented as a string with at least [minDecimals] and at most
  * [maxDecimals].
  */
-inline fun BigDecimal?.toArrrString(
+fun BigDecimal?.toArrrString(
     maxDecimals: Int = ARRR_FORMATTER.maximumFractionDigits,
     minDecimals: Int = ARRR_FORMATTER.minimumFractionDigits
 ): String {
@@ -101,7 +104,7 @@ inline fun BigDecimal?.toArrrString(
  * @return this Double ARRR value represented as a string with at least [minDecimals] and at most
  * [maxDecimals], which is 2 by default. Zero is always represented without any decimals.
  */
-inline fun Double?.toUsdString(
+fun Double?.toUsdString(
     maxDecimals: Int = USD_FORMATTER.maximumFractionDigits,
     minDecimals: Int = USD_FORMATTER.minimumFractionDigits
 ): String {
@@ -123,7 +126,7 @@ inline fun Double?.toUsdString(
  * @return this BigDecimal USD value represented as a string with at least [minDecimals] and at most
  * [maxDecimals], which is 2 by default.
  */
-inline fun BigDecimal?.toUsdString(
+fun BigDecimal?.toUsdString(
     maxDecimals: Int = USD_FORMATTER.maximumFractionDigits,
     minDecimals: Int = USD_FORMATTER.minimumFractionDigits
 ): String {
@@ -141,7 +144,7 @@ inline fun BigDecimal?.toUsdString(
  *
  * @return a currency formatter, appropriate for the default locale.
  */
-inline fun currencyFormatter(maxDecimals: Int, minDecimals: Int): NumberFormat {
+fun currencyFormatter(maxDecimals: Int, minDecimals: Int): NumberFormat {
     return NumberFormat.getInstance(Locale.getDefault()).apply {
         roundingMode = ARRR_FORMATTER.roundingMode
         maximumFractionDigits = maxDecimals
@@ -162,7 +165,7 @@ inline fun currencyFormatter(maxDecimals: Int, minDecimals: Int): NumberFormat {
  * @return this Long Arrrtoshi value represented as ARRR using a BigDecimal with the given scale,
  * rounded accurately out to 128 digits.
  */
-inline fun Arrrtoshi?.convertArrrtoshiToArrr(scale: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
+fun Arrrtoshi?.convertArrrtoshiToArrr(scale: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
     return BigDecimal(this?.value ?: 0L, MathContext.DECIMAL128).divide(
         Conversions.ONE_ARRR_IN_ZATOSHI,
         MathContext.DECIMAL128
@@ -176,7 +179,7 @@ inline fun Arrrtoshi?.convertArrrtoshiToArrr(scale: Int = ARRR_FORMATTER.maximum
  * @return this ARRR value represented as Arrrtoshi, rounded accurately out to 128 digits, in order to
  * minimize cumulative errors when applied repeatedly over a sequence of calculations.
  */
-inline fun BigDecimal?.convertArrrToArrrtoshi(): Arrrtoshi {
+fun BigDecimal?.convertArrrToArrrtoshi(): Arrrtoshi {
     if (this == null) return Arrrtoshi(0L)
     if (this < BigDecimal.ZERO) {
         throw IllegalArgumentException(
@@ -197,7 +200,7 @@ inline fun BigDecimal?.convertArrrToArrrtoshi(): Arrrtoshi {
  * @return this Double ARRR value converted into a BigDecimal, with the proper rounding mode for use
  * with other formatting functions.
  */
-inline fun Double?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
+fun Double?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
     return BigDecimal(this?.toString() ?: "0.0", MathContext.DECIMAL128).setScale(
         decimals,
         ARRR_FORMATTER.roundingMode
@@ -214,7 +217,7 @@ inline fun Double?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigits):
  * @return this Double ARRR value converted into Arrrtoshi, with proper rounding and precision by
  * leveraging an intermediate BigDecimal object.
  */
-inline fun Double?.convertArrrToArrrtoshi(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): Arrrtoshi {
+fun Double?.convertArrrToArrrtoshi(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): Arrrtoshi {
     return this.toArrr(decimals).convertArrrToArrrtoshi()
 }
 
@@ -227,7 +230,7 @@ inline fun Double?.convertArrrToArrrtoshi(decimals: Int = ARRR_FORMATTER.maximum
  *
  * @return this BigDecimal ARRR adjusted to the default scale and rounding mode.
  */
-inline fun BigDecimal?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
+fun BigDecimal?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
     return (this ?: BigDecimal.ZERO).setScale(decimals, ARRR_FORMATTER.roundingMode)
 }
 
@@ -240,7 +243,7 @@ inline fun BigDecimal?.toArrr(decimals: Int = ARRR_FORMATTER.maximumFractionDigi
  *
  * @return this Double USD value converted into a BigDecimal, with proper rounding and precision.
  */
-inline fun Double?.toUsd(decimals: Int = USD_FORMATTER.maximumFractionDigits): BigDecimal {
+fun Double?.toUsd(decimals: Int = USD_FORMATTER.maximumFractionDigits): BigDecimal {
     return BigDecimal(this?.toString() ?: "0.0", MathContext.DECIMAL128).setScale(
         decimals,
         USD_FORMATTER.roundingMode
@@ -256,7 +259,7 @@ inline fun Double?.toUsd(decimals: Int = USD_FORMATTER.maximumFractionDigits): B
  *
  * @return this BigDecimal USD value converted into USD, with proper rounding and precision.
  */
-inline fun BigDecimal?.toUsd(decimals: Int = USD_FORMATTER.maximumFractionDigits): BigDecimal {
+fun BigDecimal?.toUsd(decimals: Int = USD_FORMATTER.maximumFractionDigits): BigDecimal {
     return (this ?: BigDecimal.ZERO).setScale(decimals, USD_FORMATTER.roundingMode)
 }
 
@@ -268,7 +271,7 @@ inline fun BigDecimal?.toUsd(decimals: Int = USD_FORMATTER.maximumFractionDigits
  *
  * @return this BigDecimal USD value converted into USD, with proper rounding and precision.
  */
-inline fun BigDecimal?.convertArrrToUsd(arrrPrice: BigDecimal): BigDecimal {
+fun BigDecimal?.convertArrrToUsd(arrrPrice: BigDecimal): BigDecimal {
     if (this == null) return BigDecimal.ZERO
     if (this < BigDecimal.ZERO) {
         throw IllegalArgumentException(
@@ -287,7 +290,7 @@ inline fun BigDecimal?.convertArrrToUsd(arrrPrice: BigDecimal): BigDecimal {
  *
  * @return this BigDecimal USD value converted into ARRR, with proper rounding and precision.
  */
-inline fun BigDecimal?.convertUsdToArrr(arrrPrice: BigDecimal): BigDecimal {
+fun BigDecimal?.convertUsdToArrr(arrrPrice: BigDecimal): BigDecimal {
     if (this == null) return BigDecimal.ZERO
     if (this < BigDecimal.ZERO) {
         throw IllegalArgumentException(
@@ -310,7 +313,7 @@ inline fun BigDecimal?.convertUsdToArrr(arrrPrice: BigDecimal): BigDecimal {
  * @return this BigDecimal value converted from one currency into the other, based on the given
  * price.
  */
-inline fun BigDecimal.convertCurrency(arrrPrice: BigDecimal, isUsd: Boolean): BigDecimal {
+fun BigDecimal.convertCurrency(arrrPrice: BigDecimal, isUsd: Boolean): BigDecimal {
     return if (isUsd) {
         this.convertUsdToArrr(arrrPrice)
     } else {
@@ -323,15 +326,19 @@ inline fun BigDecimal.convertCurrency(arrrPrice: BigDecimal, isUsd: Boolean): Bi
  *
  * @return this string as a BigDecimal or null when parsing fails.
  */
-inline fun String?.safelyConvertToBigDecimal(): BigDecimal? {
-    if (this.isNullOrEmpty()) return BigDecimal.ZERO
-    return try {
-        // ignore commas and whitespace
-        var sanitizedInput = this.filter { it.isDigit() or (it == '.') }
-        BigDecimal.ZERO.max(BigDecimal(sanitizedInput, MathContext.DECIMAL128))
-    } catch (t: Throwable) {
-        return null
+fun String?.safelyConvertToBigDecimal(): BigDecimal? {
+    if (this.isNullOrEmpty()) {
+        return BigDecimal.ZERO
     }
+    val result = try {
+        // ignore commas and whitespace
+        val sanitizedInput = this.filter { it.isDigit() or (it == '.') }
+        BigDecimal.ZERO.max(BigDecimal(sanitizedInput, MathContext.DECIMAL128))
+    } catch (nfe: NumberFormatException) {
+        twig("Exception while converting String to BigDecimal: ${nfe.message} caused by: ${nfe.cause}")
+        null
+    }
+    return result
 }
 
 /**
@@ -343,7 +350,7 @@ inline fun String?.safelyConvertToBigDecimal(): BigDecimal? {
  * @return the abbreviated string unless the string is too short, in which case the original string
  * is returned.
  */
-inline fun String.toAbbreviatedAddress(startLength: Int = 8, endLength: Int = 8) =
+fun String.toAbbreviatedAddress(startLength: Int = 8, endLength: Int = 8) =
     if (length > startLength + endLength) "${take(startLength)}…${takeLast(endLength)}" else this
 
 /**
@@ -355,13 +362,16 @@ inline fun String.toAbbreviatedAddress(startLength: Int = 8, endLength: Int = 8)
  *
  * @return the masked version of this string, typically for use in logs.
  */
-internal inline fun String.masked(addressCharsToShow: Int = 4): String =
-    if (startsWith("ztest") || startsWith("zs")) "****${takeLast(addressCharsToShow)}"
-    else "***masked***"
+internal fun String.masked(addressCharsToShow: Int = 4): String =
+    if (startsWith("ztest") || startsWith("zs")) {
+        "****${takeLast(addressCharsToShow)}"
+    } else {
+        "***masked***"
+    }
 
 /**
  * Convenience function that returns true when this string starts with 'z'.
  *
  * @return true when this function starts with 'z' rather than 't'.
  */
-inline fun String?.isShielded() = this != null && startsWith('z')
+fun String?.isShielded() = this != null && startsWith('z')

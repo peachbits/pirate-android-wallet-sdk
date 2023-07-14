@@ -7,7 +7,7 @@ import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking

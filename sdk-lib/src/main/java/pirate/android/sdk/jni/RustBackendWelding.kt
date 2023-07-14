@@ -5,7 +5,8 @@ import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
+import java.io.File
 
 /**
  * Contract defining the exposed capabilities of the Rust backend.
@@ -13,10 +14,14 @@ import pirate.android.sdk.type.PirateNetwork
  * It is not documented because it is not intended to be used, directly.
  * Instead, use the synchronizer or one of its subcomponents.
  */
+@Suppress("TooManyFunctions")
 internal interface PirateRustBackendWelding {
 
     val network: PirateNetwork
 
+    val saplingParamDir: File
+
+    @Suppress("LongParameterList")
     suspend fun createToAddress(
         consensusBranchId: Long,
         account: Int,
@@ -73,6 +78,7 @@ internal interface PirateRustBackendWelding {
      */
     suspend fun validateCombinedChain(): BlockHeight?
 
+    @Suppress("LongParameterList")
     suspend fun putUtxo(
         tAddress: String,
         txId: ByteArray,
@@ -82,7 +88,10 @@ internal interface PirateRustBackendWelding {
         height: BlockHeight
     ): Boolean
 
-    suspend fun clearUtxos(tAddress: String, aboveHeightInclusive: BlockHeight = BlockHeight(network.saplingActivationHeight.value)): Boolean
+    suspend fun clearUtxos(
+        tAddress: String,
+        aboveHeightInclusive: BlockHeight = BlockHeight(network.saplingActivationHeight.value)
+    ): Boolean
 
     suspend fun getDownloadedUtxoBalance(address: String): PirateWalletBalance
 

@@ -1,43 +1,43 @@
 package pirate.android.sdk
 
 import android.content.Context
+import pirate.android.sdk.db.DatabaseCoordinator
 import pirate.android.sdk.exception.PirateInitializerException
 import pirate.android.sdk.ext.PirateSdk
-import pirate.android.sdk.internal.SdkDispatchers
-import pirate.android.sdk.internal.ext.getCacheDirSuspend
-import pirate.android.sdk.internal.ext.getDatabasePathSuspend
+import pirate.android.sdk.internal.PirateSaplingParamTool
 import pirate.android.sdk.internal.model.Checkpoint
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.CheckpointTool
 import pirate.android.sdk.tool.PirateDerivationTool
 import pirate.android.sdk.type.PirateUnifiedViewingKey
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import java.io.File
 
 /**
  * Simplified PirateInitializer focused on starting from a ViewingKey.
  */
+@Suppress("LongParameterList", "unused")
 class PirateInitializer private constructor(
     val context: Context,
     internal val rustBackend: PirateRustBackend,
     val network: PirateNetwork,
     val alias: String,
-    val host: String,
-    val port: Int,
+    val lightWalletEndpoint: LightWalletEndpoint,
     val viewingKeys: List<PirateUnifiedViewingKey>,
     val overwriteVks: Boolean,
-    internal val checkpoint: Checkpoint
+    internal val checkpoint: Checkpoint,
+    internal val saplingParamTool: PirateSaplingParamTool
 ) {
 
     suspend fun erase() = erase(context, network, alias)
 
+    @Suppress("TooManyFunctions")
     class PirateConfig private constructor(
         val viewingKeys: MutableList<PirateUnifiedViewingKey> = mutableListOf(),
-        var alias: String = PirateSdk.DEFAULT_ALIAS,
+        var alias: String = PirateSdk.DEFAULT_ALIAS
     ) {
         var birthdayHeight: BlockHeight? = null
             private set
@@ -45,10 +45,7 @@ class PirateInitializer private constructor(
         lateinit var network: PirateNetwork
             private set
 
-        lateinit var host: String
-            private set
-
-        var port: Int = PirateNetwork.Mainnet.defaultPort
+        lateinit var lightWalletEndpoint: LightWalletEndpoint
             private set
 
         /**
@@ -151,21 +148,17 @@ class PirateInitializer private constructor(
         /**
          * Set the server and the network property at the same time to prevent them from getting out
          * of sync. Ultimately, this determines which host a synchronizer will use in order to
-         * connect to lightwalletd. In most cases, the default host is sufficient but an override
-         * can be provided. The host cannot be changed without explicitly setting the network.
+         * connect to lightwalletd.
          *
          * @param network the Zcash network to use. Either testnet or mainnet.
-         * @param host the lightwalletd host to use.
-         * @param port the lightwalletd port to use.
+         * @param lightWalletEndpoint the light wallet endpoint to use.
          */
         fun setNetwork(
             network: PirateNetwork,
-            host: String = network.defaultHost,
-            port: Int = network.defaultPort
+            lightWalletEndpoint: LightWalletEndpoint
         ): PirateConfig = apply {
             this.network = network
-            this.host = host
-            this.port = port
+            this.lightWalletEndpoint = lightWalletEndpoint
         }
 
         /**
@@ -175,16 +168,14 @@ class PirateInitializer private constructor(
             seed: ByteArray,
             birthday: BlockHeight?,
             network: PirateNetwork,
-            host: String = network.defaultHost,
-            port: Int = network.defaultPort,
+            lightWalletEndpoint: LightWalletEndpoint,
             alias: String = PirateSdk.DEFAULT_ALIAS
         ): PirateConfig =
             importWallet(
                 PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network = network)[0],
                 birthday,
                 network,
-                host,
-                port,
+                lightWalletEndpoint,
                 alias
             )
 
@@ -195,12 +186,11 @@ class PirateInitializer private constructor(
             viewingKey: PirateUnifiedViewingKey,
             birthday: BlockHeight?,
             network: PirateNetwork,
-            host: String = network.defaultHost,
-            port: Int = network.defaultPort,
+            lightWalletEndpoint: LightWalletEndpoint,
             alias: String = PirateSdk.DEFAULT_ALIAS
         ): PirateConfig = apply {
             setViewingKeys(viewingKey)
-            setNetwork(network, host, port)
+            setNetwork(network, lightWalletEndpoint)
             importedWalletBirthday(birthday)
             this.alias = alias
         }
@@ -211,14 +201,12 @@ class PirateInitializer private constructor(
         suspend fun newWallet(
             seed: ByteArray,
             network: PirateNetwork,
-            host: String = network.defaultHost,
-            port: Int = network.defaultPort,
+            lightWalletEndpoint: LightWalletEndpoint,
             alias: String = PirateSdk.DEFAULT_ALIAS
         ): PirateConfig = newWallet(
             PirateDerivationTool.derivePirateUnifiedViewingKeys(seed, network)[0],
             network,
-            host,
-            port,
+            lightWalletEndpoint,
             alias
         )
 
@@ -228,12 +216,11 @@ class PirateInitializer private constructor(
         fun newWallet(
             viewingKey: PirateUnifiedViewingKey,
             network: PirateNetwork,
-            host: String = network.defaultHost,
-            port: Int = network.defaultPort,
+            lightWalletEndpoint: LightWalletEndpoint,
             alias: String = PirateSdk.DEFAULT_ALIAS
         ): PirateConfig = apply {
             setViewingKeys(viewingKey)
-            setNetwork(network, host, port)
+            setNetwork(network, lightWalletEndpoint)
             newWalletBirthday()
             this.alias = alias
         }
@@ -248,6 +235,7 @@ class PirateInitializer private constructor(
             numberOfAccounts: Int = 1
         ): PirateConfig =
             apply {
+                @Suppress("SpreadOperator")
                 setViewingKeys(
                     *PirateDerivationTool.derivePirateUnifiedViewingKeys(
                         seed,
@@ -323,6 +311,7 @@ class PirateInitializer private constructor(
             block: (PirateConfig) -> Unit
         ) = new(appContext, onCriticalErrorHandler, PirateConfig(block))
 
+        @Suppress("UNUSED_PARAMETER")
         suspend fun new(
             context: Context,
             onCriticalErrorHandler: ((Throwable?) -> Boolean)?,
@@ -345,18 +334,21 @@ class PirateInitializer private constructor(
                 )
             }
 
-            val rustBackend = initPirateRustBackend(context, config.network, config.alias, loadedCheckpoint.height)
+            val saplingParamTool = PirateSaplingParamTool.new(context.applicationContext)
+
+            val rustBackend =
+                initPirateRustBackend(context, config.network, config.alias, loadedCheckpoint.height, saplingParamTool)
 
             return PirateInitializer(
                 context.applicationContext,
                 rustBackend,
                 config.network,
                 config.alias,
-                config.host,
-                config.port,
+                config.lightWalletEndpoint,
                 config.viewingKeys,
                 config.overwriteVks,
-                loadedCheckpoint
+                loadedCheckpoint,
+                saplingParamTool
             )
         }
 
@@ -387,12 +379,15 @@ class PirateInitializer private constructor(
             context: Context,
             network: PirateNetwork,
             alias: String,
-            blockHeight: BlockHeight
+            blockHeight: BlockHeight,
+            saplingParamTool: PirateSaplingParamTool
         ): PirateRustBackend {
+            val coordinator = DatabaseCoordinator.getInstance(context)
+
             return PirateRustBackend.init(
-                cacheDbPath(context, network, alias),
-                dataDbPath(context, network, alias),
-                File(context.getCacheDirSuspend(), "params").absolutePath,
+                coordinator.cacheDbFile(network, alias),
+                coordinator.dataDbFile(network, alias),
+                saplingParamTool.properties.paramsDirectory,
                 network,
                 blockHeight
             )
@@ -416,88 +411,7 @@ class PirateInitializer private constructor(
             appContext: Context,
             network: PirateNetwork,
             alias: String
-        ): Boolean {
-            val cacheDeleted = deleteDb(cacheDbPath(appContext, network, alias))
-            val dataDeleted = deleteDb(dataDbPath(appContext, network, alias))
-            return dataDeleted || cacheDeleted
-        }
-
-        //
-        // Path Helpers
-        //
-
-        /**
-         * Returns the path to the cache database that would correspond to the given alias.
-         *
-         * @param appContext the application context
-         * @param network the network associated with the data in the cache database.
-         * @param alias the alias to convert into a database path
-         */
-        private suspend fun cacheDbPath(
-            appContext: Context,
-            network: PirateNetwork,
-            alias: String
-        ): String =
-            aliasToPath(appContext, network, alias, PirateSdk.DB_CACHE_NAME)
-
-        /**
-         * Returns the path to the data database that would correspond to the given alias.
-         * @param appContext the application context
-         * * @param network the network associated with the data in the database.
-         * @param alias the alias to convert into a database path
-         */
-        private suspend fun dataDbPath(
-            appContext: Context,
-            network: PirateNetwork,
-            alias: String
-        ): String =
-            aliasToPath(appContext, network, alias, PirateSdk.DB_DATA_NAME)
-
-        private suspend fun aliasToPath(
-            appContext: Context,
-            network: PirateNetwork,
-            alias: String,
-            dbFileName: String
-        ): String {
-            val parentDir: String =
-                appContext.getDatabasePathSuspend("unused.db").parentFile?.absolutePath
-                    ?: throw PirateInitializerException.DatabasePathException
-            val prefix = if (alias.endsWith('_')) alias else "${alias}_"
-            return File(parentDir, "$prefix${network.networkName}_$dbFileName").absolutePath
-        }
-
-        /**
-         * Delete a database and it's potential journal file at the given path.
-         *
-         * @param filePath the path of the db to erase.
-         * @return true when a file exists at the given path and was deleted.
-         */
-        private suspend fun deleteDb(filePath: String): Boolean {
-            // just try the journal file. Doesn't matter if it's not there.
-            delete("$filePath-journal")
-
-            return delete(filePath)
-        }
-
-        /**
-         * Delete the file at the given path.
-         *
-         * @param filePath the path of the file to erase.
-         * @return true when a file exists at the given path and was deleted.
-         */
-        private suspend fun delete(filePath: String): Boolean {
-            return File(filePath).let {
-                withContext(SdkDispatchers.DATABASE_IO) {
-                    if (it.exists()) {
-                        twig("Deleting ${it.name}!")
-                        it.delete()
-                        true
-                    } else {
-                        false
-                    }
-                }
-            }
-        }
+        ): Boolean = DatabaseCoordinator.getInstance(appContext).deleteDatabases(network, alias)
     }
 }
 
@@ -514,7 +428,8 @@ class PirateInitializer private constructor(
  */
 internal fun validateAlias(alias: String) {
     require(
-        alias.length in 1..99 && alias[0].isLetter() &&
+    
+        alias.length in PirateSdk.ALIAS_MIN_LENGTH..PirateSdk.ALIAS_MAX_LENGTH && alias[0].isLetter() &&
             alias.all { it.isLetterOrDigit() || it == '_' }
     ) {
         "ERROR: Invalid alias ($alias). For security, the alias must be shorter than 100 " +

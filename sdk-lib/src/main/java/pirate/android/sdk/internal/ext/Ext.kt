@@ -2,6 +2,7 @@ package pirate.android.sdk.internal.ext
 
 import pirate.android.sdk.internal.twig
 
+@Suppress("SwallowedException", "TooGenericExceptionCaught")
 internal inline fun <R> tryNull(block: () -> R): R? {
     return try {
         block()
@@ -17,6 +18,7 @@ internal inline fun <R> tryNull(block: () -> R): R? {
  * @param ifContains only convert an exception into a warning if it contains the given text
  * @param unlessContains convert all exceptions into warnings unless they contain the given text
  */
+@Suppress("TooGenericExceptionCaught")
 internal inline fun <R> tryWarn(
     message: String,
     ifContains: String? = null,
@@ -28,11 +30,11 @@ internal inline fun <R> tryWarn(
     } catch (t: Throwable) {
         val shouldThrowAnyway = (
             unlessContains != null &&
-                (t.message?.toLowerCase()?.contains(unlessContains.toLowerCase()) == true)
+                (t.message?.lowercase()?.contains(unlessContains.lowercase()) == true)
             ) ||
             (
                 ifContains != null &&
-                    (t.message?.toLowerCase()?.contains(ifContains.toLowerCase()) == false)
+                    (t.message?.lowercase()?.contains(ifContains.lowercase()) == false)
                 )
         if (shouldThrowAnyway) {
             throw t

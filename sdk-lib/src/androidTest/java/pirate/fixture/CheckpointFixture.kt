@@ -7,8 +7,8 @@ import pirate.android.sdk.internal.KEY_TREE
 import pirate.android.sdk.internal.KEY_VERSION
 import pirate.android.sdk.internal.VERSION_1
 import pirate.android.sdk.internal.model.Checkpoint
+import pirate.android.sdk.type.PirateNetwork
 import pirate.android.sdk.model.BlockHeight
-import cash.z.ecc.android.sdk.type.PirateNetwork
 import org.json.JSONObject
 
 object CheckpointFixture {

@@ -1,9 +1,9 @@
 package pirate.android.sdk.demoapp.demos.getblock
 
 import android.os.Bundle
-import android.text.Html
 import android.view.LayoutInflater
 import android.view.View
+import androidx.core.text.HtmlCompat
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentGetBlockBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
@@ -14,7 +14,7 @@ import pirate.android.sdk.demoapp.util.toRelativeTime
 import pirate.android.sdk.demoapp.util.withCommas
 import pirate.android.sdk.ext.toHex
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.type.PirateNetwork
+import pirate.android.sdk.model.PirateNetwork
 import kotlin.math.min
 
 /**
@@ -26,10 +26,10 @@ class GetBlockFragment : BaseDemoFragment<FragmentGetBlockBinding>() {
 
     private fun setBlockHeight(blockHeight: BlockHeight) {
         val blocks =
-            lightwalletService?.getBlockRange(blockHeight..blockHeight)
+            lightWalletService?.getBlockRange(blockHeight..blockHeight)
         val block = blocks?.firstOrNull()
         binding.textInfo.visibility = View.VISIBLE
-        binding.textInfo.text = Html.fromHtml(
+        binding.textInfo.text = HtmlCompat.fromHtml(
             """
                 <b>block height:</b> ${block?.height.withCommas()}
                 <br/><b>block time:</b> ${block?.time.toRelativeTime(requireApplicationContext())}
@@ -37,14 +37,21 @@ class GetBlockFragment : BaseDemoFragment<FragmentGetBlockBinding>() {
                 <br/><b>hash:</b> ${block?.hash?.toByteArray()?.toHex()}
                 <br/><b>prevHash:</b> ${block?.prevHash?.toByteArray()?.toHex()}
                 ${block?.vtxList.toHtml()}
-            """.trimIndent()
+            """.trimIndent(),
+            HtmlCompat.FROM_HTML_MODE_LEGACY
         )
     }
 
-    private fun onApply(_unused: View? = null) {
+    @Suppress("UNUSED_PARAMETER")
+    private fun onApply(unused: View? = null) {
         val network = PirateNetwork.fromResources(requireApplicationContext())
-        val newHeight = min(binding.textBlockHeight.text.toString().toLongOrNull() ?: network.saplingActivationHeight.value, network.saplingActivationHeight.value)
+        val newHeight = min(
+            binding.textBlockHeight.text.toString().toLongOrNull()
+                ?: network.saplingActivationHeight.value,
+            network.saplingActivationHeight.value
+        )
 
+        @Suppress("TooGenericExceptionCaught")
         try {
             setBlockHeight(BlockHeight.new(network, newHeight))
         } catch (t: Throwable) {

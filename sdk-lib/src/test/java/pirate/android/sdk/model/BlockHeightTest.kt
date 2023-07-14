@@ -1,6 +1,5 @@
 package pirate.android.sdk.model
 
-import pirate.android.sdk.type.PirateNetwork
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

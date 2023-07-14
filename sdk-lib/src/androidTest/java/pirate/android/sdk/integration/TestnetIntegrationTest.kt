@@ -13,23 +13,24 @@ import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.Arrrtoshi
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.test.ScopedTest
+import pirate.android.sdk.tool.CheckpointTool
 import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.tool.PirateWalletBirthdayTool
-import pirate.android.sdk.type.PirateNetwork
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TestnetIntegrationTest : ScopedTest() {
 
@@ -39,9 +40,9 @@ class TestnetIntegrationTest : ScopedTest() {
     @Test
     @Ignore("This test is broken")
     fun testLatestBlockTest() {
-        val service = PirateLightWalletGrpcService(
+        val service = PirateLightWalletGrpcService.new(
             context,
-            host
+            lightWalletEndpoint
         )
         val height = service.getLatestBlockHeight()
         assertTrue(height > saplingActivation)
@@ -49,7 +50,7 @@ class TestnetIntegrationTest : ScopedTest() {
 
     @Test
     fun testLoadBirthday() {
-        val (height, hash, time, tree) = runBlocking {
+        val (height) = runBlocking {
             CheckpointTool.loadNearest(
                 context,
                 synchronizer.network,
@@ -80,8 +81,8 @@ class TestnetIntegrationTest : ScopedTest() {
         }
 
         assertTrue(
-            "No funds available when we expected a balance greater than zero!",
-            availableBalance!!.value > 0
+            availableBalance!!.value > 0,
+            "No funds available when we expected a balance greater than zero!"
         )
     }
 
@@ -104,7 +105,7 @@ class TestnetIntegrationTest : ScopedTest() {
             PirateSdk.MINERS_FEE,
             toAddress,
             "first mainnet tx from the SDK"
-        ).filter { it?.isSubmitSuccess() == true }.onFirst {
+        ).filter { it.isSubmitSuccess() }.onFirst {
             log("DONE SENDING!!!")
         }
         log("returning true from sendFunds")
@@ -118,7 +119,7 @@ class TestnetIntegrationTest : ScopedTest() {
     companion object {
         init { Twig.plant(PirateTroubleshootingTwig()) }
 
-        const val host = "lightwalletd.testnet.z.cash"
+        val lightWalletEndpoint = LightWalletEndpoint("lightwalletd.testnet.z.cash", 9087, true)
         private const val birthdayHeight = 963150L
         private const val targetHeight = 663250
         private const val seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
@@ -129,8 +130,8 @@ class TestnetIntegrationTest : ScopedTest() {
         private val context = InstrumentationRegistry.getInstrumentation().context
         private val initializer = runBlocking {
             PirateInitializer.new(context) { config ->
-                config.setNetwork(PirateNetwork.Testnet, host)
-                runBlocking { config.importWallet(seed, BlockHeight.new(PirateNetwork.Testnet, birthdayHeight), PirateNetwork.Testnet) }
+                config.setNetwork(PirateNetwork.Testnet, lightWalletEndpoint)
+                runBlocking { config.importWallet(seed, BlockHeight.new(PirateNetwork.Testnet, birthdayHeight), PirateNetwork.Testnet, lightWalletEndpoint) }
             }
         }
         private lateinit var synchronizer: Synchronizer
