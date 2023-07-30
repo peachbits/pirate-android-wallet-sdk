@@ -2,6 +2,7 @@ package pirate.android.sdk.internal.block
 import pirate.android.sdk.exception.PirateLightWalletException
 import pirate.android.sdk.internal.ext.retryUpTo
 import pirate.android.sdk.internal.ext.tryWarn
+import pirate.android.sdk.internal.repository.PirateCompactBlockRepository
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
@@ -21,17 +22,17 @@ import kotlinx.coroutines.withContext
  * data; although, by default the SDK uses gRPC and SQL.
  *
  * @property lightWalletService the service used for requesting compact blocks
- * @property compactBlockStore responsible for persisting the compact blocks that are received
+ * @property compactBlockRepository responsible for persisting the compact blocks that are received
  */
-open class PirateCompactBlockDownloader private constructor(val compactBlockStore: CompactBlockStore) {
+open class PirateCompactBlockDownloader private constructor(val compactBlockRepository: PirateCompactBlockRepository) {
 
     lateinit var lightWalletService: LightWalletService
         private set
 
     constructor(
         lightWalletService: LightWalletService,
-        compactBlockStore: CompactBlockStore
-    ) : this(compactBlockStore) {
+        compactBlockRepository: PirateCompactBlockRepository
+    ) : this(compactBlockRepository) {
         this.lightWalletService = lightWalletService
     }
 
@@ -46,7 +47,7 @@ open class PirateCompactBlockDownloader private constructor(val compactBlockStor
      */
     suspend fun downloadBlockRange(heightRange: ClosedRange<BlockHeight>): Int = withContext(IO) {
         val result = lightWalletService.getBlockRange(heightRange)
-        compactBlockStore.write(result)
+        compactBlockRepository.write(result)
     }
 
     /**
@@ -58,7 +59,7 @@ open class PirateCompactBlockDownloader private constructor(val compactBlockStor
     suspend fun rewindToHeight(height: BlockHeight) =
         // TODO [#685]: cancel anything in flight
         // TODO [#685]: https://github.com/zcash/zcash-android-wallet-sdk/issues/685
-        compactBlockStore.rewindTo(height)
+        compactBlockRepository.rewindTo(height)
 
     /**
      * Return the latest block height known by the lightwalletService.
@@ -69,12 +70,12 @@ open class PirateCompactBlockDownloader private constructor(val compactBlockStor
         lightWalletService.getLatestBlockHeight()
 
     /**
-     * Return the latest block height that has been persisted into the [CompactBlockStore].
+     * Return the latest block height that has been persisted into the [PirateCompactBlockRepository].
      *
      * @return the latest block height that has been persisted.
      */
     suspend fun getLastDownloadedHeight() =
-        compactBlockStore.getLatestHeight()
+        compactBlockRepository.getLatestHeight()
 
     suspend fun getServerInfo(): Service.LightdInfo = withContext<Service.LightdInfo>(IO) {
         lateinit var result: Service.LightdInfo
@@ -126,7 +127,7 @@ open class PirateCompactBlockDownloader private constructor(val compactBlockStor
         withContext(Dispatchers.IO) {
             lightWalletService.shutdown()
         }
-        compactBlockStore.close()
+        compactBlockRepository.close()
     }
 
     /**

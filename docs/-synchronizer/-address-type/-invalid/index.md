@@ -1,8 +1,8 @@
-[zcash-android-wallet-sdk](../../../../index.md) / [pirate.wallet.sdk](../../../index.md) / [Synchronizer](../../index.md) / [AddressType](../index.md) / [Invalid](./index.md)
+[zcash-android-wallet-sdk](../../../../index.md) / [pirate.wallet.sdk](../../../index.md) / [PirateSynchronizer](../../index.md) / [PirateAddressType](../index.md) / [Invalid](./index.md)
 
 # Invalid
 
-`class Invalid : `[`Synchronizer.AddressType`](../index.md)
+`class Invalid : `[`PirateSynchronizer.PirateAddressType`](../index.md)
 
 ### Constructors
 

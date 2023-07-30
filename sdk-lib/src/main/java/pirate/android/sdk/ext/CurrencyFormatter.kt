@@ -24,7 +24,7 @@ import java.util.Locale
 // TODO [#678]: https://github.com/zcash/zcash-android-wallet-sdk/issues/678
 @Suppress("MagicNumber")
 object Conversions {
-    var ONE_ARRR_IN_ZATOSHI = BigDecimal(Arrrtoshi.ZATOSHI_PER_ARRR, MathContext.DECIMAL128)
+    var ONE_ARRR_IN_ARRRTOSHI = BigDecimal(Arrrtoshi.ARRRTOSHI_PER_ARRR, MathContext.DECIMAL128)
     var ARRR_FORMATTER = NumberFormat.getInstance(Locale.getDefault()).apply {
         roundingMode = RoundingMode.HALF_EVEN
         maximumFractionDigits = 6
@@ -167,7 +167,7 @@ fun currencyFormatter(maxDecimals: Int, minDecimals: Int): NumberFormat {
  */
 fun Arrrtoshi?.convertArrrtoshiToArrr(scale: Int = ARRR_FORMATTER.maximumFractionDigits): BigDecimal {
     return BigDecimal(this?.value ?: 0L, MathContext.DECIMAL128).divide(
-        Conversions.ONE_ARRR_IN_ZATOSHI,
+        Conversions.ONE_ARRR_IN_ARRRTOSHI,
         MathContext.DECIMAL128
     ).setScale(scale, ARRR_FORMATTER.roundingMode)
 }
@@ -187,7 +187,7 @@ fun BigDecimal?.convertArrrToArrrtoshi(): Arrrtoshi {
                 " cannot be negative"
         )
     }
-    return Arrrtoshi(this.multiply(Conversions.ONE_ARRR_IN_ZATOSHI, MathContext.DECIMAL128).toLong())
+    return Arrrtoshi(this.multiply(Conversions.ONE_ARRR_IN_ARRRTOSHI, MathContext.DECIMAL128).toLong())
 }
 
 /**

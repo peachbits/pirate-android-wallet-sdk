@@ -1,16 +1,16 @@
-[zcash-android-wallet-sdk](../../../index.md) / [pirate.wallet.sdk](../../index.md) / [Synchronizer](../index.md) / [AddressType](./index.md)
+[zcash-android-wallet-sdk](../../../index.md) / [pirate.wallet.sdk](../../index.md) / [PirateSynchronizer](../index.md) / [PirateAddressType](./index.md)
 
-# AddressType
+# PirateAddressType
 
-`sealed class AddressType`
+`sealed class PirateAddressType`
 
 ### Types
 
 | Name | Summary |
 |---|---|
-| [Invalid](-invalid/index.md) | `class Invalid : `[`Synchronizer.AddressType`](./index.md) |
-| [Shielded](-shielded.md) | `object Shielded : `[`Synchronizer.AddressType.Valid`](-valid.md)`, `[`Synchronizer.AddressType`](./index.md) |
-| [Transparent](-transparent.md) | `object Transparent : `[`Synchronizer.AddressType.Valid`](-valid.md)`, `[`Synchronizer.AddressType`](./index.md) |
+| [Invalid](-invalid/index.md) | `class Invalid : `[`PirateSynchronizer.PirateAddressType`](./index.md) |
+| [Shielded](-shielded.md) | `object Shielded : `[`PirateSynchronizer.PirateAddressType.Valid`](-valid.md)`, `[`PirateSynchronizer.PirateAddressType`](./index.md) |
+| [Transparent](-transparent.md) | `object Transparent : `[`PirateSynchronizer.PirateAddressType.Valid`](-valid.md)`, `[`PirateSynchronizer.PirateAddressType`](./index.md) |
 | [Valid](-valid.md) | `interface Valid` |
 
 ### Properties
@@ -23,6 +23,6 @@
 
 | Name | Summary |
 |---|---|
-| [Invalid](-invalid/index.md) | `class Invalid : `[`Synchronizer.AddressType`](./index.md) |
-| [Shielded](-shielded.md) | `object Shielded : `[`Synchronizer.AddressType.Valid`](-valid.md)`, `[`Synchronizer.AddressType`](./index.md) |
-| [Transparent](-transparent.md) | `object Transparent : `[`Synchronizer.AddressType.Valid`](-valid.md)`, `[`Synchronizer.AddressType`](./index.md) |
+| [Invalid](-invalid/index.md) | `class Invalid : `[`PirateSynchronizer.PirateAddressType`](./index.md) |
+| [Shielded](-shielded.md) | `object Shielded : `[`PirateSynchronizer.PirateAddressType.Valid`](-valid.md)`, `[`PirateSynchronizer.PirateAddressType`](./index.md) |
+| [Transparent](-transparent.md) | `object Transparent : `[`PirateSynchronizer.PirateAddressType.Valid`](-valid.md)`, `[`PirateSynchronizer.PirateAddressType`](./index.md) |

@@ -1,6 +1,6 @@
 package pirate.fixture
 
-import pirate.android.sdk.db.DatabaseCoordinator
+import pirate.android.sdk.internal.db.DatabaseCoordinator
 import pirate.android.sdk.model.PirateNetwork
 
 object DatabaseNameFixture {

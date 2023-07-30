@@ -2,8 +2,9 @@ package pirate.android.sdk.darkside.test
 
 import androidx.test.platform.app.InstrumentationRegistry
 
-import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.PirateSynchronizer
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.Darkside
 import pirate.android.sdk.model.LightWalletEndpoint
@@ -99,7 +100,7 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
             twig("***  Waiting up to ${timeout / 1_000}s for sync ***")
             synchronizer.status.onEach {
                 twig("got processor status $it")
-                if (it == Synchronizer.Status.DISCONNECTED) {
+                if (it == PirateSynchronizer.Status.DISCONNECTED) {
                     twig("waiting a bit before giving up on connection...")
                 } else if (targetHeight != null && synchronizer.processor.getLastScannedHeight() < targetHeight) {
                     twig("awaiting new blocks from server...")
@@ -109,11 +110,11 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
                 // and in between polls, then consider it that we're not synced
                 if (targetHeight != null && synchronizer.processor.getLastScannedHeight() < targetHeight) {
                     twig("switching status to DOWNLOADING because we're still waiting for height $targetHeight")
-                    Synchronizer.Status.DOWNLOADING
+                    PirateSynchronizer.Status.DOWNLOADING
                 } else {
                     it
                 }
-            }.filter { it == Synchronizer.Status.SYNCED }.first()
+            }.filter { it == PirateSynchronizer.Status.SYNCED }.first()
             twig("***  Done waiting for sync! ***")
         }
     }
@@ -215,8 +216,8 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
                 assertTrue("invalid total balance. Expected a minimum of $total but found ${balance?.total}", total <= balance?.total?.value!!)
             }
         }
-        suspend fun validateBalance(available: Long = -1, total: Long = -1, accountIndex: Int = 0) {
-            val balance = synchronizer.processor.getBalanceInfo(accountIndex)
+        suspend fun validateBalance(available: Long = -1, total: Long = -1, account: Account) {
+            val balance = synchronizer.processor.getBalanceInfo(account)
             if (available > 0) {
                 assertEquals("invalid available balance", available, balance.available)
             }

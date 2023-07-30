@@ -1,9 +1,9 @@
-[zcash-android-wallet-sdk](../../../index.md) / [pirate.android.sdk](../../index.md) / [Synchronizer](../index.md) / [Status](index.md) / [DISCONNECTED](./-d-i-s-c-o-n-n-e-c-t-e-d.md)
+[zcash-android-wallet-sdk](../../../index.md) / [pirate.android.sdk](../../index.md) / [PirateSynchronizer](../index.md) / [Status](index.md) / [DISCONNECTED](./-d-i-s-c-o-n-n-e-c-t-e-d.md)
 
 # DISCONNECTED
 
 `DISCONNECTED`
 
-Indicates that this Synchronizer is disconnected from its lightwalletd server.
+Indicates that this PirateSynchronizer is disconnected from its lightwalletd server.
 When set, a UI element may want to turn red.
 

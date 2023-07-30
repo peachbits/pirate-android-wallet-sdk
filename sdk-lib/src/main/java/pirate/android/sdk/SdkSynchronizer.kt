@@ -1,144 +1,202 @@
 package pirate.android.sdk
 
 import android.content.Context
-import pirate.android.sdk.Synchronizer.PirateStatus.DISCONNECTED
-import pirate.android.sdk.Synchronizer.PirateStatus.DOWNLOADING
-import pirate.android.sdk.Synchronizer.PirateStatus.ENHANCING
-import pirate.android.sdk.Synchronizer.PirateStatus.SCANNING
-import pirate.android.sdk.Synchronizer.PirateStatus.STOPPED
-import pirate.android.sdk.Synchronizer.PirateStatus.SYNCED
-import pirate.android.sdk.Synchronizer.PirateStatus.VALIDATING
+import pirate.android.sdk.PirateSynchronizer.PirateStatus.DISCONNECTED
+import pirate.android.sdk.PirateSynchronizer.PirateStatus.DOWNLOADING
+import pirate.android.sdk.PirateSynchronizer.PirateStatus.ENHANCING
+import pirate.android.sdk.PirateSynchronizer.PirateStatus.SCANNING
+import pirate.android.sdk.PirateSynchronizer.PirateStatus.STOPPED
+import pirate.android.sdk.PirateSynchronizer.PirateStatus.SYNCED
+import pirate.android.sdk.PirateSynchronizer.PirateStatus.VALIDATING
 import pirate.android.sdk.block.PirateCompactBlockProcessor
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Disconnected
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Downloading
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Enhancing
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Initialized
-import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.PirateScanned
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanned
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanning
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Stopped
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Validating
-import pirate.android.sdk.db.DatabaseCoordinator
-import pirate.android.sdk.db.entity.PendingTransaction
-import pirate.android.sdk.db.entity.hasRawTransactionId
-import pirate.android.sdk.db.entity.isCancelled
-import pirate.android.sdk.db.entity.isExpired
-import pirate.android.sdk.db.entity.isFailedSubmit
-import pirate.android.sdk.db.entity.isLongExpired
-import pirate.android.sdk.db.entity.isMarkedForDeletion
-import pirate.android.sdk.db.entity.isMined
-import pirate.android.sdk.db.entity.isSafeToDiscard
-import pirate.android.sdk.db.entity.isSubmitSuccess
-import pirate.android.sdk.db.entity.isSubmitted
-import pirate.android.sdk.exception.PirateSynchronizerException
 import pirate.android.sdk.ext.PirateConsensusBranchId
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.internal.PirateSaplingParamTool
-import pirate.android.sdk.internal.block.PirateCompactBlockDbStore
 import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
-import pirate.android.sdk.internal.block.CompactBlockStore
+import pirate.android.sdk.internal.db.DatabaseCoordinator
+import pirate.android.sdk.internal.db.block.DbPirateCompactBlockRepository
+import pirate.android.sdk.internal.db.derived.DbDerivedDataRepository
+import pirate.android.sdk.internal.db.derived.DerivedDataDb
 import pirate.android.sdk.internal.ext.toHexReversed
 import pirate.android.sdk.internal.ext.tryNull
 import pirate.android.sdk.internal.isEmpty
+import pirate.android.sdk.internal.model.Checkpoint
+import pirate.android.sdk.internal.repository.PirateCompactBlockRepository
+import pirate.android.sdk.internal.repository.DerivedDataRepository
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.transaction.OutboundTransactionManager
-import pirate.android.sdk.internal.transaction.PiratePagedTransactionRepository
 import pirate.android.sdk.internal.transaction.PiratePersistentTransactionManager
 import pirate.android.sdk.internal.transaction.TransactionEncoder
-import pirate.android.sdk.internal.transaction.TransactionRepository
 import pirate.android.sdk.internal.transaction.PirateWalletTransactionEncoder
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
+import pirate.android.sdk.jni.PirateRustBackend
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.PendingTransaction
+import pirate.android.sdk.model.TransactionOverview
+import pirate.android.sdk.model.TransactionRecipient
+import pirate.android.sdk.model.PirateUnifiedSpendingKey
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.tool.PirateDerivationTool
+import pirate.android.sdk.model.isExpired
+import pirate.android.sdk.model.isLongExpired
+import pirate.android.sdk.model.isMarkedForDeletion
+import pirate.android.sdk.model.isMined
+import pirate.android.sdk.model.isSafeToDiscard
+import pirate.android.sdk.model.isSubmitSuccess
 import pirate.android.sdk.type.PirateAddressType
 import pirate.android.sdk.type.PirateAddressType.Shielded
 import pirate.android.sdk.type.PirateAddressType.Transparent
+import pirate.android.sdk.type.PirateAddressType.Unified
 import pirate.android.sdk.type.PirateConsensusMatchType
+import pirate.android.sdk.type.PirateUnifiedFullViewingKey
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.ManagedChannel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 /**
- * A Synchronizer that attempts to remain operational, despite any number of errors that can occur.
+ * A PirateSynchronizer that attempts to remain operational, despite any number of errors that can occur.
  * It acts as the glue that ties all the pieces of the SDK together. Each component of the SDK is
  * designed for the potential of stand-alone usage but coordinating all the interactions is non-
- * trivial. So the Synchronizer facilitates this, acting as reference that demonstrates how all the
+ * trivial. So the PirateSynchronizer facilitates this, acting as reference that demonstrates how all the
  * pieces can be tied together. Its goal is to allow a developer to focus on their app rather than
  * the nuances of how Zcash works.
  *
+ * @property synchronizerKey Identifies the synchronizer's on-disk state
  * @property storage exposes flows of wallet transaction information.
  * @property txManager manages and tracks outbound transactions.
  * @property processor saves the downloaded compact blocks to the cache and then scans those blocks for
  * data related to this wallet.
  */
-@FlowPreview
 @Suppress("TooManyFunctions")
-class PirateSdkSynchronizer internal constructor(
-    private val storage: TransactionRepository,
+class PirateSdkSynchronizer private constructor(
+    private val synchronizerKey: PirateSynchronizerKey,
+    private val storage: DerivedDataRepository,
     private val txManager: OutboundTransactionManager,
-    val processor: PirateCompactBlockProcessor
-) : Synchronizer {
+    val processor: PirateCompactBlockProcessor,
+    private val rustBackend: PirateRustBackend
+) : CloseablePirateSynchronizer {
+
+    companion object {
+        private sealed class InstanceState {
+            object Active : InstanceState()
+            data class ShuttingDown(val job: Job) : InstanceState()
+        }
+
+        private val instances: MutableMap<PirateSynchronizerKey, InstanceState> =
+            ConcurrentHashMap<PirateSynchronizerKey, InstanceState>()
+
+        /**
+         * @throws IllegalStateException If multiple instances of synchronizer with the same network+alias are
+         * active at the same time.  Call `close` to finish one synchronizer before starting another one with the same
+         * network+alias.
+         */
+        @Suppress("LongParameterList")
+        internal suspend fun new(
+            zcashNetwork: PirateNetwork,
+            alias: String,
+            repository: DerivedDataRepository,
+            txManager: OutboundTransactionManager,
+            processor: PirateCompactBlockProcessor,
+            rustBackend: PirateRustBackend
+        ): CloseablePirateSynchronizer {
+            val synchronizerKey = PirateSynchronizerKey(zcashNetwork, alias)
+
+            waitForShutdown(synchronizerKey)
+            checkForExistingPirateSynchronizers(synchronizerKey)
+
+            return PirateSdkSynchronizer(
+                synchronizerKey,
+                repository,
+                txManager,
+                processor,
+                rustBackend
+            ).apply {
+                instances[synchronizerKey] = InstanceState.Active
+
+                start()
+            }
+        }
+
+        private suspend fun waitForShutdown(synchronizerKey: PirateSynchronizerKey) {
+            instances[synchronizerKey]?.let {
+                if (it is InstanceState.ShuttingDown) {
+                    twig("Waiting for prior synchronizer instance to shut down") // $NON-NLS-1$
+                    it.job.join()
+                }
+            }
+        }
+
+        private fun checkForExistingPirateSynchronizers(synchronizerKey: PirateSynchronizerKey) {
+            check(!instances.containsKey(synchronizerKey)) {
+                "Another synchronizer with $synchronizerKey is currently active" // $NON-NLS-1$
+            }
+        }
+
+        internal suspend fun erase(
+            appContext: Context,
+            network: PirateNetwork,
+            alias: String
+        ): Boolean {
+            val key = PirateSynchronizerKey(network, alias)
+
+            waitForShutdown(key)
+            checkForExistingPirateSynchronizers(key)
+
+            return DatabaseCoordinator.getInstance(appContext).deleteDatabases(network, alias)
+        }
+    }
 
     // pools
     private val _orchardBalances = MutableStateFlow<PirateWalletBalance?>(null)
     private val _saplingBalances = MutableStateFlow<PirateWalletBalance?>(null)
     private val _transparentBalances = MutableStateFlow<PirateWalletBalance?>(null)
 
-    private val _status = MutableStateFlow<Synchronizer.PirateStatus>(DISCONNECTED)
+    private val _status = MutableStateFlow<PirateSynchronizer.PirateStatus>(DISCONNECTED)
+
+    var coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     /**
-     * The lifespan of this Synchronizer. This scope is initialized once the Synchronizer starts
-     * because it will be a child of the parentScope that gets passed into the [start] function.
-     * Everything launched by this Synchronizer will be cancelled once the Synchronizer or its
-     * parentScope stops. This coordinates with [isStarted] so that it fails early
-     * rather than silently, whenever the scope is used before the Synchronizer has been started.
-     */
-    var coroutineScope: CoroutineScope = CoroutineScope(EmptyCoroutineContext)
-        get() {
-            if (!isStarted) {
-                throw PirateSynchronizerException.NotYetStarted
-            } else {
-                return field
-            }
-        }
-        set(value) {
-            field = value
-            if (value.coroutineContext !is EmptyCoroutineContext) isStarted = true
-        }
-
-    /**
-     * The channel that this Synchronizer uses to communicate with lightwalletd. In most cases, this
+     * The channel that this PirateSynchronizer uses to communicate with lightwalletd. In most cases, this
      * should not be needed or used. Instead, APIs should be added to the synchronizer to
      * enable the desired behavior. In the rare case, such as testing, it can be helpful to share
      * the underlying channel to connect to the same service, and use other APIs
      * (such as darksidewalletd) because channels are heavyweight.
      */
     val channel: ManagedChannel get() = (processor.downloader.lightWalletService as PirateLightWalletGrpcService).channel
-
-    override var isStarted = false
 
     //
     // Balances
@@ -164,7 +222,7 @@ class PirateSdkSynchronizer internal constructor(
     override val network: PirateNetwork get() = processor.network
 
     /**
-     * Indicates the status of this Synchronizer. This implementation basically simplifies the
+     * Indicates the status of this PirateSynchronizer. This implementation basically simplifies the
      * status of the processor to focus only on the high level states that matter most. Whenever the
      * processor is finished scanning, the synchronizer updates transaction and balance info and
      * then emits a [SYNCED] status.
@@ -172,8 +230,8 @@ class PirateSdkSynchronizer internal constructor(
     override val status = _status.asStateFlow()
 
     /**
-     * Indicates the download progress of the Synchronizer. When progress reaches 100, that
-     * signals that the Synchronizer is in sync with the network. Balances should be considered
+     * Indicates the download progress of the PirateSynchronizer. When progress reaches 100, that
+     * signals that the PirateSynchronizer is in sync with the network. Balances should be considered
      * inaccurate and outbound transactions should be prevented until this sync is complete. It is
      * a simplified version of [processorInfo].
      */
@@ -249,54 +307,31 @@ class PirateSdkSynchronizer internal constructor(
     override val latestBirthdayHeight
         get() = processor.birthdayHeight
 
-    override suspend fun prepare(): Synchronizer = apply {
-        // Do nothing; this could likely be removed
+    internal fun start() {
+        coroutineScope.onReady()
     }
 
-    /**
-     * Starts this synchronizer within the given scope. For simplicity, attempting to start an
-     * instance that has already been started will throw a [PirateSynchronizerException.PirateFalseStart]
-     * exception. This reduces the complexity of managing resources that must be recycled. Instead,
-     * each synchronizer is designed to have a long lifespan and should be started from an activity,
-     * application or session.
-     *
-     * @param parentScope the scope to use for this synchronizer, typically something with a
-     * lifecycle such as an Activity for single-activity apps or a logged in user session. This
-     * scope is only used for launching this synchronizer's job as a child. If no scope is provided,
-     * then this synchronizer and all of its coroutines will run until stop is called, which is not
-     * recommended since it can leak resources. That type of behavior is more useful for tests.
-     *
-     * @return an instance of this class so that this function can be used fluidly.
-     */
-    override fun start(parentScope: CoroutineScope?): Synchronizer {
-        if (isStarted) throw PirateSynchronizerException.PirateFalseStart
-        // base this scope on the parent so that when the parent's job cancels, everything here
-        // cancels as well also use a supervisor job so that one failure doesn't bring down the
-        // whole synchronizer
-        val supervisorJob = SupervisorJob(parentScope?.coroutineContext?.get(Job))
-        CoroutineScope(supervisorJob + Dispatchers.Main).let { scope ->
-            coroutineScope = scope
-            scope.onReady()
-        }
-        return this
-    }
+    override fun close() {
+        // Note that stopping will continue asynchronously.  Race conditions with starting a new synchronizer are
+        // avoided with a delay during startup.
 
-    /**
-     * Stop this synchronizer and all of its child jobs. Once a synchronizer has been stopped it
-     * should not be restarted and attempting to do so will result in an error. Also, this function
-     * will throw an exception if the synchronizer was never previously started.
-     */
-    override fun stop() {
-        coroutineScope.launch {
+        val shutdownJob = coroutineScope.launch {
             // log everything to help troubleshoot shutdowns that aren't graceful
-            twig("Synchronizer::stop: STARTING")
-            twig("Synchronizer::stop: processor.stop()")
+            twig("PirateSynchronizer::stop: STARTING")
+            twig("PirateSynchronizer::stop: processor.stop()")
             processor.stop()
-            twig("Synchronizer::stop: coroutineScope.cancel()")
+        }
+
+        instances[synchronizerKey] = InstanceState.ShuttingDown(shutdownJob)
+
+        shutdownJob.invokeOnCompletion {
+            twig("PirateSynchronizer::stop: coroutineScope.cancel()")
             coroutineScope.cancel()
-            twig("Synchronizer::stop: _status.value = STOPPED")
+            twig("PirateSynchronizer::stop: _status.cancel()")
             _status.value = STOPPED
-            twig("Synchronizer::stop: COMPLETE")
+            twig("PirateSynchronizer::stop: COMPLETE")
+
+            instances.remove(synchronizerKey)
         }
     }
 
@@ -318,6 +353,27 @@ class PirateSdkSynchronizer internal constructor(
         processor.quickRewind()
     }
 
+    override fun getMemos(transactionOverview: TransactionOverview): Flow<String> {
+        return when (transactionOverview.isSentTransaction) {
+            true -> {
+                val sentNoteIds = storage.getSentNoteIds(transactionOverview.id)
+
+                sentNoteIds.map { rustBackend.getSentMemoAsUtf8(it) }.filterNotNull()
+            }
+            false -> {
+                val receivedNoteIds = storage.getReceivedNoteIds(transactionOverview.id)
+
+                receivedNoteIds.map { rustBackend.getReceivedMemoAsUtf8(it) }.filterNotNull()
+            }
+        }
+    }
+
+    override fun getRecipients(transactionOverview: TransactionOverview): Flow<TransactionRecipient> {
+        require(transactionOverview.isSentTransaction) { "Recipients can only be queried for sent transactions" }
+
+        return storage.getRecipients(transactionOverview.id)
+    }
+
     //
     // Storage APIs
     //
@@ -327,7 +383,7 @@ class PirateSdkSynchronizer internal constructor(
     // TODO [#682]: https://github.com/zcash/zcash-android-wallet-sdk/issues/682
 
     suspend fun findBlockHash(height: BlockHeight): ByteArray? {
-        return (storage as? PiratePagedTransactionRepository)?.findBlockHash(height)
+        return storage.findBlockHash(height)
     }
 
     suspend fun findBlockHashAsHex(height: BlockHeight): String? {
@@ -335,7 +391,7 @@ class PirateSdkSynchronizer internal constructor(
     }
 
     suspend fun getTransactionCount(): Int {
-        return (storage as? PiratePagedTransactionRepository)?.getTransactionCount() ?: 0
+        return storage.getTransactionCount().toInt()
     }
 
     fun refreshTransactions() {
@@ -365,7 +421,7 @@ class PirateSdkSynchronizer internal constructor(
 
     suspend fun refreshSaplingBalance() {
         twig("refreshing sapling balance")
-        _saplingBalances.value = processor.getBalanceInfo()
+        _saplingBalances.value = processor.getBalanceInfo(Account.DEFAULT)
     }
 
     suspend fun refreshTransparentBalance() {
@@ -379,16 +435,15 @@ class PirateSdkSynchronizer internal constructor(
 
     private fun CoroutineScope.onReady() = launch(CoroutineExceptionHandler(::onCriticalError)) {
         twig("Preparing to start...")
-        prepare()
 
-        twig("Synchronizer (${this@PirateSdkSynchronizer}) Ready. Starting processor!")
+        twig("PirateSynchronizer (${this@PirateSdkSynchronizer}) Ready. Starting processor!")
         var lastScanTime = 0L
         processor.onProcessorErrorListener = ::onProcessorError
         processor.onSetupErrorListener = ::onSetupError
         processor.onChainErrorListener = ::onChainError
         processor.state.onEach {
             when (it) {
-                is PirateScanned -> {
+                is Scanned -> {
                     val now = System.currentTimeMillis()
                     // do a bit of housekeeping and then report synced status
                     onScanComplete(it.scannedRange, now - lastScanTime)
@@ -409,7 +464,7 @@ class PirateSdkSynchronizer internal constructor(
             }
         }.launchIn(this)
         processor.start()
-        twig("Synchronizer onReady complete. Processor start has exited!")
+        twig("PirateSynchronizer onReady complete. Processor start has exited!")
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -527,38 +582,13 @@ class PirateSdkSynchronizer internal constructor(
             .forEach { pendingTx ->
                 twig("checking for updates on pendingTx id: ${pendingTx.id}")
                 pendingTx.rawTransactionId?.let { rawId ->
-                    storage.findMinedHeight(rawId)?.let { minedHeight ->
+                    storage.findMinedHeight(rawId.byteArray)?.let { minedHeight ->
                         twig(
                             "found matching transaction for pending transaction with id" +
                                 " ${pendingTx.id} mined at height $minedHeight!"
                         )
                         txManager.applyMinedHeight(pendingTx, minedHeight)
                     }
-                }
-            }
-
-        twig("[cleanup] beginning to cleanup cancelled transactions", -1)
-        var hasCleaned = false
-        // Experimental: cleanup cancelled transactions
-        allPendingTxs.filter { it.isCancelled() && it.hasRawTransactionId() }.let { cancellable ->
-            cancellable.forEachIndexed { index, pendingTx ->
-                twig(
-                    "[cleanup] FOUND (${index + 1} of ${cancellable.size})" +
-                        " CANCELLED pendingTxId: ${pendingTx.id}"
-                )
-                hasCleaned = hasCleaned || cleanupCancelledTx(pendingTx)
-            }
-        }
-
-        // Experimental: cleanup failed transactions
-        allPendingTxs.filter { it.isSubmitted() && it.isFailedSubmit() && !it.isMarkedForDeletion() }
-            .let { failed ->
-                failed.forEachIndexed { index, pendingTx ->
-                    twig(
-                        "[cleanup] FOUND (${index + 1} of ${failed.size})" +
-                            " FAILED pendingTxId: ${pendingTx.id}"
-                    )
-                    cleanupCancelledTx(pendingTx)
                 }
             }
 
@@ -581,113 +611,96 @@ class PirateSdkSynchronizer internal constructor(
                     lastScannedHeight,
                     network.saplingActivationHeight
                 ) || it.isSafeToDiscard()
+        }.forEach {
+            val result = txManager.abort(it)
+            twig(
+                "[cleanup] FOUND EXPIRED pendingTX (lastScanHeight: $lastScannedHeight " +
+                    " expiryHeight: ${it.expiryHeight}): and ${it.id} " +
+                    "${if (result > 0) "successfully removed" else "failed to remove"} it"
+            )
         }
-            .forEach {
-                val result = txManager.abort(it)
-                twig(
-                    "[cleanup] FOUND EXPIRED pendingTX (lastScanHeight: $lastScannedHeight " +
-                        " expiryHeight: ${it.expiryHeight}): and ${it.id} " +
-                        "${if (result > 0) "successfully removed" else "failed to remove"} it"
-                )
-            }
 
-        twig("[cleanup] deleting expired transactions from storage", -1)
-        val expiredCount = storage.deleteExpired(lastScannedHeight)
-        if (expiredCount > 0) {
-            twig("[cleanup] deleted $expiredCount expired transaction(s)!")
-        }
-        hasCleaned = hasCleaned || (expiredCount > 0)
-
-        if (hasCleaned) {
-            refreshAllBalances()
-        }
         twig("[cleanup] done refreshing and cleaning up pending transactions", -1)
     }
 
-    private suspend fun cleanupCancelledTx(pendingTx: PendingTransaction): Boolean {
-        return if (storage.cleanupCancelledTx(pendingTx.rawTransactionId!!)) {
-            txManager.markForDeletion(pendingTx.id)
-            true
-        } else {
-            twig("[cleanup] no matching tx was cleaned so the pendingTx will not be marked for deletion")
-            false
+    //
+    // Account management
+    //
+
+    // Not ready to be a public API; internal for testing only
+    internal suspend fun createAccount(seed: ByteArray): PirateUnifiedSpendingKey =
+        processor.createAccount(seed)
+
+    /**
+     * Returns the current Unified Address for this account.
+     */
+    override suspend fun getUnifiedAddress(account: Account): String =
+        processor.getCurrentAddress(account)
+
+    /**
+     * Returns the legacy Sapling address corresponding to the current Unified Address for this account.
+     */
+    override suspend fun getSaplingAddress(account: Account): String =
+        processor.getLegacySaplingAddress(account)
+
+    /**
+     * Returns the legacy transparent address corresponding to the current Unified Address for this account.
+     */
+    override suspend fun getTransparentAddress(account: Account): String =
+        processor.getTransparentAddress(account)
+
+    override fun sendToAddress(
+        usk: PirateUnifiedSpendingKey,
+        amount: Arrrtoshi,
+        toAddress: String,
+        memo: String
+    ): Flow<PendingTransaction> {
+        // Using a job to ensure that even if the flow is collected multiple times, the transaction is only submitted
+        // once
+        val deferred = coroutineScope.async {
+            // Emit the placeholder transaction, then switch to monitoring the database
+            val placeHolderTx = txManager.initSpend(amount, TransactionRecipient.Address(toAddress), memo, usk.account)
+
+            txManager.encode(usk, placeHolderTx).let { encodedTx ->
+                txManager.submit(encodedTx)
+            }
+
+            placeHolderTx.id
+        }
+
+        return flow<PendingTransaction> {
+            val placeHolderTxId = deferred.await()
+            emitAll(txManager.monitorById(placeHolderTxId))
         }
     }
 
-    //
-    // Send / Receive
-    //
-
-    override suspend fun cancelSpend(pendingId: Long) = txManager.cancel(pendingId)
-
-    override suspend fun getAddress(accountId: Int): String = getShieldedAddress(accountId)
-
-    override suspend fun getShieldedAddress(accountId: Int): String =
-        processor.getShieldedAddress(accountId)
-
-    override suspend fun getTransparentAddress(accountId: Int): String =
-        processor.getTransparentAddress(accountId)
-
-    override fun sendToAddress(
-        spendingKey: String,
-        amount: Arrrtoshi,
-        toAddress: String,
-        memo: String,
-        fromAccountIndex: Int
-    ): Flow<PendingTransaction> = flow {
-        twig("Initializing pending transaction")
-        // Emit the placeholder transaction, then switch to monitoring the database
-        txManager.initSpend(amount, toAddress, memo, fromAccountIndex).let { placeHolderTx ->
-            emit(placeHolderTx)
-            txManager.encode(spendingKey, placeHolderTx).let { encodedTx ->
-                // only submit if it wasn't cancelled. Otherwise cleanup, immediately for best UX.
-                if (encodedTx.isCancelled()) {
-                    twig("[cleanup] this tx has been cancelled so we will cleanup instead of submitting")
-                    if (cleanupCancelledTx(encodedTx)) {
-                        refreshAllBalances()
-                    }
-                } else {
-                    txManager.submit(encodedTx)
-                }
-            }
-        }
-    }.flatMapLatest {
-        // switch this flow over to monitoring the database for transactions
-        // so we emit the placeholder TX above, then watch the database for all further updates
-        twig("Monitoring pending transaction (id: ${it.id}) for updates...")
-        txManager.monitorById(it.id)
-    }.distinctUntilChanged()
-
     override fun shieldFunds(
-        spendingKey: String,
-        transparentSecretKey: String,
+        usk: PirateUnifiedSpendingKey,
         memo: String
-    ): Flow<PendingTransaction> = flow {
+    ): Flow<PendingTransaction> {
         twig("Initializing shielding transaction")
-        val tAddr =
-            PirateDerivationTool.deriveTransparentAddressFromPrivateKey(transparentSecretKey, network)
-        val tBalance = processor.getUtxoCacheBalance(tAddr)
-        val zAddr = getAddress(0)
+        val deferred = coroutineScope.async {
+            val tAddr = processor.getTransparentAddress(usk.account)
+            val tBalance = processor.getUtxoCacheBalance(tAddr)
 
-        // Emit the placeholder transaction, then switch to monitoring the database
-        txManager.initSpend(tBalance.available, zAddr, memo, 0).let { placeHolderTx ->
-            emit(placeHolderTx)
-            txManager.encode(spendingKey, transparentSecretKey, placeHolderTx).let { encodedTx ->
-                // only submit if it wasn't cancelled. Otherwise cleanup, immediately for best UX.
-                if (encodedTx.isCancelled()) {
-                    twig("[cleanup] this shielding tx has been cancelled so we will cleanup instead of submitting")
-                    if (cleanupCancelledTx(encodedTx)) {
-                        refreshAllBalances()
-                    }
-                } else {
-                    txManager.submit(encodedTx)
-                }
-            }
+            // Emit the placeholder transaction, then switch to monitoring the database
+            val placeHolderTx = txManager.initSpend(
+                tBalance.available,
+                TransactionRecipient.Account(usk.account),
+                memo,
+                usk.account
+            )
+            val encodedTx = txManager.encode("", usk, placeHolderTx)
+            txManager.submit(encodedTx)
+
+            placeHolderTx.id
         }
-    }.flatMapLatest {
-        twig("Monitoring shielding transaction (id: ${it.id}) for updates...")
-        txManager.monitorById(it.id)
-    }.distinctUntilChanged()
+
+        return flow<PendingTransaction> {
+            val placeHolderTxId = deferred.await()
+            emitAll(txManager.monitorById(placeHolderTxId))
+        }
+    }
 
     override suspend fun refreshUtxos(tAddr: String, since: BlockHeight): Int? {
         return processor.refreshUtxos(tAddr, since)
@@ -703,30 +716,23 @@ class PirateSdkSynchronizer internal constructor(
     override suspend fun isValidTransparentAddr(address: String) =
         txManager.isValidTransparentAddress(address)
 
+    override suspend fun isValidUnifiedAddr(address: String) =
+        txManager.isValidUnifiedAddress(address)
+
     override suspend fun validateAddress(address: String): PirateAddressType {
         @Suppress("TooGenericExceptionCaught")
         return try {
             if (isValidShieldedAddr(address)) {
                 Shielded
-            } else {
+            } else if (isValidTransparentAddr(address)) {
                 Transparent
+            } else if (isValidUnifiedAddr(address)) {
+                Unified
+            } else {
+                PirateAddressType.Invalid("Not a Zcash address")
             }
-        } catch (zError: Throwable) {
-            val message = zError.message
-            try {
-                if (isValidTransparentAddr(address)) {
-                    Transparent
-                } else {
-                    Shielded
-                }
-            } catch (tError: Throwable) {
-                val reason = if (message != tError.message) {
-                    "$message and ${tError.message}"
-                } else {
-                    message ?: "Invalid"
-                }
-                PirateAddressType.PirateInvalid(reason)
-            }
+        } catch (@Suppress("TooGenericExceptionCaught") error: Throwable) {
+            PirateAddressType.Invalid(error.message ?: "Invalid")
         }
     }
 
@@ -740,25 +746,6 @@ class PirateSdkSynchronizer internal constructor(
             serverBranchId?.let { PirateConsensusBranchId.fromHex(it) }
         )
     }
-
-    interface Erasable {
-        /**
-         * Erase content related to this SDK.
-         *
-         * @param appContext the application context.
-         * @param network the network corresponding to the data being erased. Data is segmented by
-         * network in order to prevent contamination.
-         * @param alias identifier for SDK content. It is possible for multiple synchronizers to
-         * exist with different aliases.
-         *
-         * @return true when content was found for the given alias. False otherwise.
-         */
-        suspend fun erase(
-            appContext: Context,
-            network: PirateNetwork,
-            alias: String = PirateSdk.DEFAULT_ALIAS
-        ): Boolean
-    }
 }
 
 /**
@@ -766,86 +753,90 @@ class PirateSdkSynchronizer internal constructor(
  *
  * See the helper methods for generating default values.
  */
-object DefaultSynchronizerFactory {
+internal object DefaultPirateSynchronizerFactory {
 
-    fun new(
-        repository: TransactionRepository,
-        txManager: OutboundTransactionManager,
-        processor: PirateCompactBlockProcessor,
-    ): Synchronizer {
-        // call the actual constructor now that all dependencies have been injected
-        // alternatively, this entire object graph can be supplied by Dagger
-        // This builder just makes that easier.
-        return PirateSdkSynchronizer(
-            repository,
-            txManager,
-            processor
+    internal suspend fun defaultPirateRustBackend(
+        context: Context,
+        network: PirateNetwork,
+        alias: String,
+        blockHeight: BlockHeight,
+        saplingParamTool: PirateSaplingParamTool
+    ): PirateRustBackend {
+        val coordinator = DatabaseCoordinator.getInstance(context)
+
+        return PirateRustBackend.init(
+            coordinator.cacheDbFile(network, alias),
+            coordinator.dataDbFile(network, alias),
+            saplingParamTool.properties.paramsDirectory,
+            network,
+            blockHeight
         )
     }
 
-    // TODO [#242]: Don't hard code page size.  It is a workaround for Uncaught Exception:
-    //  android.view.ViewRootImpl$CalledFromWrongThreadException: Only the original thread that created a view hierarchy
-    //  can touch its views. and is probably related to FlowPagedList
-    // TODO [#242]: https://github.com/zcash/zcash-android-wallet-sdk/issues/242
-    private const val DEFAULT_PAGE_SIZE = 1000
-    suspend fun defaultTransactionRepository(initializer: PirateInitializer): TransactionRepository =
-        PiratePagedTransactionRepository.new(
-            initializer.context,
-            initializer.network,
-            DEFAULT_PAGE_SIZE,
-            initializer.rustBackend,
-            initializer.checkpoint,
-            initializer.viewingKeys,
-            initializer.overwriteVks
+    @Suppress("LongParameterList")
+    internal suspend fun defaultDerivedDataRepository(
+        context: Context,
+        rustBackend: PirateRustBackend,
+        zcashNetwork: PirateNetwork,
+        checkpoint: Checkpoint,
+        seed: ByteArray?,
+        viewingKeys: List<PirateUnifiedFullViewingKey>
+    ): DerivedDataRepository =
+        DbDerivedDataRepository(DerivedDataDb.new(context, rustBackend, zcashNetwork, checkpoint, seed, viewingKeys))
+
+    internal fun defaultPirateCompactBlockRepository(context: Context, cacheDbFile: File, zcashNetwork: PirateNetwork):
+        PirateCompactBlockRepository =
+        DbPirateCompactBlockRepository.new(
+            context,
+            zcashNetwork,
+            cacheDbFile
         )
 
-    fun defaultBlockStore(initializer: PirateInitializer): CompactBlockStore =
-        PirateCompactBlockDbStore.new(
-            initializer.context,
-            initializer.network,
-            initializer.rustBackend.cacheDbFile
-        )
-
-    fun defaultService(initializer: PirateInitializer): LightWalletService =
-        PirateLightWalletGrpcService.new(initializer.context, initializer.lightWalletEndpoint)
+    fun defaultService(context: Context, lightWalletEndpoint: LightWalletEndpoint): LightWalletService =
+        PirateLightWalletGrpcService.new(context, lightWalletEndpoint)
 
     internal fun defaultEncoder(
-        initializer: PirateInitializer,
+        rustBackend: PirateRustBackend,
         saplingParamTool: PirateSaplingParamTool,
-        repository: TransactionRepository
-    ): TransactionEncoder = PirateWalletTransactionEncoder(initializer.rustBackend, saplingParamTool, repository)
+        repository: DerivedDataRepository
+    ): TransactionEncoder = PirateWalletTransactionEncoder(rustBackend, saplingParamTool, repository)
 
     fun defaultDownloader(
         service: LightWalletService,
-        blockStore: CompactBlockStore
+        blockStore: PirateCompactBlockRepository
     ): PirateCompactBlockDownloader = PirateCompactBlockDownloader(service, blockStore)
 
-    suspend fun defaultTxManager(
-        initializer: PirateInitializer,
+    internal suspend fun defaultTxManager(
+        context: Context,
+        zcashNetwork: PirateNetwork,
+        alias: String,
         encoder: TransactionEncoder,
         service: LightWalletService
     ): OutboundTransactionManager {
-        val databaseFile = DatabaseCoordinator.getInstance(initializer.context).pendingTransactionsDbFile(
-            initializer.network,
-            initializer.alias
+        val databaseFile = DatabaseCoordinator.getInstance(context).pendingTransactionsDbFile(
+            zcashNetwork,
+            alias
         )
 
-        return PiratePersistentTransactionManager(
-            initializer.context,
+        return PiratePersistentTransactionManager.new(
+            context,
+            zcashNetwork,
             encoder,
             service,
             databaseFile
         )
     }
 
-    fun defaultProcessor(
-        initializer: PirateInitializer,
+    internal fun defaultProcessor(
+        rustBackend: PirateRustBackend,
         downloader: PirateCompactBlockDownloader,
-        repository: TransactionRepository
+        repository: DerivedDataRepository
     ): PirateCompactBlockProcessor = PirateCompactBlockProcessor(
         downloader,
         repository,
-        initializer.rustBackend,
-        initializer.rustBackend.birthdayHeight
+        rustBackend,
+        rustBackend.birthdayHeight
     )
 }
+
+internal data class PirateSynchronizerKey(val zcashNetwork: PirateNetwork, val alias: String)

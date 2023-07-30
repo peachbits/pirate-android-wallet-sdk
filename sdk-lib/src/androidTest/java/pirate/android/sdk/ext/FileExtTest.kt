@@ -5,6 +5,7 @@ import pirate.android.sdk.internal.ext.createNewFileSuspend
 import pirate.android.sdk.internal.ext.existsSuspend
 import pirate.android.sdk.internal.ext.getSha1Hash
 import pirate.android.sdk.test.getAppContext
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -25,6 +26,7 @@ class FileExtTest {
 
     @Test
     @SmallTest
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun check_empty_file_sha1_result() = runTest {
         testFile.apply {
             createNewFileSuspend()
@@ -39,6 +41,7 @@ class FileExtTest {
 
     @Test
     @SmallTest
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun check_not_empty_file_sha1_result() = runTest {
         testFile.apply {
             createNewFileSuspend()

@@ -1,8 +1,8 @@
-[zcash-android-wallet-sdk](../../../index.md) / [pirate.android.sdk](../../index.md) / [Synchronizer](../index.md) / [Status](index.md) / [DOWNLOADING](./-d-o-w-n-l-o-a-d-i-n-g.md)
+[zcash-android-wallet-sdk](../../../index.md) / [pirate.android.sdk](../../index.md) / [PirateSynchronizer](../index.md) / [Status](index.md) / [DOWNLOADING](./-d-o-w-n-l-o-a-d-i-n-g.md)
 
 # DOWNLOADING
 
 `DOWNLOADING`
 
-Indicates that this Synchronizer is actively downloading new blocks from the server.
+Indicates that this PirateSynchronizer is actively downloading new blocks from the server.
 

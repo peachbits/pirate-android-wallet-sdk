@@ -22,12 +22,12 @@ data class Arrrtoshi(val value: Long) : Comparable<Arrrtoshi> {
         /**
          * The number of Arrrtoshi that equal 1 ARRR.
          */
-        const val ZATOSHI_PER_ARRR = 100_000_000L
+        const val ARRRTOSHI_PER_ARRR = 100_000_000L
 
         private const val MAX_ZEC_SUPPLY = 21_000_000
 
         const val MIN_INCLUSIVE = 0
 
-        const val MAX_INCLUSIVE = ZATOSHI_PER_ARRR * MAX_ZEC_SUPPLY
+        const val MAX_INCLUSIVE = ARRRTOSHI_PER_ARRR * MAX_ZEC_SUPPLY
     }
 }

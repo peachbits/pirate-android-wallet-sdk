@@ -18,8 +18,14 @@ android {
         multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
     }
+
     buildFeatures {
+        compose = true
         viewBinding = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.androidx.compose.compiler.get().versionConstraint.displayName
     }
 
     val releaseKeystorePath = project.property("ZCASH_RELEASE_KEYSTORE_PATH").toString()
@@ -66,15 +72,26 @@ android {
     buildTypes {
         getByName("release").apply {
             isMinifyEnabled = project.property("IS_MINIFY_APP_ENABLED").toString().toBoolean()
-            proguardFiles.addAll(
-                listOf(
-                    getDefaultProguardFile("proguard-android-optimize.txt"),
-                    File("proguard-project.txt")
-                )
+            isShrinkResources = project.property("IS_MINIFY_APP_ENABLED").toString().toBoolean()
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-project.txt"
             )
+            val isSignReleaseBuildWithDebugKey = project.property("IS_SIGN_RELEASE_BUILD_WITH_DEBUG_KEY")
+                .toString().toBoolean()
+
             if (isReleaseSigningConfigured) {
                 signingConfig = signingConfigs.getByName("release")
+            } else if (isSignReleaseBuildWithDebugKey) {
+                // Warning: in this case the release build signed with the debug key
+                signingConfig = signingConfigs.getByName("debug")
             }
+        }
+        create("benchmark") {
+            // We provide the extra benchmark build type just for benchmarking purposes
+            initWith(buildTypes.getByName("release"))
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
         }
     }
 
@@ -92,15 +109,29 @@ dependencies {
     implementation(libs.bip39)
 
     // Android
-    implementation(libs.androidx.core)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.core)
     implementation(libs.androidx.multidex)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.bundles.androidx.compose.core)
+    implementation(libs.bundles.androidx.compose.extended)
     implementation(libs.material)
+
+    // Just to support profile installation and tracing events needed by benchmark tests
+    implementation(libs.androidx.profileinstaller)
+    implementation(libs.androidx.tracing)
+
     androidTestImplementation(libs.bundles.androidx.test)
+    androidTestImplementation(libs.androidx.compose.test.junit)
+    androidTestImplementation(libs.androidx.compose.test.manifest)
+    androidTestImplementation(libs.kotlin.reflect)
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    androidTestImplementation(libs.kotlin.test)
 
     implementation(libs.bundles.grpc)
+    implementation(libs.kotlinx.datetime)
 }
 
 fladle {
@@ -153,3 +184,11 @@ fladle {
         }
     }
 }
+
+// This is a workaround for issue #723.
+// Native libraries are missing after this: `./gradlew clean; ./gradlew :demo-app:assemble`
+// But are present after this: `./gradlew clean; ./gradlew assemble`
+// The second one probably doesn't solve the problem, as there's probably a race condition in the Rust Gradle Plugin.
+// This hack ensures that the SDK is completely built before the demo app starts being built.  There may be more
+// efficient or better solutions we can find later.
+tasks.getByName("assemble").dependsOn(":sdk-lib:assemble")

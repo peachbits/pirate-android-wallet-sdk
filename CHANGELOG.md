@@ -1,6 +1,83 @@
 Change Log
 ==========
 
+## Unreleased
+
+### Added
+- `cash.z.ecc.android.sdk`:
+  - `PirateSynchronizer.getUnifiedAddress`
+  - `PirateSynchronizer.getSaplingAddress`
+  - `PirateSynchronizer.isValidUnifiedAddr`
+  - `PirateSynchronizer.getMemos(TransactionOverview)`
+  - `PirateSynchronizer.getReceipients(TransactionOverview)`
+- `cash.z.ecc.android.sdk.model`:
+  - `Account`
+  - `FirstClassByteArray`
+  - `PendingTransaction`
+  - `Transaction`
+  - `PirateUnifiedSpendingKey`
+- `cash.z.ecc.android.sdk.tool`:
+  - `PirateDerivationTool.derivePirateUnifiedSpendingKey`
+  - `PirateDerivationTool.derivePirateUnifiedFullViewingKey`
+  - `PirateDerivationTool.deriveTransparentAccountPrivateKey`
+  - `PirateDerivationTool.deriveTransparentAddressFromAccountPrivateKey`
+  - `PirateDerivationTool.deriveUnifiedAddress`
+  - `PirateDerivationTool.derivePirateUnifiedFullViewingKeys`
+  - `PirateDerivationTool.validatePirateUnifiedFullViewingKey`
+    - Still unimplemented.
+- `cash.z.ecc.android.sdk.type`:
+  - `PirateAddressType.Unified`
+  - `PirateUnifiedFullViewingKey`, representing a Unified Full Viewing Key as specified in
+    [ZIP 316](https://zips.z.cash/zip-0316#encoding-of-unified-full-incoming-viewing-keys).
+
+### Changed
+- The following methods now take or return `PirateUnifiedFullViewingKey` instead of
+  `PirateUnifiedViewingKey`:
+    - `cash.z.ecc.android.sdk`:
+      - `Initializer.Config.addViewingKey`
+      - `Initializer.Config.importWallet`
+      - `Initializer.Config.newWallet`
+      - `Initializer.Config.setViewingKeys`
+- `cash.z.ecc.android.sdk`:
+  - `PirateSynchronizer.Companion.new` now takes many of the arguments previously passed to `Initializer`. In addition, an optional `seed` argument is required for first-time initialization or if `PirateSynchronizer.new` throws an exception indicating that an internal migration requires the wallet seed.  (This second case will be true the first time existing clients upgrade to this new version of the SDK).
+  - `PirateSynchronizer.new()` now returns an instance that implements the `Closeable` interface.  `PirateSynchronizer.stop()` is effectively renamed to `PirateSynchronizer.close()`
+  - `PirateSynchronizer` ensures that multiple instances cannot be running concurrently with the same network and alias
+  - `PirateSynchronizer.sendToAddress` now takes a `PirateUnifiedSpendingKey` instead of an encoded
+    Sapling extended spending key, and the `fromAccountIndex` argument is now implicit in
+    the `PirateUnifiedSpendingKey`.
+  - `PirateSynchronizer.shieldFunds` now takes a `PirateUnifiedSpendingKey` instead of separately
+    encoded Sapling and transparent keys.
+  - `PirateSynchronizer` methods that previously took an `Int` for account index now take an `Account` object
+  - `PirateSynchronizer.sendToAddress()` and `PirateSynchronizer.shieldFunds()` return flows that can now be collected multiple times.  Prior versions of the SDK had a bug that could submit transactions multiple times if the flow was collected more than once.
+- Updated dependencies:
+  - Kotlin 1.7.21
+  - AndroidX  
+  - etc.
+- Updated checkpoints
+
+### Removed
+- `cash.z.ecc.android.sdk`:
+  - `Initializer` (use `PirateSynchronizer.new` instead)
+  - `PirateSynchronizer.start()` - PirateSynchronizer is now started automatically when constructing a new instance.
+  - `PirateSynchronizer.getAddress` (use `PirateSynchronizer.getUnifiedAddress` instead).
+  - `PirateSynchronizer.getShieldedAddress` (use `PirateSynchronizer.getSaplingAddress` instead)
+  - `PirateSynchronizer.cancel`
+  - `PirateSynchronizer.cancelSpend`
+- `pirate.android.sdk.type.PirateUnifiedViewingKey`
+  - This type had a bug where the `extpub` field actually was storing a plain transparent
+    public key, and not the extended public key as intended. This made it incompatible
+    with ZIP 316.
+- `cash.z.ecc.android.sdk.tool`:
+  - `PirateDerivationTool.deriveSpendingKeys` (use `PirateDerivationTool.derivePirateUnifiedSpendingKey` instead)
+  - `PirateDerivationTool.deriveViewingKey` (use `PirateDerivationTool.derivePirateUnifiedFullViewingKey` instead)
+  - `PirateDerivationTool.deriveTransparentAddress` (use `PirateSynchronizer.getLegacyTransparentAddress` instead).
+  - `PirateDerivationTool.deriveTransparentAddressFromPrivateKey` (use `PirateSynchronizer.getLegacyTransparentAddress` instead).
+  - `PirateDerivationTool.deriveTransparentAddressFromPublicKey` (use `PirateSynchronizer.getLegacyTransparentAddress` instead).
+  - `PirateDerivationTool.deriveTransparentSecretKey` (use `PirateDerivationTool.derivePirateUnifiedSpendingKey` instead).
+  - `PirateDerivationTool.deriveShieldedAddress`
+  - `PirateDerivationTool.derivePirateUnifiedViewingKeys` (use `PirateDerivationTool.derivePirateUnifiedFullViewingKey` instead)
+  - `PirateDerivationTool.validatePirateUnifiedViewingKey`
+
 Version 1.9.0-beta05
 ------------------------------------
 - The minimum version of Android supported is now API 21
@@ -8,7 +85,7 @@ Version 1.9.0-beta05
 
 Version 1.9.0-beta04
 ------------------------------------
-- The SDK now stores sapling param files in `no_backup/co.electricoin.zcash` folder instead of the `cache/params` 
+- The SDK now stores sapling param files in `no_backup/co.electricoin.zcash` folder instead of the `cache/params`
   folder. Besides that, `PirateSaplingParamTool` also does validation of downloaded sapling param file hash and size.
 **No action required from client app**.
 
@@ -28,7 +105,7 @@ Version 1.9.0-beta01
 
 Version 1.8.0-beta01
 ------------------------------------
-- Enabled automated unit tests run on the CI server 
+- Enabled automated unit tests run on the CI server
 - Added `BlockHeight` typesafe object to represent block heights
 - Significantly reduced memory usage, fixing potential OutOfMemoryError during block download
 - Kotlin 1.7.10
@@ -95,7 +172,7 @@ Version 1.3.0-beta16
 - New: Expose StateFlows for balances.
 - New: Make it easier to subscribe to transactions.
 - New: Cleanup default logs.
-- New: Convenience functions for WalletBalance objects.
+- New: Convenience functions for PirateWalletBalance objects.
 
 Version 1.3.0-beta15
 ------------------------------------
@@ -150,7 +227,7 @@ Version 1.3.0-beta05
 - New: Adds Ktlint [Credit: @nighthawk24]
 - Fix: Added PirateSaplingParamTool and ability to clear param files from cache [Credit: @herou]
 - New: Added responsible disclosure document for vulnerabilities [Credit: @zebambam]
-- New: UnifiedViewingKey concept.
+- New: PirateUnifiedViewingKey concept.
 - New: Adds support for autoshielding, including database migrations.
 - New: Adds basic support for UTXOs, including refresh during scan.
 - New: Support the ability to wipe all sqlite data and rebuild from keys.
@@ -206,7 +283,7 @@ Version 1.1.0-beta08
 
 Version 1.1.0-beta05
 ------------------------------------
-- New: Synchronizer can now be started with just a viewing key.
+- New: PirateSynchronizer can now be started with just a viewing key.
 - New: PirateInitializer improvements.
 - New: Added tool for loading checkpoints.
 - New: Added tool for deriving keys and addresses, statically.

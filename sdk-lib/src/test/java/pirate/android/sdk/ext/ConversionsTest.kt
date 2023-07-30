@@ -1,21 +1,21 @@
 package pirate.android.sdk.ext
 
 import pirate.android.sdk.model.Arrrtoshi
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.math.MathContext
+import kotlin.test.assertEquals
 
-internal class PirateConversionsTest {
+class ConversionsTest {
 
     @Test
     fun `default right padding is 6`() {
-        assertEquals(1.13.toArrr(6), Arrrtoshi(113000000L).convertArrrtoshiToArrr())
-        assertEquals(1.13.toArrr(6), 1.13.toArrr())
+        assertEquals(1.13.toZec(6), Arrrtoshi(113000000L).convertArrrtoshiToZec())
+        assertEquals(1.13.toZec(6), 1.13.toZec())
     }
 
     @Test
-    fun `toArrr uses banker's rounding`() {
+    fun `toZec uses banker's rounding`() {
         assertEquals("1.004", 1.0035.toArrrString(3))
         assertEquals("1.004", 1.0045.toArrrString(3))
     }
@@ -82,10 +82,10 @@ internal class PirateConversionsTest {
     }
 
     @Test
-    fun `toArrr reduces precision`() {
+    fun `toZec reduces precision`() {
         val amount = "20.37905033625433054819645404524149".safelyConvertToBigDecimal()
         val expected = "20.379050".safelyConvertToBigDecimal()
-        assertEquals(expected, amount.toArrr(6))
+        assertEquals(expected, amount.toZec(6))
         assertEquals("20.37905", amount.toArrrString(6))
     }
 
@@ -93,7 +93,7 @@ internal class PirateConversionsTest {
     fun `convert usd to zec`() {
         val price = BigDecimal("49.07", MathContext.DECIMAL128)
         val usdValue = "1000".safelyConvertToBigDecimal()
-        val zecValue = usdValue.convertUsdToArrr(price)
-        assertEquals("20.379050".safelyConvertToBigDecimal(), zecValue.toArrr(6))
+        val zecValue = usdValue.convertUsdToZec(price)
+        assertEquals("20.379050".safelyConvertToBigDecimal(), zecValue.toZec(6))
     }
 }

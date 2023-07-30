@@ -3,6 +3,7 @@ package pirate.android.sdk.internal.ext.android
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,6 +24,7 @@ abstract class PirateComputableFlow<T>(dispatcher: CoroutineDispatcher = Dispatc
         computationScope.launch { computationFlow.emit(compute()) }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun cancel() {
         computationScope.cancel()
         computationFlow.resetReplayCache()

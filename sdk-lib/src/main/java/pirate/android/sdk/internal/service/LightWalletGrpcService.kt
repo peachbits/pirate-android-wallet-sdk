@@ -1,8 +1,9 @@
 package pirate.android.sdk.internal.service
 
 import android.content.Context
-
 import pirate.android.sdk.annotation.PirateOpenForTesting
+import pirate.android.sdk.ext.BenchmarkingExt
+import pirate.android.sdk.fixture.BlockRangeFixture
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.LightWalletEndpoint
@@ -51,10 +52,16 @@ class PirateLightWalletGrpcService private constructor(
     }
 
     override fun getLatestBlockHeight(): BlockHeight {
-        return BlockHeight(
-            requireChannel().createStub(singleRequestTimeout)
-                .getLatestBlock(Service.ChainSpec.newBuilder().build()).height
-        )
+        return if (BenchmarkingExt.isBenchmarking()) {
+            // We inject a benchmark test blocks range at this point to process only a restricted range of blocks
+            // for a more reliable benchmark results.
+            BlockRangeFixture.new().endInclusive
+        } else {
+            BlockHeight(
+                requireChannel().createStub(singleRequestTimeout)
+                    .getLatestBlock(Service.ChainSpec.newBuilder().build()).height
+            )
+        }
     }
 
     override fun getServerInfo(): Service.LightdInfo {

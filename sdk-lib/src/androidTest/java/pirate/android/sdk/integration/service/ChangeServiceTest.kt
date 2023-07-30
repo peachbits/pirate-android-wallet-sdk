@@ -9,7 +9,7 @@ import pirate.android.sdk.annotation.TestPurpose
 import pirate.android.sdk.exception.PirateLightWalletException.PirateChangeServerException.PirateChainInfoNotMatching
 import pirate.android.sdk.exception.PirateLightWalletException.PirateChangeServerException.PirateStatusException
 import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
-import pirate.android.sdk.internal.block.CompactBlockStore
+import pirate.android.sdk.internal.repository.PirateCompactBlockRepository
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
@@ -45,7 +45,7 @@ class ChangeServiceTest : ScopedTest() {
     private val eccEndpoint = LightWalletEndpoint("lightd1.pirate.black", 443, true)
 
     @Mock
-    lateinit var mockBlockStore: CompactBlockStore
+    lateinit var mockBlockStore: PirateCompactBlockRepository
     var mockCloseable: AutoCloseable? = null
 
     @Spy

@@ -2,21 +2,28 @@ package pirate.android.sdk.internal.transaction
 
 import android.content.Context
 import androidx.room.RoomDatabase
-import pirate.android.sdk.db.commonDatabaseBuilder
-import pirate.android.sdk.db.entity.PendingTransaction
-import pirate.android.sdk.db.entity.PiratePendingTransactionEntity
-import pirate.android.sdk.db.entity.isCancelled
-import pirate.android.sdk.db.entity.isFailedEncoding
-import pirate.android.sdk.db.entity.isSubmitted
-import pirate.android.sdk.internal.db.PendingTransactionDao
-import pirate.android.sdk.internal.db.PiratePendingTransactionDb
+import pirate.android.sdk.ext.PirateSdk
+import pirate.android.sdk.internal.db.commonDatabaseBuilder
+import pirate.android.sdk.internal.db.pending.PendingTransactionDao
+import pirate.android.sdk.internal.db.pending.PiratePendingTransactionDb
+import pirate.android.sdk.internal.db.pending.PiratePendingTransactionEntity
+import pirate.android.sdk.internal.db.pending.isCancelled
+import pirate.android.sdk.internal.db.pending.isFailedEncoding
+import pirate.android.sdk.internal.db.pending.isSubmitted
+import pirate.android.sdk.internal.db.pending.recipient
 import pirate.android.sdk.internal.service.LightWalletService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.PendingTransaction
+import pirate.android.sdk.model.TransactionRecipient
+import pirate.android.sdk.model.PirateUnifiedSpendingKey
 import pirate.android.sdk.model.Arrrtoshi
+import pirate.android.sdk.model.PirateNetwork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -35,8 +42,9 @@ import kotlin.math.max
  * @property service the lightwallet service used to submit transactions.
  */
 @Suppress("TooManyFunctions")
-class PiratePersistentTransactionManager(
+internal class PiratePersistentTransactionManager(
     db: PiratePendingTransactionDb,
+    private val zcashNetwork: PirateNetwork,
     internal val encoder: TransactionEncoder,
     private val service: LightWalletService
 ) : OutboundTransactionManager {
@@ -49,40 +57,36 @@ class PiratePersistentTransactionManager(
      */
     private val _dao: PendingTransactionDao = db.pendingTransactionDao()
 
-    /**
-     * Constructor that creates the database and then executes a callback on it.
-     */
-    constructor(
-        appContext: Context,
-        encoder: TransactionEncoder,
-        service: LightWalletService,
-        databaseFile: File
-    ) : this(
-        commonDatabaseBuilder(
-            appContext,
-            PiratePendingTransactionDb::class.java,
-            databaseFile
-        ).setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build(),
-        encoder,
-        service
-    )
-
     //
     // OutboundTransactionManager implementation
     //
 
     override suspend fun initSpend(
         zatoshi: Arrrtoshi,
-        toAddress: String,
+        recipient: TransactionRecipient,
         memo: String,
-        fromAccountIndex: Int
+        account: Account
     ): PendingTransaction = withContext(Dispatchers.IO) {
         twig("constructing a placeholder transaction")
+
+        val toAddress = if (recipient is TransactionRecipient.Address) {
+            recipient.addressValue
+        } else {
+            null
+        }
+        val toInternal = if (recipient is TransactionRecipient.Account) {
+            recipient.accountValue
+        } else {
+            null
+        }
+
         var tx = PiratePendingTransactionEntity(
-            value = zatoshi.value,
             toAddress = toAddress,
+            toInternalAccountIndex = toInternal?.value,
+            value = zatoshi.value,
+            fee = PirateSdk.MINERS_FEE.value,
             memo = memo.toByteArray(),
-            accountIndex = fromAccountIndex
+            sentFromAccountIndex = account.value
         )
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -97,7 +101,7 @@ class PiratePersistentTransactionManager(
             )
         }
 
-        tx
+        tx.toPendingTransaction(zcashNetwork)
     }
 
     override suspend fun applyMinedHeight(pendingTx: PendingTransaction, minedHeight: BlockHeight) {
@@ -108,32 +112,38 @@ class PiratePersistentTransactionManager(
     }
 
     override suspend fun encode(
-        spendingKey: String,
+        usk: PirateUnifiedSpendingKey,
         pendingTx: PendingTransaction
     ): PendingTransaction = withContext(Dispatchers.IO) {
         twig("managing the creation of a transaction")
-        var tx = pendingTx as PiratePendingTransactionEntity
+
+        var tx = PiratePendingTransactionEntity.from(pendingTx)
 
         @Suppress("TooGenericExceptionCaught")
         try {
             twig("beginning to encode transaction with : $encoder")
             val encodedTx = encoder.createTransaction(
-                spendingKey,
-                tx.valueArrrtoshi,
-                tx.toAddress,
-                tx.memo,
-                tx.accountIndex
+                usk,
+                pendingTx.value,
+                pendingTx.recipient,
+                pendingTx.memo?.byteArray
             )
             twig("successfully encoded transaction!")
             safeUpdate("updating transaction encoding", -1) {
-                updateEncoding(tx.id, encodedTx.raw, encodedTx.txId, encodedTx.expiryHeight)
+                updateEncoding(
+                    pendingTx.id,
+                    encodedTx.raw.byteArray,
+                    encodedTx.txId.byteArray,
+                    encodedTx
+                        .expiryHeight?.value
+                )
             }
         } catch (t: Throwable) {
             var message = "failed to encode transaction due to : ${t.message}"
             t.cause?.let { message += " caused by: $it" }
             twig(message)
             safeUpdate("updating transaction error info") {
-                updateError(tx.id, message, ERROR_ENCODING)
+                updateError(pendingTx.id, message, ERROR_ENCODING)
             }
         } finally {
             safeUpdate("incrementing transaction encodeAttempts (from: ${tx.encodeAttempts})", -1) {
@@ -142,27 +152,29 @@ class PiratePersistentTransactionManager(
             }
         }
 
-        tx
+        tx.toPendingTransaction(zcashNetwork)
     }
 
+    // TODO(str4d): This uses operator overloading to distinguish between it and createToAddress, which breaks when
+    //  spendingKey is removed. Figure out where these methods need to be renamed, and do so.
     override suspend fun encode(
-        spendingKey: String,
-        transparentSecretKey: String,
+        spendingKey: String, // TODO(str4d): Remove this argument.
+        usk: PirateUnifiedSpendingKey,
         pendingTx: PendingTransaction
     ): PendingTransaction {
         twig("managing the creation of a shielding transaction")
-        var tx = pendingTx as PiratePendingTransactionEntity
+        var tx = PiratePendingTransactionEntity.from(pendingTx)
         @Suppress("TooGenericExceptionCaught")
         try {
             twig("beginning to encode shielding transaction with : $encoder")
             val encodedTx = encoder.createShieldingTransaction(
-                spendingKey,
-                transparentSecretKey,
+                usk,
+                tx.recipient,
                 tx.memo
             )
             twig("successfully encoded shielding transaction!")
             safeUpdate("updating shielding transaction encoding") {
-                updateEncoding(tx.id, encodedTx.raw, encodedTx.txId, encodedTx.expiryHeight)
+                updateEncoding(tx.id, encodedTx.raw.byteArray, encodedTx.txId.byteArray, encodedTx.expiryHeight?.value)
             }
         } catch (t: Throwable) {
             var message = "failed to encode auto-shielding transaction due to : ${t.message}"
@@ -178,7 +190,7 @@ class PiratePersistentTransactionManager(
             }
         }
 
-        return tx
+        return tx.toPendingTransaction(zcashNetwork)
     }
 
     override suspend fun submit(pendingTx: PendingTransaction): PendingTransaction = withContext(Dispatchers.IO) {
@@ -231,11 +243,11 @@ class PiratePersistentTransactionManager(
             }
         }
 
-        tx
+        tx.toPendingTransaction(zcashNetwork)
     }
 
     override suspend fun monitorById(id: Long): Flow<PendingTransaction> {
-        return pendingTransactionDao { monitorById(id) }
+        return pendingTransactionDao { monitorById(id) }.map { it.toPendingTransaction(zcashNetwork) }
     }
 
     override suspend fun isValidShieldedAddress(address: String) =
@@ -243,6 +255,9 @@ class PiratePersistentTransactionManager(
 
     override suspend fun isValidTransparentAddress(address: String) =
         encoder.isValidTransparentAddress(address)
+
+    override suspend fun isValidUnifiedAddress(address: String) =
+        encoder.isValidUnifiedAddress(address)
 
     override suspend fun cancel(pendingId: Long): Boolean {
         return pendingTransactionDao {
@@ -260,7 +275,7 @@ class PiratePersistentTransactionManager(
 
     override suspend fun findById(id: Long) = pendingTransactionDao {
         findById(id)
-    }
+    }?.toPendingTransaction(zcashNetwork)
 
     override suspend fun markForDeletion(id: Long) = pendingTransactionDao {
         withContext(IO) {
@@ -284,11 +299,11 @@ class PiratePersistentTransactionManager(
     override suspend fun abort(transaction: PendingTransaction): Int {
         return pendingTransactionDao {
             twig("[cleanup] Deleting pendingTxId: ${transaction.id}")
-            delete(transaction as PiratePendingTransactionEntity)
+            delete(PiratePendingTransactionEntity.from(transaction))
         }
     }
 
-    override fun getAll() = _dao.getAll()
+    override fun getAll() = _dao.getAll().map { list -> list.map { it.toPendingTransaction(zcashNetwork) } }
 
     //
     // Helper functions
@@ -335,5 +350,23 @@ class PiratePersistentTransactionManager(
 
         private const val SAFE_TO_DELETE_ERROR_MESSAGE = "safe to delete"
         const val SAFE_TO_DELETE_ERROR_CODE = -9090
+
+        fun new(
+            appContext: Context,
+            zcashNetwork: PirateNetwork,
+            encoder: TransactionEncoder,
+            service: LightWalletService,
+            databaseFile: File
+        ) = PiratePersistentTransactionManager(
+            commonDatabaseBuilder(
+                appContext,
+                PiratePendingTransactionDb::class.java,
+                databaseFile
+            ).setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
+                .addMigrations(PiratePendingTransactionDb.MIGRATION_1_2).build(),
+            zcashNetwork,
+            encoder,
+            service
+        )
     }
 }

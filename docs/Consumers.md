@@ -73,7 +73,7 @@ implementation("cash.z.ecc.android:zcash-android-sdk:$LATEST_VERSION")
 ```
 
 # Using the SDK
-Start the [Synchronizer](-synchronizer/README.md)
+Start the [PirateSynchronizer](-synchronizer/README.md)
 
 ```kotlin
 synchronizer.start(this)
@@ -86,7 +86,7 @@ synchronizer.getAddress()
 
 // or alternatively
 
-DerivationTool.deriveShieldedAddress(viewingKey)
+PirateDerivationTool.deriveShieldedAddress(viewingKey)
 ```
 
 Send funds to another address
@@ -95,12 +95,12 @@ Send funds to another address
 synchronizer.sendToAddress(spendingKey, zatoshi, address, memo)
 ```
 
-The [Synchronizer](-synchronizer/README.md) is the primary entrypoint for the SDK.
+The [PirateSynchronizer](-synchronizer/README.md) is the primary entrypoint for the SDK.
 
-1. Start the [Synchronizer](-synchronizer/README.md)
+1. Start the [PirateSynchronizer](-synchronizer/README.md)
 2. Subscribe to wallet data
 
-The [Synchronizer](-synchronizer/README.md) takes care of:
+The [PirateSynchronizer](-synchronizer/README.md) takes care of:
 
 - Connecting to the light wallet server 
 - Downloading the latest compact blocks in a privacy-sensitive way

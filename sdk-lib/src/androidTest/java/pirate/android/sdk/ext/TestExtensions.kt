@@ -1,19 +1,11 @@
 package pirate.android.sdk.ext
 
-import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.util.SimpleMnemonics
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.test.assertNotNull
-
-fun PirateInitializer.PirateConfig.seedPhrase(seedPhrase: String, network: PirateNetwork) {
-    runBlocking { setSeed(SimpleMnemonics().toSeed(seedPhrase.toCharArray()), network) }
-}
 
 object BlockExplorer {
     suspend fun fetchLatestHeight(): Long {

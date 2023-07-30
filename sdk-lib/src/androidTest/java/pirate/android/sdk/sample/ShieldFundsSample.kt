@@ -30,7 +30,7 @@ class ShieldFundsSample {
 
         val wallet = TestWallet(TestWallet.Backups.DEV_WALLET, PirateNetwork.Mainnet)
 
-        Assert.assertEquals("foo", "${wallet.shieldedAddress} ${wallet.transparentAddress}")
+        Assert.assertEquals("foo", "${wallet.unifiedAddress} ${wallet.transparentAddress}")
 //        wallet.shieldFunds()
 
         Twig.clip("ShieldFundsSample")

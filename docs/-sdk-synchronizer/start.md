@@ -1,11 +1,11 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [start](./start.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [PirateSdkSynchronizer](index.md) / [start](./start.md)
 
 # start
 
-`fun start(parentScope: CoroutineScope?): `[`Synchronizer`](../-synchronizer/index.md)
+`fun start(parentScope: CoroutineScope?): `[`PirateSynchronizer`](../-synchronizer/index.md)
 
 Starts this synchronizer within the given scope. For simplicity, attempting to start an
-instance that has already been started will throw a [SynchronizerException.FalseStart](../../pirate.android.sdk.exception/-synchronizer-exception/-false-start.md)
+instance that has already been started will throw a [PirateSynchronizerException.FalseStart](../../pirate.android.sdk.exception/-synchronizer-exception/-false-start.md)
 exception. This reduces the complexity of managing resources that must be recycled. Instead,
 each synchronizer is designed to have a long lifespan and should be started from an activity,
 application or session.

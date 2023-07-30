@@ -2,27 +2,19 @@ package pirate.android.sdk.demoapp.demos.send
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import cash.z.ecc.android.bip39.Mnemonics
-import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.Synchronizer
+import androidx.lifecycle.repeatOnLifecycle
+import pirate.android.sdk.PirateSynchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
-import pirate.android.sdk.db.entity.PendingTransaction
-import pirate.android.sdk.db.entity.isCreated
-import pirate.android.sdk.db.entity.isCreating
-import pirate.android.sdk.db.entity.isFailedEncoding
-import pirate.android.sdk.db.entity.isFailedSubmit
-import pirate.android.sdk.db.entity.isMined
-import pirate.android.sdk.db.entity.isSubmitSuccess
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.DemoConstants
+import pirate.android.sdk.demoapp.R
 import pirate.android.sdk.demoapp.databinding.FragmentSendBinding
-import pirate.android.sdk.demoapp.ext.requireApplicationContext
-import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.demoapp.util.mainActivity
 import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.ext.convertArrrtoshiToArrrString
@@ -30,12 +22,19 @@ import pirate.android.sdk.ext.convertArrrToArrrtoshi
 import pirate.android.sdk.ext.toArrrString
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.twig
-import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.PendingTransaction
+import pirate.android.sdk.model.PirateUnifiedSpendingKey
 import pirate.android.sdk.model.PirateWalletBalance
-import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.model.defaultForNetwork
-import pirate.android.sdk.tool.PirateDerivationTool
-import kotlinx.coroutines.runBlocking
+import pirate.android.sdk.model.isCreated
+import pirate.android.sdk.model.isCreating
+import pirate.android.sdk.model.isFailedEncoding
+import pirate.android.sdk.model.isFailedSubmit
+import pirate.android.sdk.model.isMined
+import pirate.android.sdk.model.isSubmitSuccess
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
 
 /**
  * Demonstrates sending funds to an address. This is the most complex example that puts all of the
@@ -47,45 +46,13 @@ import kotlinx.coroutines.runBlocking
  */
 @Suppress("TooManyFunctions")
 class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
-    private lateinit var synchronizer: Synchronizer
 
     private lateinit var amountInput: TextView
     private lateinit var addressInput: TextView
 
     // in a normal app, this would be stored securely with the trusted execution environment (TEE)
     // but since this is a demo, we'll derive it on the fly
-    private lateinit var spendingKey: String
-
-    /**
-     * Initialize the required values that would normally live outside the demo but are repeated
-     * here for completeness so that each demo file can serve as a standalone example.
-     */
-    private fun setup() {
-        // defaults to the value of `DemoConfig.seedWords` but can also be set by the user
-        var seedPhrase = sharedViewModel.seedPhrase.value
-
-        // Use a BIP-39 library to convert a seed phrase into a byte array. Most wallets already
-        // have the seed stored
-        val seed = Mnemonics.MnemonicCode(seedPhrase).toSeed()
-
-        runBlocking {
-            PirateInitializer.new(requireApplicationContext()) {
-                val network = PirateNetwork.fromResources(requireApplicationContext())
-                runBlocking {
-                    it.newWallet(
-                        seed,
-                        network = network,
-                        lightWalletEndpoint = LightWalletEndpoint.defaultForNetwork(network)
-                    )
-                }
-            }
-        }.let { initializer ->
-            synchronizer = Synchronizer.newBlocking(initializer)
-        }
-        spendingKey = runBlocking {
-            PirateDerivationTool.deriveSpendingKeys(seed, PirateNetwork.fromResources(requireApplicationContext())).first()
-        }
-    }
+    private lateinit var spendingKey: PirateUnifiedSpendingKey
 
     //
     // Observable properties (done without livedata or flows for simplicity)
@@ -122,21 +89,46 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
         binding.buttonSend.setOnClickListener(::onSend)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun monitorChanges() {
-        synchronizer.status.collectWith(lifecycleScope, ::onStatus)
-        synchronizer.progress.collectWith(lifecycleScope, ::onProgress)
-        synchronizer.processorInfo.collectWith(lifecycleScope, ::onProcessorInfoUpdated)
-        synchronizer.saplingBalances.collectWith(lifecycleScope, ::onBalance)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .flatMapLatest { it.status }
+                        .collect { onStatus(it) }
+                }
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .flatMapLatest { it.progress }
+                        .collect { onProgress(it) }
+                }
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .flatMapLatest { it.processorInfo }
+                        .collect { onProcessorInfoUpdated(it) }
+                }
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .flatMapLatest { it.saplingBalances }
+                        .collect { onBalance(it) }
+                }
+            }
+        }
     }
 
     //
     // Change listeners
     //
 
-    private fun onStatus(status: Synchronizer.PirateStatus) {
+    private fun onStatus(status: PirateSynchronizer.PirateStatus) {
         binding.textStatus.text = "Status: $status"
-        isSyncing = status != Synchronizer.PirateStatus.SYNCED
-        if (status == Synchronizer.PirateStatus.SCANNING) {
+        isSyncing = status != PirateSynchronizer.PirateStatus.SYNCED
+        if (status == PirateSynchronizer.PirateStatus.SCANNING) {
             binding.textBalance.text = "Calculating balance..."
         } else {
             if (!isSyncing) onBalance(balance)
@@ -173,26 +165,28 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
         isSending = true
         val amount = amountInput.text.toString().toDouble().convertArrrToArrrtoshi()
         val toAddress = addressInput.text.toString().trim()
-        synchronizer.sendToAddress(
-            spendingKey,
-            amount,
-            toAddress,
-            "Funds from Demo App"
-        ).collectWith(lifecycleScope, ::onPendingTxUpdated)
+        lifecycleScope.launch {
+            sharedViewModel.synchronizerFlow.value?.sendToAddress(
+                spendingKey,
+                amount,
+                toAddress,
+                "Funds from Demo App"
+            )?.collectWith(lifecycleScope, ::onPendingTxUpdated)
+        }
+
         mainActivity()?.hideKeyboard()
     }
 
     @Suppress("ComplexMethod")
     private fun onPendingTxUpdated(pendingTransaction: PendingTransaction?) {
-        val id = pendingTransaction?.id ?: -1
         val message = when {
             pendingTransaction == null -> "Transaction not found"
-            pendingTransaction.isMined() -> "Transaction Mined (id: $id)!\n\nSEND COMPLETE".also { isSending = false }
+            pendingTransaction.isMined() -> "Transaction Mined!\n\nSEND COMPLETE".also { isSending = false }
             pendingTransaction.isSubmitSuccess() -> "Successfully submitted transaction!\nAwaiting confirmation..."
             pendingTransaction.isFailedEncoding() ->
-                "ERROR: failed to encode transaction! (id: $id)".also { isSending = false }
+                "ERROR: failed to encode transaction!".also { isSending = false }
             pendingTransaction.isFailedSubmit() ->
-                "ERROR: failed to submit transaction! (id: $id)".also { isSending = false }
+                "ERROR: failed to submit transaction!".also { isSending = false }
             pendingTransaction.isCreated() -> "Transaction creation complete! (id: $id)"
             pendingTransaction.isCreating() -> "Creating transaction!".also { onResetInfo() }
             else -> "Transaction updated!".also { twig("Unhandled TX state: $pendingTransaction") }
@@ -231,26 +225,30 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
     // Android Lifecycle overrides
     //
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = super.onCreateView(inflater, container, savedInstanceState)
-        setup()
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initSendUi()
+        monitorChanges()
     }
 
-    override fun onResume() {
-        super.onResume()
-        // the lifecycleScope is used to dispose of the synchronizer when the fragment dies
-        synchronizer.start(lifecycleScope)
-        monitorChanges()
+    override fun onPrepareOptionsMenu(menu: Menu) {
+        super.onPrepareOptionsMenu(menu)
+        // We rather hide options menu actions while actively using the PirateSynchronizer
+        menu.setGroupVisible(R.id.main_menu_group, false)
     }
 
     //

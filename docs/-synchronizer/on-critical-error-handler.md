@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [Synchronizer](index.md) / [onCriticalErrorHandler](./on-critical-error-handler.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [PirateSynchronizer](index.md) / [onCriticalErrorHandler](./on-critical-error-handler.md)
 
 # onCriticalErrorHandler
 
@@ -8,6 +8,6 @@ Gets or sets a global error handler. This is a useful hook for handling unexpect
 errors.
 
 **Return**
-true when the error has been handled and the Synchronizer should attempt to continue.
-False when the error is unrecoverable and the Synchronizer should [stop](stop.md).
+true when the error has been handled and the PirateSynchronizer should attempt to continue.
+False when the error is unrecoverable and the PirateSynchronizer should [stop](stop.md).
 

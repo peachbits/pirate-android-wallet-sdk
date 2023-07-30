@@ -1,8 +1,8 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [Synchronizer](index.md) / [start](./start.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [PirateSynchronizer](index.md) / [start](./start.md)
 
 # start
 
-`abstract fun start(parentScope: CoroutineScope? = null): `[`Synchronizer`](index.md)
+`abstract fun start(parentScope: CoroutineScope? = null): `[`PirateSynchronizer`](index.md)
 
 Starts this synchronizer within the given scope.
 

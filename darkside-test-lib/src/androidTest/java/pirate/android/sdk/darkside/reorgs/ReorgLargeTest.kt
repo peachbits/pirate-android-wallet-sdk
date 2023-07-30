@@ -2,8 +2,8 @@ package pirate.android.sdk.darkside.reorgs // package pirate.android.sdk.integra
 //
 // import androidx.test.platform.app.InstrumentationRegistry
 // import pirate.android.sdk.PirateInitializer
-// import pirate.android.sdk.SdkSynchronizer
-// import pirate.android.sdk.Synchronizer
+// import pirate.android.sdk.PirateSdkSynchronizer
+// import pirate.android.sdk.PirateSynchronizer
 // import pirate.android.sdk.test.ScopedTest
 // import pirate.android.sdk.ext.import
 // import pirate.android.sdk.internal.twig
@@ -69,17 +69,17 @@ package pirate.android.sdk.darkside.reorgs // package pirate.android.sdk.integra
 // //        synchronizer.validateMinSyncHeight(targetHeight)
 // //    }
 //
-//    private fun Synchronizer.awaitSync() = runBlocking<Unit> {
+//    private fun PirateSynchronizer.awaitSync() = runBlocking<Unit> {
 //        twig("***  Waiting for sync ***")
 //        status.onEach {
 //            twig("got processor status $it")
-//            assertTrue("Error: Cannot complete test because the server is disconnected.", it != Synchronizer.Status.DISCONNECTED)
+//            assertTrue("Error: Cannot complete test because the server is disconnected.", it != PirateSynchronizer.Status.DISCONNECTED)
 //            delay(1000)
-//        }.filter { it == Synchronizer.Status.SYNCED }.first()
+//        }.filter { it == PirateSynchronizer.Status.SYNCED }.first()
 //        twig("***  Done waiting for sync! ***")
 //    }
 //
-//    private fun Synchronizer.awaitHeight(height: Int) = runBlocking<Unit> {
+//    private fun PirateSynchronizer.awaitHeight(height: Int) = runBlocking<Unit> {
 //        twig("***  Waiting for block $height ***")
 // //        processorInfo.first { it.lastScannedHeight >= height }
 //        processorInfo.onEach {
@@ -89,14 +89,14 @@ package pirate.android.sdk.darkside.reorgs // package pirate.android.sdk.integra
 //        twig("***  Done waiting for block $height! ***")
 //    }
 //
-//    private fun Synchronizer.validateMinSyncHeight(minHeight: Int) = runBlocking<Unit> {
+//    private fun PirateSynchronizer.validateMinSyncHeight(minHeight: Int) = runBlocking<Unit> {
 //        val info = processorInfo.first()
 //        val lastDownloadedHeight = info.lastDownloadedHeight
 //        assertTrue("Expected to be synced beyond $minHeight but the last downloaded block was" +
 //                " $lastDownloadedHeight details: $info", lastDownloadedHeight >= minHeight)
 //    }
 //
-//    private fun Synchronizer.validateMaxSyncHeight(maxHeight: Int) = runBlocking<Unit> {
+//    private fun PirateSynchronizer.validateMaxSyncHeight(maxHeight: Int) = runBlocking<Unit> {
 //        val lastDownloadedHeight = processorInfo.first().lastScannedHeight
 //        assertTrue("Did not expect to be synced beyond $maxHeight but we are synced to" +
 //                " $lastDownloadedHeight", lastDownloadedHeight <= maxHeight)
@@ -106,7 +106,7 @@ package pirate.android.sdk.darkside.reorgs // package pirate.android.sdk.integra
 //        lightwalletd.getBlockRange(height..height).first()
 //
 //    private val lightwalletd
-//        get() = (synchronizer as SdkSynchronizer).processor.downloader.lightwalletService
+//        get() = (synchronizer as PirateSdkSynchronizer).processor.downloader.lightwalletService
 //
 //    companion object {
 //        private const val port = 9067
@@ -115,7 +115,7 @@ package pirate.android.sdk.darkside.reorgs // package pirate.android.sdk.integra
 //        private const val seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
 //        private val context = InstrumentationRegistry.getInstrumentation().context
 //        private val initializer = PirateInitializer(context, host, port, "ReorgHandlingTests")
-//        private lateinit var synchronizer: Synchronizer
+//        private lateinit var synchronizer: PirateSynchronizer
 //        private lateinit var sithLord: DarksideApi
 //
 //        @BeforeClass

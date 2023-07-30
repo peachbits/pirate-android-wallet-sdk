@@ -1,9 +1,9 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [Synchronizer](index.md) / [isScanning](./is-scanning.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [PirateSynchronizer](index.md) / [isScanning](./is-scanning.md)
 
 # isScanning
 
 `abstract val isScanning: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)
 
-A flag indicating whether this Synchronizer is actively decrypting compact blocks, searching for transactions.
+A flag indicating whether this PirateSynchronizer is actively decrypting compact blocks, searching for transactions.
 When true, a UI element may want to turn yellow.
 

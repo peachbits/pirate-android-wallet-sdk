@@ -39,7 +39,7 @@ sealed class PirateRepositoryException(message: String, cause: Throwable? = null
         "Unprepared repository: Data cannot be accessed before the repository is prepared." +
             " Ensure that things have been properly initialized. If you see this error it most" +
             " likely means that you are accessing transactions or other data before starting the" +
-            " Synchronizer. Previously, this was a silent bug that would cause problems later." +
+            " PirateSynchronizer. Previously, this was a silent bug that would cause problems later." +
             " Mostly, during database migrations. Now, we catch this early and explicitly prevent" +
             " it from happening."
     )
@@ -157,11 +157,11 @@ sealed class PirateBirthdayException(message: String, cause: Throwable? = null) 
         nearestMatch: Checkpoint? = null
     ) : PirateBirthdayException(
         "Unable to find birthday that exactly matches $birthday.${
-        if (nearestMatch != null) {
-            " An exact match was request but the nearest match found was ${nearestMatch.height}."
-        } else {
-            ""
-        }
+            if (nearestMatch != null) {
+                " An exact match was request but the nearest match found was ${nearestMatch.height}."
+            } else {
+                ""
+            }
         }"
     )
     class PirateBirthdayFileNotFoundException(directory: String, height: BlockHeight?) : PirateBirthdayException(
@@ -178,6 +178,10 @@ sealed class PirateBirthdayException(message: String, cause: Throwable? = null) 
  * Exceptions thrown by the initializer.
  */
 sealed class PirateInitializerException(message: String, cause: Throwable? = null) : PirateSdkException(message, cause) {
+    object SeedRequired : PirateInitializerException(
+        "A pending database migration requires the wallet's seed. Call this initialization " +
+            "method again with the seed."
+    )
     class PirateFalseStart(cause: Throwable?) : PirateInitializerException("Failed to initialize accounts due to: $cause", cause)
     class PirateAlreadyInitializedException(cause: Throwable, dbPath: String) : PirateInitializerException(
         "Failed to initialize the blocks table" +

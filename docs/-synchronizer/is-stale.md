@@ -1,10 +1,10 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [Synchronizer](index.md) / [isStale](./is-stale.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [PirateSynchronizer](index.md) / [isStale](./is-stale.md)
 
 # isStale
 
 `abstract suspend fun isStale(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)
 
-A flag to indicate that this Synchronizer is significantly out of sync with it's server. Typically, this means
+A flag to indicate that this PirateSynchronizer is significantly out of sync with it's server. Typically, this means
 that the balance and other data cannot be completely trusted because a significant amount of data has not been
 processed. This is intended for showing progress indicators when the user returns to the app after having not
 used it for days. Typically, this means minor sync issues should be ignored and this should be leveraged in order

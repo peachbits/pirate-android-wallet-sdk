@@ -11,6 +11,7 @@ import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.databinding.FragmentGetPrivateKeyBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.PirateDerivationTool
 import kotlinx.coroutines.launch
@@ -43,14 +44,14 @@ class GetPrivateKeyFragment : BaseDemoFragment<FragmentGetPrivateKeyBinding>() {
         // demonstrate deriving spending keys for five accounts but only take the first one
         lifecycleScope.launchWhenStarted {
             @Suppress("MagicNumber")
-            val spendingKey = PirateDerivationTool.deriveSpendingKeys(
+            val spendingKey = PirateDerivationTool.derivePirateUnifiedSpendingKey(
                 seed,
                 PirateNetwork.fromResources(requireApplicationContext()),
-                5
-            ).first()
+                Account(5)
+            )
 
             // derive the key that allows you to view but not spend transactions
-            val viewingKey = PirateDerivationTool.deriveViewingKey(
+            val viewingKey = PirateDerivationTool.derivePirateUnifiedFullViewingKey(
                 spendingKey,
                 PirateNetwork.fromResources(requireApplicationContext())
             )
@@ -86,11 +87,11 @@ class GetPrivateKeyFragment : BaseDemoFragment<FragmentGetPrivateKeyBinding>() {
     override fun onActionButtonClicked() {
         lifecycleScope.launch {
             copyToClipboard(
-                PirateDerivationTool.derivePirateUnifiedViewingKeys(
+                PirateDerivationTool.derivePirateUnifiedFullViewingKeys(
                     seed,
                     PirateNetwork.fromResources(requireApplicationContext())
-                ).first().extpub,
-                "ViewingKey copied to clipboard!"
+                ).first().encoding,
+                "PirateUnifiedFullViewingKey copied to clipboard!"
             )
         }
     }

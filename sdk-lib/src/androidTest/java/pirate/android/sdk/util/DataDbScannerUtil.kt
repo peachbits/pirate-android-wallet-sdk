@@ -1,13 +1,15 @@
 package pirate.android.sdk.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.PirateInitializer
+import pirate.android.sdk.CloseablePirateSynchronizer
 import pirate.android.sdk.PirateSdkSynchronizer
-import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.PirateSynchronizer
 import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.PiratehNetwork
+import pirate.android.sdk.model.defaultForNetwork
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -39,7 +41,7 @@ class DataDbScannerUtil {
 //    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
 
     private val birthdayHeight = 600_000L
-    private lateinit var synchronizer: Synchronizer
+    private lateinit var synchronizer: CloseablePirateSynchronizer
 
     @Before
     fun setup() {
@@ -65,30 +67,19 @@ class DataDbScannerUtil {
     @Test
     @Ignore("This test is broken")
     fun scanExistingDb() {
-        synchronizer = run {
-            val initializer = runBlocking {
-                PirateInitializer.new(context) {
-                    it.setBirthdayHeight(
-                        BlockHeight.new(
-                            PirateNetwork.Mainnet,
-                            birthdayHeight
-                        ),
-                        false
-                    )
-                }
-            }
-
-            val synchronizer = runBlocking {
-                Synchronizer.new(
-                    initializer
-                )
-            }
-
-            synchronizer
-        }
+        synchronizer = PirateSynchronizer.newBlocking(
+            context,
+            PirateNetwork.Mainnet,
+            lightWalletEndpoint = LightWalletEndpoint
+                .defaultForNetwork(PiratehNetwork.Mainnet),
+            seed = byteArrayOf(),
+            birthday = BlockHeight.new(
+                PirateNetwork.Mainnet,
+                birthdayHeight
+            )
+        )
 
         println("sync!")
-        synchronizer.start()
         val scope = (synchronizer as PirateSdkSynchronizer).coroutineScope
 
         scope.launch {
@@ -101,7 +92,7 @@ class DataDbScannerUtil {
         println("going to sleep!")
         Thread.sleep(125000)
         println("I'm back and I'm out!")
-        synchronizer.stop()
+        runBlocking { synchronizer.close() }
     }
 //
 //    @Test
@@ -127,7 +118,7 @@ class DataDbScannerUtil {
 //                        - can we be more stateless and thereby improve the flexibility of this code?!!!
 //                      */
 //                synchronizer?.stop()
-//                synchronizer = Synchronizer(context, initializer)
+//                synchronizer = PirateSynchronizer(context, initializer)
 //
 // //            deleteDb(dataDbPath)
 // //            initWallet(seed)

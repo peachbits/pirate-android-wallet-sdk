@@ -266,7 +266,7 @@ interface TransactionDao {
         WHERE  id_tx = :id AND raw is not null
         """
     )
-    suspend fun findEncodedTransactionById(id: Long): PirateEncodedTransaction?
+    suspend fun findPirateEncodedTransactionById(id: Long): PirateEncodedTransaction?
 
     @Query(
         """

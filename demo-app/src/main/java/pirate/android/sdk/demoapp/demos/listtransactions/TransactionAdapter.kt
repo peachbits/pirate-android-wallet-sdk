@@ -4,22 +4,22 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.demoapp.R
+import pirate.android.sdk.model.TransactionOverview
 
 /**
  * Simple adapter implementation that knows how to bind a recyclerview to ClearedTransactions.
  */
-class TransactionAdapter : ListAdapter<PirateConfirmedTransaction, TransactionViewHolder>(
-    object : DiffUtil.ItemCallback<PirateConfirmedTransaction>() {
+class TransactionAdapter : ListAdapter<TransactionOverview, TransactionViewHolder>(
+    object : DiffUtil.ItemCallback<TransactionOverview>() {
         override fun areItemsTheSame(
-            oldItem: PirateConfirmedTransaction,
-            newItem: PirateConfirmedTransaction
+            oldItem: TransactionOverview,
+            newItem: TransactionOverview
         ) = oldItem.minedHeight == newItem.minedHeight
 
         override fun areContentsTheSame(
-            oldItem: PirateConfirmedTransaction,
-            newItem: PirateConfirmedTransaction
+            oldItem: TransactionOverview,
+            newItem: TransactionOverview
         ) = oldItem == newItem
     }
 ) {

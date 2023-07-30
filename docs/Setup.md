@@ -14,7 +14,7 @@ Start by making sure the command line with Gradle works first, because **all the
     1. Install JVM 11 or greater on your system.  Our setup has been tested with Java 11-17.  Although a variety of JVM distributions are available and should work, we have settled on recommending [Adoptium/Temurin](https://adoptium.net), because this is the default distribution used by Gradle toolchains.  For Windows or Linux, be sure that the `JAVA_HOME` environment variable points to the right Java version.  Note: If you switch from a newer to an older JVM version, you may see an error like the following `> com.android.ide.common.signing.KeytoolException: Failed to read key AndroidDebugKey from store "~/.android/debug.keystore": Integrity check failed: java.security.NoSuchAlgorithmException: Algorithm HmacPBESHA256 not available`.  A solution is to delete the debug keystore and allow it to be re-generated.
     1. Android Studio has an embedded JVM, although running Gradle tasks from the command line requires a separate JVM to be installed.  Our Gradle scripts are configured to use toolchains to automatically install the correct JVM version.
 1. Configure Rust
-    1. [Install rust](https://www.rust-lang.org/learn/get-started)
+    1. [Install Rust](https://www.rust-lang.org/learn/get-started). You will need Rust 1.59 or greater. If you install with `rustup` then you are guaranteed to get a compatible Rust version. If you use system packages, check the provided version.
         1. macOS with Homebrew
             1. `brew install rustup`
             1. `rustup-init`
@@ -121,7 +121,9 @@ For Continuous Integration, see [CI.md](CI.md).  The rest of this section is reg
     1. If you are an Electric Coin Co team member: Make an IT request to add your Google account to the existing Firebase Test Lab project
     1. If you are an open source contributor: set up your own Firebase project for the purpose of running Firebase Test Lab
 1. Set the Firebase Google Cloud project name as a global Gradle property `ZCASH_FIREBASE_TEST_LAB_PROJECT` under `~/.gradle/gradle.properties`
-1. Run the Gradle task `flankAuth` to generate a Firebase authentication token on your machine
+1. Run the Gradle task `flankAuth` to generate a Firebase authentication token on your machine. Make sure you have Editor role, at
+   least in the Firebase project, to be able to authenticate successfully. Note that Gradle 
+   may report the task failed yet still successfully store the token.
 
 Tests can now be run on Firebase Test Lab from your local machine.
 

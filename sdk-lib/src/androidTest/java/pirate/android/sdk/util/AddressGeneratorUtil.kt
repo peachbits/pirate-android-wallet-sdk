@@ -1,5 +1,6 @@
 package pirate.android.sdk.util
 
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.PirateNetwork
 import cash.z.ecc.android.sdk.test.readFileLinesInFlow
 import pirate.android.sdk.tool.PirateDerivationTool
@@ -30,10 +31,10 @@ class AddressGeneratorUtil {
             .map { seedPhrase ->
                 mnemonics.toSeed(seedPhrase.toCharArray())
             }.map { seed ->
-                PirateDerivationTool.deriveShieldedAddress(seed, PirateNetwork.Mainnet)
+                PirateDerivationTool.deriveUnifiedAddress(seed, PirateNetwork.Mainnet, Account.DEFAULT)
             }.collect { address ->
                 println("xrxrx2\t$address")
-                assertTrue(address.startsWith("zs1"))
+                assertTrue(address.startsWith("u1"))
             }
     }
 }

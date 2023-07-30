@@ -1,8 +1,8 @@
 package pirate.android.sdk.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.CloseablePirateSynchronizer
+import pirate.android.sdk.PirateSynchronizer
 import pirate.android.sdk.internal.PirateTroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.ext.deleteSuspend
@@ -47,7 +47,7 @@ class BalancePrinterUtil {
 //    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
 
     private lateinit var birthday: Checkpoint
-    private var synchronizer: Synchronizer? = null
+    private var synchronizer: CloseablePirateSynchronizer? = null
 
     @Before
     fun setup() {
@@ -80,11 +80,7 @@ class BalancePrinterUtil {
                 mnemonics.toSeed(seedPhrase.toCharArray())
             }.collect { seed ->
                 // TODO: clear the dataDb but leave the cacheDb
-                val initializer = PirateInitializer.new(context) { config ->
-                    val endpoint = LightWalletEndpoint.defaultForNetwork(network)
-                    runBlocking { config.importWallet(seed, birthdayHeight, network, endpoint) }
-                    config.alias = alias
-                }
+
                 /*
             what I need to do right now
             - for each seed
@@ -99,10 +95,15 @@ class BalancePrinterUtil {
                 - I might need to consider how state is impacting this design
                     - can we be more stateless and thereby improve the flexibility of this code?!!!
                   */
-                synchronizer?.stop()
-                synchronizer = Synchronizer.new(initializer).apply {
-                    start()
-                }
+                synchronizer?.close()
+                synchronizer = PirateSynchronizer.new(
+                    context,
+                    network,
+                    lightWalletEndpoint = LightWalletEndpoint
+                        .defaultForNetwork(network),
+                    seed = seed,
+                    birthday = birthdayHeight
+                )
 
 //            deleteDb(dataDbPath)
 //            initWallet(seed)

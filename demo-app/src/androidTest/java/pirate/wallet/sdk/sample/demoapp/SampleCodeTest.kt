@@ -1,9 +1,9 @@
 package pirate.wallet.sdk.sample.demoapp
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.db.entity.isFailure
+
+import pirate.android.sdk.PirateSynchronizer
+import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.convertArrrToArrrtoshi
 import pirate.android.sdk.ext.toHex
 import pirate.android.sdk.internal.PirateTroubleshootingTwig
@@ -14,8 +14,9 @@ import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.Mainnet
 import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.defaultForNetwork
+import pirate.android.sdk.model.isFailure
 import pirate.android.sdk.tool.PirateDerivationTool
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -61,22 +62,9 @@ class SampleCodeTest {
     }
 
     // ///////////////////////////////////////////////////
-    // Derive Extended Spending Key
-    @Test fun deriveSpendingKey() {
-        val spendingKeys = runBlocking {
-            PirateDerivationTool.deriveSpendingKeys(
-                seed,
-                PirateNetwork.Mainnet
-            )
-        }
-        assertEquals(1, spendingKeys.size)
-        log("Spending Key: ${spendingKeys[0]}")
-    }
-
-    // ///////////////////////////////////////////////////
     // Get Address
     @Test fun getAddress() = runBlocking {
-        val address = synchronizer.getAddress()
+        val address = synchronizer.getUnifiedAddress()
         assertFalse(address.isBlank())
         log("Address: $address")
     }
@@ -142,7 +130,7 @@ class SampleCodeTest {
         val amount = 0.123.convertArrrToArrrtoshi()
         val address = "ztestsapling1tklsjr0wyw0d58f3p7wufvrj2cyfv6q6caumyueadq8qvqt8lda6v6tpx474rfru9y6u75u7qnw"
         val memo = "Test Transaction"
-        val spendingKey = PirateDerivationTool.deriveSpendingKeys(seed, PirateNetwork.Mainnet)[0]
+        val spendingKey = PirateDerivationTool.derivePirateUnifiedSpendingKey(seed, PirateNetwork.Mainnet, Account.DEFAULT)
         val transactionFlow = synchronizer.sendToAddress(spendingKey, amount, address, memo)
         transactionFlow.collect {
             log("pending transaction updated $it")
@@ -159,9 +147,15 @@ class SampleCodeTest {
         private val lightwalletdHost = PirateLightWalletEndpoint.Mainnet
 
         private val context = InstrumentationRegistry.getInstrumentation().targetContext
-        private val synchronizer: Synchronizer = run {
-            val initializer = runBlocking { PirateInitializer.new(context) {} }
-            Synchronizer.newBlocking(initializer)
+        private val synchronizer: PirateSynchronizer = run {
+            val network = PirateNetwork.fromResources(context)
+            PirateSynchronizer.newBlocking(
+                context,
+                network,
+                lightWalletEndpoint = LightWalletEndpoint.defaultForNetwork(network),
+                seed = seed,
+                birthday = null
+            )
         }
 
         @BeforeClass

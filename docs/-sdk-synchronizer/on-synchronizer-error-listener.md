@@ -1,10 +1,10 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [SdkSynchronizer](index.md) / [onSynchronizerErrorListener](./on-synchronizer-error-listener.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [PirateSdkSynchronizer](index.md) / [onPirateSynchronizerErrorListener](./on-synchronizer-error-listener.md)
 
-# onSynchronizerErrorListener
+# onPirateSynchronizerErrorListener
 
-`var onSynchronizerErrorListener: ((`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`?) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`)?`
+`var onPirateSynchronizerErrorListener: ((`[`Throwable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-throwable/index.html)`?) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`)?`
 
-Overrides [Synchronizer.onSynchronizerErrorListener](../-synchronizer/on-synchronizer-error-listener.md)
+Overrides [PirateSynchronizer.onPirateSynchronizerErrorListener](../-synchronizer/on-synchronizer-error-listener.md)
 
-Sets a listener to be notified of uncaught Synchronizer errors. When null, errors will only be logged.
+Sets a listener to be notified of uncaught PirateSynchronizer errors. When null, errors will only be logged.
 

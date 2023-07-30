@@ -2,7 +2,9 @@ package pirate.android.sdk.db
 
 import androidx.test.filters.SmallTest
 import pirate.android.sdk.internal.AndroidApiVersion
-import pirate.android.sdk.internal.db.PendingTransactionDb
+import pirate.android.sdk.internal.db.DatabaseCoordinator
+import pirate.android.sdk.internal.db.commonDatabaseBuilder
+import pirate.android.sdk.internal.db.pending.PiratePendingTransactionDb
 import pirate.android.sdk.test.getAppContext
 import pirate.fixture.DatabaseNameFixture
 import pirate.fixture.DatabasePathFixture
@@ -22,7 +24,7 @@ class CommonDatabaseBuilderTest {
 
         val db = commonDatabaseBuilder(
             getAppContext(),
-            PendingTransactionDb::class.java,
+            PiratePendingTransactionDb::class.java,
             dbFile
         ).build()
 

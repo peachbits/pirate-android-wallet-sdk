@@ -2,20 +2,20 @@ package pirate.wallet.sdk.integration
 
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.Synchronizer.PirateStatus.SYNCED
-import pirate.android.sdk.db.entity.isSubmitSuccess
+
+import pirate.android.sdk.PirateSynchronizer.PirateStatus.SYNCED
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.onFirst
-import pirate.android.sdk.internal.PirateTroubleshootingTwig
+import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.isSubmitSuccess
 import pirate.android.sdk.test.ScopedTest
 import pirate.android.sdk.tool.CheckpointTool
 import pirate.android.sdk.tool.PirateDerivationTool
@@ -63,7 +63,7 @@ class TestnetIntegrationTest : ScopedTest() {
     @Test
     @Ignore("This test is broken")
     fun getAddress() = runBlocking {
-        assertEquals(address, synchronizer.getAddress())
+        assertEquals(address, synchronizer.getUnifiedAddress())
     }
 
     // This is an extremely slow test; it is disabled so that we can get CI set up
@@ -98,7 +98,7 @@ class TestnetIntegrationTest : ScopedTest() {
     }
 
     private suspend fun sendFunds(): Boolean {
-        val spendingKey = PirateDerivationTool.deriveSpendingKeys(seed, synchronizer.network)[0]
+        val spendingKey = PirateDerivationTool.derivePirateUnifiedSpendingKey(seed, synchronizer.network, Account.DEFAULT)
         log("sending to address")
         synchronizer.sendToAddress(
             spendingKey,
@@ -117,30 +117,33 @@ class TestnetIntegrationTest : ScopedTest() {
     }
 
     companion object {
-        init { Twig.plant(PirateTroubleshootingTwig()) }
+        init {
+            Twig.plant(PirateTroubleshootingTwig())
+        }
 
         val lightWalletEndpoint = LightWalletEndpoint("lightwalletd.testnet.z.cash", 9087, true)
         private const val birthdayHeight = 963150L
         private const val targetHeight = 663250
-        private const val seedPhrase = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+        private const val seedPhrase =
+            "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
         val seed = "pirate.android.sdk.integration.IntegrationTest.seed.value.64bytes".toByteArray()
         val address = "zs1m30y59wxut4zk9w24d6ujrdnfnl42hpy0ugvhgyhr8s0guszutqhdj05c7j472dndjstulph74m"
         val toAddress = "zs1vp7kvlqr4n9gpehztr76lcn6skkss9p8keqs3nv8avkdtjrcctrvmk9a7u494kluv756jeee5k0"
 
         private val context = InstrumentationRegistry.getInstrumentation().context
-        private val initializer = runBlocking {
-            PirateInitializer.new(context) { config ->
-                config.setNetwork(PirateNetwork.Testnet, lightWalletEndpoint)
-                runBlocking { config.importWallet(seed, BlockHeight.new(PirateNetwork.Testnet, birthdayHeight), PirateNetwork.Testnet, lightWalletEndpoint) }
-            }
-        }
-        private lateinit var synchronizer: Synchronizer
+        private lateinit var synchronizer: PirateSynchronizer
 
         @JvmStatic
         @BeforeClass
         fun startUp() {
-            synchronizer = Synchronizer.newBlocking(initializer)
-            synchronizer.start(classScope)
+            synchronizer = PirateSynchronizer.newBlocking(
+                context,
+                PirateNetwork.Testnet,
+                lightWalletEndpoint =
+                lightWalletEndpoint,
+                seed = seed,
+                birthday = BlockHeight.new(PirateNetwork.Testnet, birthdayHeight)
+            )
         }
     }
 }

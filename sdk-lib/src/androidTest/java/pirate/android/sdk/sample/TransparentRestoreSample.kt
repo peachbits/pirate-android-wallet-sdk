@@ -162,7 +162,7 @@ class TransparentRestoreSample {
 //        private val context = InstrumentationRegistry.getInstrumentation().context
 //        private val seed: ByteArray = Mnemonics.MnemonicCode(seedPhrase).toSeed()
 //        private val shieldedSpendingKey = PirateDerivationTool.deriveSpendingKeys(seed, Testnet)[0]
-//        private val transparentSecretKey = PirateDerivationTool.deriveTransparentSecretKey(seed, Testnet)
+//        private val transparentAccountPrivateKey = PirateDerivationTool.deriveTransparentAccountPrivateKey(seed, Testnet)
 //        private val host = "lightwalletd.testnet.electriccoin.co"
 //        private val initializer = PirateInitializer(context) { config ->
 //            config.importWallet(seed, startHeight)
@@ -170,7 +170,7 @@ class TransparentRestoreSample {
 //            config.alias = alias
 //        }
 //
-//        val synchronizer = Synchronizer(initializer)
+//        val synchronizer = PirateSynchronizer(initializer)
 //        val available get() = synchronizer.latestBalance.availableArrrtoshi
 //        val shieldedAddress = PirateDerivationTool.deriveShieldedAddress(seed, Testnet)
 //        val transparentAddress = PirateDerivationTool.deriveTransparentAddress(seed, Testnet)
@@ -219,7 +219,7 @@ class TransparentRestoreSample {
 //                twig("FOUND utxo balance of total: ${walletBalance.totalArrrtoshi}  available: ${walletBalance.availableArrrtoshi}")
 //
 //                if (walletBalance.availableArrrtoshi > 0L) {
-//                    synchronizer.shieldFunds(shieldedSpendingKey, transparentSecretKey)
+//                    synchronizer.shieldFunds(shieldedSpendingKey, transparentAccountPrivateKey)
 //                        .onCompletion { twig("done shielding funds") }
 //                        .catch { twig("Failed with $it") }
 //                        .collect()
@@ -239,7 +239,7 @@ class TransparentRestoreSample {
 //                    synchronizer.stop()
 //                }
 //            }
-//            synchronizer.status.first { it == Synchronizer.PirateStatus.STOPPED }
+//            synchronizer.status.first { it == PirateSynchronizer.PirateStatus.STOPPED }
 //            twig("Stopped!")
 //            return this
 //        }

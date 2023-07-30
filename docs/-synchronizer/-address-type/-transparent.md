@@ -1,8 +1,8 @@
-[zcash-android-wallet-sdk](../../../index.md) / [pirate.wallet.sdk](../../index.md) / [Synchronizer](../index.md) / [AddressType](index.md) / [Transparent](./-transparent.md)
+[zcash-android-wallet-sdk](../../../index.md) / [pirate.wallet.sdk](../../index.md) / [PirateSynchronizer](../index.md) / [PirateAddressType](index.md) / [Transparent](./-transparent.md)
 
 # Transparent
 
-`object Transparent : `[`Synchronizer.AddressType.Valid`](-valid.md)`, `[`Synchronizer.AddressType`](index.md)
+`object Transparent : `[`PirateSynchronizer.PirateAddressType.Valid`](-valid.md)`, `[`PirateSynchronizer.PirateAddressType`](index.md)
 
 ### Inherited Properties
 

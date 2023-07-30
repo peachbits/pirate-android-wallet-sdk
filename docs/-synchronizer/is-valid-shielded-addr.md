@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [Synchronizer](index.md) / [isValidShieldedAddr](./is-valid-shielded-addr.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [PirateSynchronizer](index.md) / [isValidShieldedAddr](./is-valid-shielded-addr.md)
 
 # isValidShieldedAddr
 

@@ -6,7 +6,7 @@ import pirate.android.sdk.ext.PirateConsensusBranchId
  * Helper class that provides consensus branch information for this SDK and the server to which it
  * is connected and whether they are aligned. Essentially a wrapper for both branch ids with helper
  * functions for communicating detailed error information to the end-user. Used in conjunction with
- * [pirate.android.sdk.Synchronizer.validateConsensusBranch].
+ * [pirate.android.sdk.PirateSynchronizer.validateConsensusBranch].
  */
 class PirateConsensusMatchType(val sdkBranch: PirateConsensusBranchId?, val serverBranch: PirateConsensusBranchId?) {
     val hasServerBranch = serverBranch != null

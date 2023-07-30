@@ -13,21 +13,20 @@ Thankfully, the only thing an app developer has to be concerned with is the foll
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | **LightWalletService**                 | Service used for requesting compact blocks                                                                                          |
 | **CompactBlockStore**                  | Stores compact blocks that have been downloaded from the `LightWalletService`                                                       |
-| **CompactBlockProcessor**              | Validates and scans the compact blocks in the `CompactBlockStore` for transaction details                                           |
+| **PirateCompactBlockProcessor**              | Validates and scans the compact blocks in the `CompactBlockStore` for transaction details                                           |
 | **OutboundTransactionManager**         | Creates, Submits and manages transactions for spending funds                                                                        |
-| **PirateInitializer**                        | Responsible for all setup that must happen before synchronization can begin. Loads the rust library and helps initialize databases. |
-| **DerivationTool**, **BirthdayTool**   | Utilities for deriving keys, addresses and loading wallet checkpoints, called "birthdays."                                          |
-| **RustBackend**                        | Wraps and simplifies the rust library and exposes its functionality to the Kotlin SDK                                               |
+| **PirateDerivationTool**                     | Utilities for deriving keys and addresses                                                                                           |
+| **PirateRustBackend**                        | Wraps and simplifies the rust library and exposes its functionality to the Kotlin SDK                                               |
 
 # Checkpoints
 To improve the speed of syncing with the Zcash network, the SDK contains a series of embedded checkpoints.  These should be updated periodically, as new transactions are added to the network.  Checkpoints are stored under the [sdk-lib's assets](../sdk-lib/src/main/assets/co.electriccoin.zcash/checkpoint) directory as JSON files.  Checkpoints for both mainnet and testnet are bundled into the SDK.
 
 To update the checkpoints, see [Checkmate](https://github.com/zcash-hackworks/checkmate).
 
-We generally recommend adding new checkpoints every few weeks.  By convention, checkpoints are added in block 
+We generally recommend adding new checkpoints every few weeks.  By convention, checkpoints are added in block
 increments of 2,500 for mainnet and 10,000 for testnet. These increments provide a reasonable tradeoff in terms of number of checkpoints versus performance.
 
-There are two special checkpoints, one for sapling activation and another for orchard activation.  These are 
+There are two special checkpoints, one for sapling activation and another for orchard activation.  These are
 mentioned because they don't follow the "round 2,500 or 10,000" rule.
  * Sapling activation
      * Mainnet: 419200

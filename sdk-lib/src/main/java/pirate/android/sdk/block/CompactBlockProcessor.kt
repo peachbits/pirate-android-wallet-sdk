@@ -7,11 +7,10 @@ import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Disconne
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Downloading
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Enhancing
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Initialized
-import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.PirateScanned
+import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanned
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Scanning
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Stopped
 import pirate.android.sdk.block.PirateCompactBlockProcessor.PirateState.Validating
-import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateEnhanceTransactionError.PirateEnhanceTxDecryptError
 import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateEnhanceTransactionError.PirateEnhanceTxDownloadError
@@ -20,6 +19,7 @@ import pirate.android.sdk.exception.PirateCompactBlockProcessorException.PirateM
 import pirate.android.sdk.exception.PirateInitializerException
 import pirate.android.sdk.exception.PirateRustLayerException
 import pirate.android.sdk.ext.PirateBatchMetrics
+import pirate.android.sdk.ext.BenchmarkingExt
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.PirateSdk.DOWNLOAD_BATCH_SIZE
 import pirate.android.sdk.ext.PirateSdk.MAX_BACKOFF_INTERVAL
@@ -28,19 +28,22 @@ import pirate.android.sdk.ext.PirateSdk.POLL_INTERVAL
 import pirate.android.sdk.ext.PirateSdk.RETRIES
 import pirate.android.sdk.ext.PirateSdk.REWIND_DISTANCE
 import pirate.android.sdk.ext.PirateSdk.SCAN_BATCH_SIZE
+import pirate.android.sdk.fixture.BlockRangeFixture
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.block.PirateCompactBlockDownloader
 import pirate.android.sdk.internal.ext.retryUpTo
 import pirate.android.sdk.internal.ext.retryWithBackoff
 import pirate.android.sdk.internal.ext.toHexReversed
 import pirate.android.sdk.internal.isEmpty
-import pirate.android.sdk.internal.transaction.PiratePagedTransactionRepository
-import pirate.android.sdk.internal.transaction.TransactionRepository
+import pirate.android.sdk.internal.repository.DerivedDataRepository
 import pirate.android.sdk.internal.twig
 import pirate.android.sdk.internal.twigTask
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.TransactionOverview
+import pirate.android.sdk.model.PirateUnifiedSpendingKey
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.wallet.sdk.rpc.Service
 import io.grpc.StatusRuntimeException
@@ -49,7 +52,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -79,7 +81,7 @@ import kotlin.time.Duration.Companion.days
 @Suppress("TooManyFunctions", "LargeClass")
 class PirateCompactBlockProcessor internal constructor(
     val downloader: PirateCompactBlockDownloader,
-    private val repository: TransactionRepository,
+    private val repository: DerivedDataRepository,
     private val rustBackend: PirateRustBackendWelding,
     minimumHeight: BlockHeight = rustBackend.network.saplingActivationHeight
 ) {
@@ -190,6 +192,7 @@ class PirateCompactBlockProcessor internal constructor(
     /**
      * Download compact blocks, verify and scan them until [stop] is called.
      */
+    @Suppress("LongMethod")
     suspend fun start() = withContext(IO) {
         verifySetup()
         updateBirthdayHeight()
@@ -223,13 +226,15 @@ class PirateCompactBlockProcessor internal constructor(
                         consecutiveChainErrors.set(0)
                         val napTime = calculatePollInterval()
                         twig(
-                            "$summary${if (result == BlockProcessingResult.FailedEnhance) {
-                                " (but there were" +
-                                    " enhancement errors! We ignore those, for now. Memos in this block range are" +
-                                    " probably missing! This will be improved in a future release.)"
-                            } else {
-                                ""
-                            }}! Sleeping" +
+                            "$summary${
+                                if (result == BlockProcessingResult.FailedEnhance) {
+                                    " (but there were" +
+                                        " enhancement errors! We ignore those, for now. Memos in this block range are" +
+                                        " probably missing! This will be improved in a future release.)"
+                                } else {
+                                    ""
+                                }
+                            }! Sleeping" +
                                 " for ${napTime}ms (latest height: ${currentInfo.networkBlockHeight})."
                         )
                         delay(napTime)
@@ -282,16 +287,29 @@ class PirateCompactBlockProcessor internal constructor(
             downloader.lightWalletService.reconnect()
             BlockProcessingResult.Reconnecting
         } else if (currentInfo.lastDownloadRange.isEmpty() && currentInfo.lastScanRange.isEmpty()) {
-            setState(PirateScanned(currentInfo.lastScanRange))
+            setState(Scanned(currentInfo.lastScanRange))
             BlockProcessingResult.NoBlocksToProcess
         } else {
-            downloadNewBlocks(currentInfo.lastDownloadRange)
-            val error = validateAndScanNewBlocks(currentInfo.lastScanRange)
-            if (error != BlockProcessingResult.Success) {
-                error
+            if (BenchmarkingExt.isBenchmarking()) {
+                // We inject a benchmark test blocks range at this point to process only a restricted range of blocks
+                // for a more reliable benchmark results.
+                val benchmarkBlockRange = BlockRangeFixture.new()
+                downloadNewBlocks(benchmarkBlockRange)
+                val error = validateAndScanNewBlocks(benchmarkBlockRange)
+                if (error != BlockProcessingResult.Success) {
+                    error
+                } else {
+                    enhanceTransactionDetails(benchmarkBlockRange)
+                }
             } else {
-                currentInfo.lastScanRange?.let { enhanceTransactionDetails(it) }
-                    ?: BlockProcessingResult.NoBlocksToProcess
+                downloadNewBlocks(currentInfo.lastDownloadRange)
+                val error = validateAndScanNewBlocks(currentInfo.lastScanRange)
+                if (error != BlockProcessingResult.Success) {
+                    error
+                } else {
+                    currentInfo.lastScanRange?.let { enhanceTransactionDetails(it) }
+                        ?: BlockProcessingResult.NoBlocksToProcess
+                }
             }
         }
     }
@@ -384,7 +402,7 @@ class PirateCompactBlockProcessor internal constructor(
                 if (!success) {
                     throw PirateCompactBlockProcessorException.PirateFailedScan()
                 } else {
-                    setState(PirateScanned(lastScanRange))
+                    setState(Scanned(lastScanRange))
                 }
             }
 
@@ -403,7 +421,7 @@ class PirateCompactBlockProcessor internal constructor(
             } else {
                 twig("enhancing ${newTxs.size} transaction(s)!")
                 // if the first transaction has been added
-                if (newTxs.size == repository.count()) {
+                if (newTxs.size.toLong() == repository.getTransactionCount()) {
                     twig("Encountered the first transaction. This changes the birthday height!")
                     updateBirthdayHeight()
                 }
@@ -421,30 +439,31 @@ class PirateCompactBlockProcessor internal constructor(
             Twig.clip("enhancing")
         }
     }
-
     // TODO [#683]: we still need a way to identify those transactions that failed to be enhanced
     // TODO [#683]: https://github.com/zcash/zcash-android-wallet-sdk/issues/683
 
-    private suspend fun enhance(transaction: PirateConfirmedTransaction) = withContext(Dispatchers.IO) {
-        var downloaded = false
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            twig("START: enhancing transaction (id:${transaction.id}  block:${transaction.minedHeight})")
-            downloader.fetchTransaction(transaction.rawTransactionId)?.let { tx ->
-                downloaded = true
-                twig("decrypting and storing transaction (id:${transaction.id}  block:${transaction.minedHeight})")
-                rustBackend.decryptAndStoreTransaction(tx.data.toByteArray())
-            } ?: twig("no transaction found. Nothing to enhance. This probably shouldn't happen.")
-            twig("DONE: enhancing transaction (id:${transaction.id}  block:${transaction.minedHeight})")
-        } catch (t: Throwable) {
-            twig("Warning: failure on transaction: error: $t\ttransaction: $transaction")
-            onProcessorError(
-                if (downloaded) {
-                    PirateEnhanceTxDecryptError(transaction.minedBlockHeight, t)
-                } else {
-                    PirateEnhanceTxDownloadError(transaction.minedBlockHeight, t)
+    private suspend fun enhance(transaction: TransactionOverview) = withContext(Dispatchers.IO) {
+        enhanceHelper(transaction.id, transaction.rawId.byteArray, transaction.minedHeight)
+    }
+
+    private suspend fun enhanceHelper(id: Long, rawTransactionId: ByteArray, minedHeight: BlockHeight) {
+        twig("START: enhancing transaction (id:$id  block:$minedHeight)")
+
+        runCatching {
+            downloader.fetchTransaction(rawTransactionId)
+        }.onSuccess { tx ->
+            tx?.let {
+                runCatching {
+                    twig("decrypting and storing transaction (id:$id  block:$minedHeight)")
+                    rustBackend.decryptAndStoreTransaction(it.data.toByteArray())
+                }.onSuccess {
+                    twig("DONE: enhancing transaction (id:$id  block:$minedHeight)")
+                }.onFailure { error ->
+                    onProcessorError(PirateEnhanceTxDecryptError(minedHeight, error))
                 }
-            )
+            } ?: twig("no transaction found. Nothing to enhance. This probably shouldn't happen.")
+        }.onFailure { error ->
+            onProcessorError(PirateEnhanceTxDownloadError(minedHeight, error))
         }
     }
 
@@ -546,8 +565,15 @@ class PirateCompactBlockProcessor internal constructor(
     ): Int = withContext(IO) {
         var skipped = 0
         val aboveHeight = startHeight
-        twig("Clearing utxos above height $aboveHeight", -1)
-        rustBackend.clearUtxos(tAddress, aboveHeight)
+        // TODO(str4d): We no longer clear UTXOs here, as rustBackend.putUtxo now uses an upsert instead of an insert.
+        //  This means that now-spent UTXOs would previously have been deleted, but now are left in the database (like
+        //  shielded notes). Due to the fact that the lightwalletd query only returns _current_ UTXOs, we don't learn
+        //  about recently-spent UTXOs here, so the transparent balance does not get updated here. Instead, when a
+        //  received shielded note is "enhanced" by downloading the full transaction, we mark any UTXOs spent in that
+        //  transaction as spent in the database. This relies on two current properties: UTXOs are only ever spent in
+        //  shielding transactions, and at least one shielded note from each shielding transaction is always enhanced.
+        //  However, for greater reliability, we may want to alter the Data Access API to support "inferring spentness"
+        //  from what is _not_ returned as a UTXO, or alternatively fetch TXOs from lightwalletd instead of just UTXOs.
         twig("Checking for UTXOs above height $aboveHeight")
         result.forEach { utxo: Service.GetAddressUtxosReply ->
             twig("Found UTXO at height ${utxo.height.toInt()} with ${utxo.valueZat} zatoshi")
@@ -899,14 +925,14 @@ class PirateCompactBlockProcessor internal constructor(
         twig("=================== BLOCKS [$errorHeight..${errorHeight.value + count - 1}]: START ========")
         repeat(count) { i ->
             val height = errorHeight + i
-            val block = downloader.compactBlockStore.findCompactBlock(height)
+            val block = downloader.compactBlockRepository.findCompactBlock(height)
             // sometimes the initial block was inserted via checkpoint and will not appear in the cache. We can get
             // the hash another way but prevHash is correctly null.
             val hash = block?.hash?.toByteArray()
-                ?: (repository as PiratePagedTransactionRepository).findBlockHash(height)
+                ?: repository.findBlockHash(height)
             twig(
                 "block: $height\thash=${hash?.toHexReversed()} \tprevHash=${
-                block?.prevHash?.toByteArray()?.toHexReversed()
+                    block?.prevHash?.toByteArray()?.toHexReversed()
                 }"
             )
         }
@@ -914,11 +940,11 @@ class PirateCompactBlockProcessor internal constructor(
     }
 
     private suspend fun fetchValidationErrorInfo(errorHeight: BlockHeight): PirateValidationErrorInfo {
-        val hash = (repository as PiratePagedTransactionRepository).findBlockHash(errorHeight + 1)
+        val hash = repository.findBlockHash(errorHeight + 1)
             ?.toHexReversed()
         val prevHash = repository.findBlockHash(errorHeight)?.toHexReversed()
 
-        val compactBlock = downloader.compactBlockStore.findCompactBlock(errorHeight + 1)
+        val compactBlock = downloader.compactBlockRepository.findCompactBlock(errorHeight + 1)
         val expectedPrevHash = compactBlock?.prevHash?.toByteArray()?.toHexReversed()
         return PirateValidationErrorInfo(errorHeight, hash, expectedPrevHash, prevHash)
     }
@@ -966,10 +992,7 @@ class PirateCompactBlockProcessor internal constructor(
         var oldestTransactionHeight: BlockHeight? = null
         @Suppress("TooGenericExceptionCaught")
         try {
-            val tempOldestTransactionHeight = repository.receivedTransactions
-                .first()
-                .lastOrNull()
-                ?.minedBlockHeight
+            val tempOldestTransactionHeight = repository.getOldestTransaction()?.minedHeight
                 ?: lowerBoundHeight
             // to be safe adjust for reorgs (and generally a little cushion is good for privacy)
             // so we round down to the nearest 100 and then subtract 100 to ensure that the result is always at least
@@ -1005,33 +1028,55 @@ class PirateCompactBlockProcessor internal constructor(
     suspend fun getLastScannedHeight() =
         repository.lastScannedHeight()
 
+    // PirateCompactBlockProcessor is the wrong place for this, but it's where all the other APIs that need
+    //  access to the PirateRustBackend live. This should be refactored.
+    internal suspend fun createAccount(seed: ByteArray): PirateUnifiedSpendingKey =
+        rustBackend.createAccount(seed)
+
     /**
-     * Get address corresponding to the given account for this wallet.
+     * Get the current unified address for the given wallet account.
      *
-     * @return the address of this wallet.
+     * @return the current unified address of this account.
      */
-    suspend fun getShieldedAddress(accountId: Int = 0) =
-        repository.getAccount(accountId)?.rawShieldedAddress
-            ?: throw PirateInitializerException.PirateMissingAddressException("shielded")
-
-    suspend fun getTransparentAddress(accountId: Int = 0) =
-        repository.getAccount(accountId)?.rawTransparentAddress
-            ?: throw PirateInitializerException.PirateMissingAddressException("transparent")
+    suspend fun getCurrentAddress(account: Account) =
+        rustBackend.getCurrentAddress(account.value)
 
     /**
-     * Calculates the latest balance info. Defaults to the first account.
+     * Get the legacy Sapling address corresponding to the current unified address for the given wallet account.
      *
-     * @param accountIndex the account to check for balance info.
+     * @return a Sapling address.
+     */
+    suspend fun getLegacySaplingAddress(account: Account) =
+        rustBackend.getSaplingReceiver(
+            rustBackend.getCurrentAddress(account.value)
+        )
+            ?: throw PirateInitializerException.PirateMissingAddressException("legacy Sapling")
+
+    /**
+     * Get the legacy transparent address corresponding to the current unified address for the given wallet account.
+     *
+     * @return a transparent address.
+     */
+    suspend fun getTransparentAddress(account: Account) =
+        rustBackend.getTransparentReceiver(
+            rustBackend.getCurrentAddress(account.value)
+        )
+            ?: throw PirateInitializerException.PirateMissingAddressException("legacy transparent")
+
+    /**
+     * Calculates the latest balance info.
+     *
+     * @param account the account to check for balance info.
      *
      * @return an instance of PirateWalletBalance containing information about available and total funds.
      */
-    suspend fun getBalanceInfo(accountIndex: Int = 0): PirateWalletBalance =
+    suspend fun getBalanceInfo(account: Account): PirateWalletBalance =
         twigTask("checking balance info", -1) {
             @Suppress("TooGenericExceptionCaught")
             try {
-                val balanceTotal = rustBackend.getBalance(accountIndex)
+                val balanceTotal = rustBackend.getBalance(account.value)
                 twig("found total balance: $balanceTotal")
-                val balanceAvailable = rustBackend.getVerifiedBalance(accountIndex)
+                val balanceAvailable = rustBackend.getVerifiedBalance(account.value)
                 twig("found available balance: $balanceAvailable")
                 PirateWalletBalance(balanceTotal, balanceAvailable)
             } catch (t: Throwable) {
@@ -1086,7 +1131,7 @@ class PirateCompactBlockProcessor internal constructor(
         /**
          * [PirateState] for when we are done decrypting blocks, for now.
          */
-        class PirateScanned(val scannedRange: ClosedRange<BlockHeight>?) : Connected, Syncing, PirateState()
+        class Scanned(val scannedRange: ClosedRange<BlockHeight>?) : Connected, Syncing, PirateState()
 
         /**
          * [PirateState] for when transaction details are being retrieved. This typically means the wallet

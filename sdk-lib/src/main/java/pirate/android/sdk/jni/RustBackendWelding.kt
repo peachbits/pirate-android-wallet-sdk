@@ -1,11 +1,13 @@
 package pirate.android.sdk.jni
 
 import pirate.android.sdk.internal.model.Checkpoint
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
+import pirate.android.sdk.model.PirateUnifiedSpendingKey
 import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
-import pirate.android.sdk.type.PirateUnifiedViewingKey
 import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.type.PirateUnifiedFullViewingKey
 import java.io.File
 
 /**
@@ -23,45 +25,48 @@ internal interface PirateRustBackendWelding {
 
     @Suppress("LongParameterList")
     suspend fun createToAddress(
-        consensusBranchId: Long,
-        account: Int,
-        extsk: String,
+        usk: PirateUnifiedSpendingKey,
         to: String,
         value: Long,
         memo: ByteArray? = byteArrayOf()
     ): Long
 
     suspend fun shieldToAddress(
-        extsk: String,
-        tsk: String,
+        usk: PirateUnifiedSpendingKey,
         memo: ByteArray? = byteArrayOf()
     ): Long
 
     suspend fun decryptAndStoreTransaction(tx: ByteArray)
 
-    suspend fun initAccountsTable(seed: ByteArray, numberOfAccounts: Int): Array<PirateUnifiedViewingKey>
+    suspend fun initAccountsTable(seed: ByteArray, numberOfAccounts: Int): Array<PirateUnifiedFullViewingKey>
 
-    suspend fun initAccountsTable(vararg keys: PirateUnifiedViewingKey): Boolean
+    suspend fun initAccountsTable(vararg keys: PirateUnifiedFullViewingKey): Boolean
 
     suspend fun initBlocksTable(checkpoint: Checkpoint): Boolean
 
-    suspend fun initDataDb(): Boolean
+    suspend fun initDataDb(seed: ByteArray?): Int
+
+    suspend fun createAccount(seed: ByteArray): PirateUnifiedSpendingKey
 
     fun isValidShieldedAddr(addr: String): Boolean
 
     fun isValidTransparentAddr(addr: String): Boolean
 
-    suspend fun getShieldedAddress(account: Int = 0): String
+    fun isValidUnifiedAddr(addr: String): Boolean
 
-    suspend fun getTransparentAddress(account: Int = 0, index: Int = 0): String
+    suspend fun getCurrentAddress(account: Int = 0): String
+
+    fun getTransparentReceiver(ua: String): String?
+
+    fun getSaplingReceiver(ua: String): String?
 
     suspend fun getBalance(account: Int = 0): Arrrtoshi
 
     fun getBranchIdForHeight(height: BlockHeight): Long
 
-    suspend fun getReceivedMemoAsUtf8(idNote: Long): String
+    suspend fun getReceivedMemoAsUtf8(idNote: Long): String?
 
-    suspend fun getSentMemoAsUtf8(idNote: Long): String
+    suspend fun getSentMemoAsUtf8(idNote: Long): String?
 
     suspend fun getVerifiedBalance(account: Int = 0): Arrrtoshi
 
@@ -88,65 +93,36 @@ internal interface PirateRustBackendWelding {
         height: BlockHeight
     ): Boolean
 
-    suspend fun clearUtxos(
-        tAddress: String,
-        aboveHeightInclusive: BlockHeight = BlockHeight(network.saplingActivationHeight.value)
-    ): Boolean
-
     suspend fun getDownloadedUtxoBalance(address: String): PirateWalletBalance
 
     // Implemented by `PirateDerivationTool`
     interface Derivation {
-        suspend fun deriveShieldedAddress(
+        suspend fun derivePirateUnifiedAddress(
             viewingKey: String,
             network: PirateNetwork
         ): String
 
-        suspend fun deriveShieldedAddress(
+        suspend fun derivePirateUnifiedAddress(
             seed: ByteArray,
             network: PirateNetwork,
-            accountIndex: Int = 0
+            account: Account
         ): String
 
-        suspend fun deriveSpendingKeys(
+        suspend fun derivePirateUnifiedSpendingKey(
+            seed: ByteArray,
+            network: PirateNetwork,
+            account: Account
+        ): PirateUnifiedSpendingKey
+
+        suspend fun derivePirateUnifiedFullViewingKey(
+            usk: PirateUnifiedSpendingKey,
+            network: PirateNetwork
+        ): PirateUnifiedFullViewingKey
+
+        suspend fun derivePirateUnifiedFullViewingKeys(
             seed: ByteArray,
             network: PirateNetwork,
             numberOfAccounts: Int = 1
-        ): Array<String>
-
-        suspend fun deriveTransparentAddress(
-            seed: ByteArray,
-            network: PirateNetwork,
-            account: Int = 0,
-            index: Int = 0
-        ): String
-
-        suspend fun deriveTransparentAddressFromPublicKey(
-            publicKey: String,
-            network: PirateNetwork
-        ): String
-
-        suspend fun deriveTransparentAddressFromPrivateKey(
-            privateKey: String,
-            network: PirateNetwork
-        ): String
-
-        suspend fun deriveTransparentSecretKey(
-            seed: ByteArray,
-            network: PirateNetwork,
-            account: Int = 0,
-            index: Int = 0
-        ): String
-
-        suspend fun deriveViewingKey(
-            spendingKey: String,
-            network: PirateNetwork
-        ): String
-
-        suspend fun derivePirateUnifiedViewingKeys(
-            seed: ByteArray,
-            network: PirateNetwork,
-            numberOfAccounts: Int = 1
-        ): Array<PirateUnifiedViewingKey>
+        ): Array<PirateUnifiedFullViewingKey>
     }
 }

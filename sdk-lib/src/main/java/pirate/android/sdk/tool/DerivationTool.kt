@@ -2,196 +2,141 @@ package pirate.android.sdk.tool
 
 import pirate.android.sdk.jni.PirateRustBackend
 import pirate.android.sdk.jni.PirateRustBackendWelding
+import pirate.android.sdk.model.Account
+import pirate.android.sdk.model.PirateUnifiedSpendingKey
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.type.PirateUnifiedViewingKey
+import pirate.android.sdk.type.PirateUnifiedFullViewingKey
 
-@Suppress("UtilityClassWithPublicConstructor")
-class PirateDerivationTool {
+@Suppress("TooManyFunctions")
+object PirateDerivationTool : PirateRustBackendWelding.Derivation {
 
-    @Suppress("TooManyFunctions")
-    companion object : PirateRustBackendWelding.Derivation {
-
-        /**
-         * Given a seed and a number of accounts, return the associated viewing keys.
-         *
-         * @param seed the seed from which to derive viewing keys.
-         * @param numberOfAccounts the number of accounts to use. Multiple accounts are not fully
-         * supported so the default value of 1 is recommended.
-         *
-         * @return the viewing keys that correspond to the seed, formatted as Strings.
-         */
-        override suspend fun derivePirateUnifiedViewingKeys(
-            seed: ByteArray,
-            network: PirateNetwork,
-            numberOfAccounts: Int
-        ): Array<PirateUnifiedViewingKey> =
-            withPirateRustBackendLoaded {
-                derivePirateUnifiedViewingKeysFromSeed(seed, numberOfAccounts, networkId = network.id).map {
-                    PirateUnifiedViewingKey(it[0], it[1])
-                }.toTypedArray()
-            }
-
-        /**
-         * Given a spending key, return the associated viewing key.
-         *
-         * @param spendingKey the key from which to derive the viewing key.
-         *
-         * @return the viewing key that corresponds to the spending key.
-         */
-        override suspend fun deriveViewingKey(
-            spendingKey: String,
-            network: PirateNetwork
-        ): String = withPirateRustBackendLoaded {
-            deriveExtendedFullViewingKey(spendingKey, networkId = network.id)
+    /**
+     * Given a seed and a number of accounts, return the associated Unified Full Viewing Keys.
+     *
+     * @param seed the seed from which to derive viewing keys.
+     * @param numberOfAccounts the number of accounts to use. Multiple accounts are not fully
+     * supported so the default value of 1 is recommended.
+     *
+     * @return the UFVKs derived from the seed, encoded as Strings.
+     */
+    override suspend fun derivePirateUnifiedFullViewingKeys(
+        seed: ByteArray,
+        network: PirateNetwork,
+        numberOfAccounts: Int
+    ): Array<PirateUnifiedFullViewingKey> =
+        withPirateRustBackendLoaded {
+            derivePirateUnifiedFullViewingKeysFromSeed(seed, numberOfAccounts, networkId = network.id).map {
+                PirateUnifiedFullViewingKey(it)
+            }.toTypedArray()
         }
 
-        /**
-         * Given a seed and a number of accounts, return the associated spending keys.
-         *
-         * @param seed the seed from which to derive spending keys.
-         * @param numberOfAccounts the number of accounts to use. Multiple accounts are not fully
-         * supported so the default value of 1 is recommended.
-         *
-         * @return the spending keys that correspond to the seed, formatted as Strings.
-         */
-        override suspend fun deriveSpendingKeys(
-            seed: ByteArray,
-            network: PirateNetwork,
-            numberOfAccounts: Int
-        ): Array<String> = withPirateRustBackendLoaded {
-            deriveExtendedSpendingKeys(seed, numberOfAccounts, networkId = network.id)
-        }
-
-        /**
-         * Given a seed and account index, return the associated address.
-         *
-         * @param seed the seed from which to derive the address.
-         * @param accountIndex the index of the account to use for deriving the address. Multiple
-         * accounts are not fully supported so the default value of 1 is recommended.
-         *
-         * @return the address that corresponds to the seed and account index.
-         */
-        override suspend fun deriveShieldedAddress(seed: ByteArray, network: PirateNetwork, accountIndex: Int): String =
-            withPirateRustBackendLoaded {
-                deriveShieldedAddressFromSeed(seed, accountIndex, networkId = network.id)
-            }
-
-        /**
-         * Given a viewing key string, return the associated address.
-         *
-         * @param viewingKey the viewing key to use for deriving the address. The viewing key is tied to
-         * a specific account so no account index is required.
-         *
-         * @return the address that corresponds to the viewing key.
-         */
-        override suspend fun deriveShieldedAddress(
-            viewingKey: String,
-            network: PirateNetwork
-        ): String = withPirateRustBackendLoaded {
-            deriveShieldedAddressFromViewingKey(viewingKey, networkId = network.id)
-        }
-
-        // WIP probably shouldn't be used just yet. Why?
-        //  - because we need the private key associated with this seed and this function doesn't return it.
-        //  - the underlying implementation needs to be split out into a few lower-level calls
-        override suspend fun deriveTransparentAddress(
-            seed: ByteArray,
-            network: PirateNetwork,
-            account: Int,
-            index: Int
-        ): String = withPirateRustBackendLoaded {
-            deriveTransparentAddressFromSeed(seed, account, index, networkId = network.id)
-        }
-
-        override suspend fun deriveTransparentAddressFromPublicKey(
-            publicKey: String,
-            network: PirateNetwork
-        ): String = withPirateRustBackendLoaded {
-            deriveTransparentAddressFromPubKey(pk = publicKey, networkId = network.id)
-        }
-
-        override suspend fun deriveTransparentAddressFromPrivateKey(
-            privateKey: String,
-            network: PirateNetwork
-        ): String = withPirateRustBackendLoaded {
-            deriveTransparentAddressFromPrivKey(sk = privateKey, networkId = network.id)
-        }
-
-        override suspend fun deriveTransparentSecretKey(
-            seed: ByteArray,
-            network: PirateNetwork,
-            account: Int,
-            index: Int
-        ): String = withPirateRustBackendLoaded {
-            deriveTransparentSecretKeyFromSeed(seed, account, index, networkId = network.id)
-        }
-
-        @Suppress("UNUSED_PARAMETER")
-        fun validatePirateUnifiedViewingKey(viewingKey: PirateUnifiedViewingKey, networkId: Int = PirateNetwork.Mainnet.id) {
-            // TODO [#654] https://github.com/zcash/zcash-android-wallet-sdk/issues/654
-        }
-
-        /**
-         * A helper function to ensure that the Rust libraries are loaded before any code in this
-         * class attempts to interact with it, indirectly, by invoking JNI functions. It would be
-         * nice to have an annotation like @UsesSystemLibrary for this
-         */
-        private suspend fun <T> withPirateRustBackendLoaded(block: () -> T): T {
-            PirateRustBackend.rustLibraryLoader.load()
-            return block()
-        }
-
-        //
-        // JNI functions
-        //
-
-        @JvmStatic
-        private external fun deriveExtendedSpendingKeys(
-            seed: ByteArray,
-            numberOfAccounts: Int,
-            networkId: Int
-        ): Array<String>
-
-        @JvmStatic
-        private external fun derivePirateUnifiedViewingKeysFromSeed(
-            seed: ByteArray,
-            numberOfAccounts: Int,
-            networkId: Int
-        ): Array<Array<String>>
-
-        @JvmStatic
-        private external fun deriveExtendedFullViewingKey(spendingKey: String, networkId: Int): String
-
-        @JvmStatic
-        private external fun deriveShieldedAddressFromSeed(
-            seed: ByteArray,
-            accountIndex: Int,
-            networkId: Int
-        ): String
-
-        @JvmStatic
-        private external fun deriveShieldedAddressFromViewingKey(key: String, networkId: Int): String
-
-        @JvmStatic
-        private external fun deriveTransparentAddressFromSeed(
-            seed: ByteArray,
-            account: Int,
-            index: Int,
-            networkId: Int
-        ): String
-
-        @JvmStatic
-        private external fun deriveTransparentAddressFromPubKey(pk: String, networkId: Int): String
-
-        @JvmStatic
-        private external fun deriveTransparentAddressFromPrivKey(sk: String, networkId: Int): String
-
-        @JvmStatic
-        private external fun deriveTransparentSecretKeyFromSeed(
-            seed: ByteArray,
-            account: Int,
-            index: Int,
-            networkId: Int
-        ): String
+    /**
+     * Given a unified spending key, return the associated unified full viewing key.
+     *
+     * @param usk the key from which to derive the viewing key.
+     *
+     * @return a unified full viewing key.
+     */
+    override suspend fun derivePirateUnifiedFullViewingKey(
+        usk: PirateUnifiedSpendingKey,
+        network: PirateNetwork
+    ): PirateUnifiedFullViewingKey = withPirateRustBackendLoaded {
+        PirateUnifiedFullViewingKey(
+            derivePirateUnifiedFullViewingKey(usk.copyBytes(), networkId = network.id)
+        )
     }
+
+    /**
+     * Derives and returns a unified spending key from the given seed for the given account ID.
+     *
+     * Returns the newly created [ZIP 316] account identifier, along with the binary encoding
+     * of the [`PirateUnifiedSpendingKey`] for the newly created account. The caller should store
+     * the returned spending key in a secure fashion.
+     *
+     * @param seed the seed from which to derive spending keys.
+     * @param account the account to derive.
+     *
+     * @return the unified spending key for the account.
+     */
+    override suspend fun derivePirateUnifiedSpendingKey(
+        seed: ByteArray,
+        network: PirateNetwork,
+        account: Account
+    ): PirateUnifiedSpendingKey = withPirateRustBackendLoaded {
+        deriveSpendingKey(seed, account.value, networkId = network.id)
+    }
+
+    /**
+     * Given a seed and account index, return the associated Unified Address.
+     *
+     * @param seed the seed from which to derive the address.
+     * @param accountIndex the index of the account to use for deriving the address.
+     *
+     * @return the address that corresponds to the seed and account index.
+     */
+    override suspend fun derivePirateUnifiedAddress(seed: ByteArray, network: PirateNetwork, account: Account): String =
+        withPirateRustBackendLoaded {
+            derivePirateUnifiedAddressFromSeed(seed, account.value, networkId = network.id)
+        }
+
+    /**
+     * Given a Unified Full Viewing Key string, return the associated Unified Address.
+     *
+     * @param viewingKey the viewing key to use for deriving the address. The viewing key is tied to
+     * a specific account so no account index is required.
+     *
+     * @return the address that corresponds to the viewing key.
+     */
+    override suspend fun derivePirateUnifiedAddress(
+        viewingKey: String,
+        network: PirateNetwork
+    ): String = withPirateRustBackendLoaded {
+        derivePirateUnifiedAddressFromViewingKey(viewingKey, networkId = network.id)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun validatePirateUnifiedFullViewingKey(viewingKey: PirateUnifiedFullViewingKey, networkId: Int = PirateNetwork.Mainnet.id) {
+        // TODO [#654] https://github.com/zcash/zcash-android-wallet-sdk/issues/654
+    }
+
+    /**
+     * A helper function to ensure that the Rust libraries are loaded before any code in this
+     * class attempts to interact with it, indirectly, by invoking JNI functions. It would be
+     * nice to have an annotation like @UsesSystemLibrary for this
+     */
+    private suspend fun <T> withPirateRustBackendLoaded(block: () -> T): T {
+        PirateRustBackend.loadLibrary()
+        return block()
+    }
+
+    //
+    // JNI functions
+    //
+
+    @JvmStatic
+    private external fun deriveSpendingKey(
+        seed: ByteArray,
+        account: Int,
+        networkId: Int
+    ): PirateUnifiedSpendingKey
+
+    @JvmStatic
+    private external fun derivePirateUnifiedFullViewingKeysFromSeed(
+        seed: ByteArray,
+        numberOfAccounts: Int,
+        networkId: Int
+    ): Array<String>
+
+    @JvmStatic
+    private external fun derivePirateUnifiedFullViewingKey(usk: ByteArray, networkId: Int): String
+
+    @JvmStatic
+    private external fun derivePirateUnifiedAddressFromSeed(
+        seed: ByteArray,
+        accountIndex: Int,
+        networkId: Int
+    ): String
+
+    @JvmStatic
+    private external fun derivePirateUnifiedAddressFromViewingKey(key: String, networkId: Int): String
 }

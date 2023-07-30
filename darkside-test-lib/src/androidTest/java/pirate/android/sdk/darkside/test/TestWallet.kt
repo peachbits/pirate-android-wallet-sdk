@@ -3,20 +3,21 @@ package pirate.android.sdk.darkside.test
 import androidx.test.platform.app.InstrumentationRegistry
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.PirateInitializer
-import pirate.android.sdk.SdkSynchronizer
-import pirate.android.sdk.Synchronizer
-import pirate.android.sdk.db.entity.isPending
+
+import pirate.android.sdk.PirateSdkSynchronizer
+import pirate.android.sdk.PirateSynchronizer
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.Darkside
 import pirate.android.sdk.model.LightWalletEndpoint
-import pirate.android.sdk.model.WalletBalance
+import pirate.android.sdk.model.PirateWalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.model.isPending
+import pirate.android.sdk.tool.PirateDerivationTool
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
@@ -64,26 +65,28 @@ class TestWallet(
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val seed: ByteArray = Mnemonics.MnemonicCode(seedPhrase).toSeed()
     private val shieldedSpendingKey =
-        runBlocking { DerivationTool.deriveSpendingKeys(seed, network = network)[0] }
-    private val transparentSecretKey =
-        runBlocking { DerivationTool.deriveTransparentSecretKey(seed, network = network) }
-    val initializer = runBlocking {
-        PirateInitializer.new(context) { config ->
-            runBlocking { config.importWallet(seed, startHeight, network, endpoint, alias = alias) }
-        }
-    }
-    val synchronizer: SdkSynchronizer = runBlocking { Synchronizer.new(initializer) } as SdkSynchronizer
-    val service = (synchronizer.processor.downloader.lightWalletService as PirateLightWalletGrpcService)
+        runBlocking { PirateDerivationTool.derivePirateUnifiedSpendingKey(seed, network = network, Account.DEFAULT) }
+    val synchronizer: PirateSdkSynchronizer = PirateSynchronizer.newBlocking(
+        context,
+        network,
+        alias,
+        endpoint,
+        seed,
+        startHeight
+    )
+        as
+        PirateSdkSynchronizer
+    val service = (synchronizer.processor.downloader.lightWalletService as LightWalletGrpcService)
 
     val available get() = synchronizer.saplingBalances.value?.available
-    val shieldedAddress =
-        runBlocking { DerivationTool.deriveShieldedAddress(seed, network = network) }
+    val unifiedAddress =
+        runBlocking { synchronizer.getUnifiedAddress(Account.DEFAULT) }
     val transparentAddress =
-        runBlocking { DerivationTool.deriveTransparentAddress(seed, network = network) }
+        runBlocking { synchronizer.getTransparentAddress(Account.DEFAULT) }
     val birthdayHeight get() = synchronizer.latestBirthdayHeight
     val networkName get() = synchronizer.network.networkName
 
-    suspend fun transparentBalance(): WalletBalance {
+    suspend fun transparentBalance(): PirateWalletBalance {
         synchronizer.refreshUtxos(transparentAddress, synchronizer.latestBirthdayHeight)
         return synchronizer.getTransparentBalance(transparentAddress)
     }
@@ -95,23 +98,19 @@ class TestWallet(
                 throw TimeoutException("Failed to sync wallet within ${timeout}ms")
             }
         }
-        if (!synchronizer.isStarted) {
-            twig("Starting sync")
-            synchronizer.start(walletScope)
-        } else {
-            twig("Awaiting next SYNCED status")
-        }
+
+        twig("Awaiting next SYNCED status")
 
         // block until synced
-        synchronizer.status.first { it == Synchronizer.Status.SYNCED }
+        synchronizer.status.first { it == PirateSynchronizer.Status.SYNCED }
         killSwitch.cancel()
         twig("Synced!")
         return this
     }
 
-    suspend fun send(address: String = transparentAddress, memo: String = "", amount: Arrrtoshi = Arrrtoshi(500L), fromAccountIndex: Int = 0): TestWallet {
+    suspend fun send(address: String = transparentAddress, memo: String = "", amount: Arrrtoshi = Arrrtoshi(500L)): TestWallet {
         Twig.sprout("$alias sending")
-        synchronizer.sendToAddress(shieldedSpendingKey, amount, address, memo, fromAccountIndex)
+        synchronizer.sendToAddress(shieldedSpendingKey, amount, address, memo)
             .takeWhile { it.isPending(null) }
             .collect {
                 twig("Updated transaction: $it")
@@ -135,7 +134,7 @@ class TestWallet(
             twig("FOUND utxo balance of total: ${walletBalance.total}  available: ${walletBalance.available}")
 
             if (walletBalance.available.value > 0L) {
-                synchronizer.shieldFunds(shieldedSpendingKey, transparentSecretKey)
+                synchronizer.shieldFunds(shieldedSpendingKey)
                     .onCompletion { twig("done shielding funds") }
                     .catch { twig("Failed with $it") }
                     .collect()
@@ -152,10 +151,10 @@ class TestWallet(
             twig("Scheduling a stop in ${timeout}ms")
             walletScope.launch {
                 delay(timeout)
-                synchronizer.stop()
+                synchronizer.close()
             }
         }
-        synchronizer.status.first { it == Synchronizer.Status.STOPPED }
+        synchronizer.status.first { it == PirateSynchronizer.Status.STOPPED }
         twig("Stopped!")
         return this
     }
@@ -166,6 +165,9 @@ class TestWallet(
         }
     }
 
+    // TODO [843]: Ktlint 0.48.1 (remove this suppress)
+    // TODO [843]: https://github.com/zcash/zcash-android-wallet-sdk/issues/843
+    @Suppress("ktlint:no-semi")
     enum class Backups(val seedPhrase: String, val testnetBirthday: BlockHeight, val mainnetBirthday: BlockHeight) {
         // TODO: get the proper birthday values for these wallets
         DEFAULT(
@@ -207,7 +209,6 @@ class TestWallet(
                 1_330_190
             ),
             BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
-        )
-        ;
+        );
     }
 }

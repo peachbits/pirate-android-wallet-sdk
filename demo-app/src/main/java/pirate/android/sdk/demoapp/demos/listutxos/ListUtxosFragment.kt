@@ -4,32 +4,31 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import cash.z.ecc.android.bip39.Mnemonics
-import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.PirateInitializer
+
 import pirate.android.sdk.PirateSdkSynchronizer
-import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.PirateSynchronizer
 import pirate.android.sdk.block.PirateCompactBlockProcessor
-import pirate.android.sdk.db.entity.PirateConfirmedTransaction
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.DemoConstants
 import pirate.android.sdk.demoapp.databinding.FragmentListUtxosBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.demoapp.util.mainActivity
-import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.internal.twig
+import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.LightWalletEndpoint
+import pirate.android.sdk.model.TransactionOverview
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.model.defaultForNetwork
-import pirate.android.sdk.tool.PirateDerivationTool
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlin.math.max
 
@@ -47,46 +46,14 @@ import kotlin.math.max
  */
 @Suppress("TooManyFunctions")
 class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
-    private lateinit var seed: ByteArray
-    private lateinit var initializer: PirateInitializer
-    private lateinit var synchronizer: Synchronizer
     private lateinit var adapter: UtxoAdapter
     private val address: String = "t1RwbKka1CnktvAJ1cSqdn7c6PXWG4tZqgd"
-    private var status: Synchronizer.PirateStatus? = null
+    private var status: PirateSynchronizer.PirateStatus? = null
 
-    private val isSynced get() = status == Synchronizer.PirateStatus.SYNCED
+    private val isSynced get() = status == PirateSynchronizer.PirateStatus.SYNCED
 
     override fun inflateBinding(layoutInflater: LayoutInflater): FragmentListUtxosBinding =
         FragmentListUtxosBinding.inflate(layoutInflater)
-
-    /**
-     * Initialize the required values that would normally live outside the demo but are repeated
-     * here for completeness so that each demo file can serve as a standalone example.
-     */
-    private fun setup() {
-        // Use a BIP-39 library to convert a seed phrase into a byte array. Most wallets already
-        // have the seed stored
-        seed = Mnemonics.MnemonicCode(sharedViewModel.seedPhrase.value).toSeed()
-        initializer = runBlocking {
-            val network = PirateNetwork.fromResources(requireApplicationContext())
-            PirateInitializer.new(requireApplicationContext()) {
-                runBlocking {
-                    it.newWallet(
-                        seed,
-                        network = network,
-                        lightWalletEndpoint = LightWalletEndpoint.defaultForNetwork(network)
-                    )
-                }
-                it.alias = "Demo_Utxos"
-            }
-        }
-        synchronizer = runBlocking { Synchronizer.new(initializer) }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setup()
-    }
 
     private fun initUi() {
         binding.inputAddress.setText(address)
@@ -104,57 +71,59 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
     }
 
     private fun downloadTransactions() {
-        binding.textStatus.text = "loading..."
-        binding.textStatus.post {
-            val network = PirateNetwork.fromResources(requireApplicationContext())
-            binding.textStatus.requestFocus()
-            val addressToUse = binding.inputAddress.text.toString()
-            val startToUse = max(
-                binding.inputRangeStart.text.toString().toLongOrNull()
-                    ?: network.saplingActivationHeight.value,
-                network.saplingActivationHeight.value
-            )
-            val endToUse = binding.inputRangeEnd.text.toString().toLongOrNull()
-                ?: getUxtoEndHeight(requireApplicationContext()).value
-            var allStart = now
-            twig("loading transactions in range $startToUse..$endToUse")
-            val txids = lightWalletService?.getTAddressTransactions(
-                addressToUse,
-                BlockHeight.new(network, startToUse)..BlockHeight.new(network, endToUse)
-            )
-            var delta = now - allStart
-            updateStatus("found ${txids?.size} transactions in ${delta}ms.", false)
+        sharedViewModel.synchronizerFlow.value?.let { synchronizer ->
+            binding.textStatus.text = "loading..."
+            binding.textStatus.post {
+                val network = PirateNetwork.fromResources(requireApplicationContext())
+                binding.textStatus.requestFocus()
+                val addressToUse = binding.inputAddress.text.toString()
+                val startToUse = max(
+                    binding.inputRangeStart.text.toString().toLongOrNull()
+                        ?: network.saplingActivationHeight.value,
+                    network.saplingActivationHeight.value
+                )
+                val endToUse = binding.inputRangeEnd.text.toString().toLongOrNull()
+                    ?: getUxtoEndHeight(requireApplicationContext()).value
+                var allStart = now
+                twig("loading transactions in range $startToUse..$endToUse")
+                val txids = lightWalletService?.getTAddressTransactions(
+                    addressToUse,
+                    BlockHeight.new(network, startToUse)..BlockHeight.new(network, endToUse)
+                )
+                var delta = now - allStart
+                updateStatus("found ${txids?.size} transactions in ${delta}ms.", false)
 
-            txids?.map {
-                // Disabled during migration to newer SDK version; this appears to have been
-                // leveraging non-public  APIs in the SDK so perhaps should be removed
-                // it.data.apply {
-                //     try {
-                //         runBlocking { initializer.rustBackend.decryptAndStoreTransaction(toByteArray()) }
-                //     } catch (t: Throwable) {
-                //         twig("failed to decrypt and store transaction due to: $t")
-                //     }
-                // }
-            }?.let { _ ->
-                // Disabled during migration to newer SDK version; this appears to have been
-                // leveraging non-public  APIs in the SDK so perhaps should be removed
-                // val parseStart = now
-                // val tList = LocalRpcTypes.TransactionDataList.newBuilder().addAllData(txData).build()
-                // val parsedTransactions = initializer.rustBackend.parseTransactionDataList(tList)
-                // delta = now - parseStart
-                // updateStatus("parsed txs in ${delta}ms.")
-            }
-            (synchronizer as PirateSdkSynchronizer).refreshTransactions()
-            delta = now - allStart
-            updateStatus("Total time ${delta}ms.")
+                txids?.map {
+                    // Disabled during migration to newer SDK version; this appears to have been
+                    // leveraging non-public  APIs in the SDK so perhaps should be removed
+                    // it.data.apply {
+                    //     try {
+                    //         runBlocking { initializer.rustBackend.decryptAndStoreTransaction(toByteArray()) }
+                    //     } catch (t: Throwable) {
+                    //         twig("failed to decrypt and store transaction due to: $t")
+                    //     }
+                    // }
+                }?.let { _ ->
+                    // Disabled during migration to newer SDK version; this appears to have been
+                    // leveraging non-public  APIs in the SDK so perhaps should be removed
+                    // val parseStart = now
+                    // val tList = LocalRpcTypes.TransactionDataList.newBuilder().addAllData(txData).build()
+                    // val parsedTransactions = initializer.rustBackend.parseTransactionDataList(tList)
+                    // delta = now - parseStart
+                    // updateStatus("parsed txs in ${delta}ms.")
+                }
+                (synchronizer as PirateSdkSynchronizer).refreshTransactions()
+                delta = now - allStart
+                updateStatus("Total time ${delta}ms.")
 
-            lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    finalCount = (synchronizer as PirateSdkSynchronizer).getTransactionCount()
-                    withContext(Dispatchers.Main) {
-                        @Suppress("MagicNumber")
-                        delay(100)
-                        updateStatus("Also found ${finalCount - initialCount} shielded txs")
+                lifecycleScope.launch {
+                    withContext(Dispatchers.IO) {
+                        finalCount = synchronizer.getTransactionCount()
+                        withContext(Dispatchers.Main) {
+                            @Suppress("MagicNumber")
+                            delay(100)
+                            updateStatus("Also found ${finalCount - initialCount} shielded txs")
+                        }
                     }
                 }
             }
@@ -175,74 +144,58 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initUi()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        resetInBackground()
-        val seed = Mnemonics.MnemonicCode(sharedViewModel.seedPhrase.value).toSeed()
-        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
-            binding.inputAddress.setText(
-                PirateDerivationTool.deriveTransparentAddress(
-                    seed,
-                    PirateNetwork.fromResources(requireApplicationContext())
-                )
-            )
-        }
+        monitorStatus()
     }
 
     var initialCount: Int = 0
     var finalCount: Int = 0
-
-    @Suppress("TooGenericExceptionCaught")
-    private fun resetInBackground() {
-        try {
-            lifecycleScope.launch {
-                withContext(Dispatchers.IO) {
-                    synchronizer.prepare()
-                    initialCount = (synchronizer as PirateSdkSynchronizer).getTransactionCount()
-                }
-            }
-            synchronizer.clearedTransactions.collectWith(lifecycleScope, ::onTransactionsUpdated)
-            // synchronizer.receivedTransactions.collectWith(lifecycleScope, ::onTransactionsUpdated)
-        } catch (t: Throwable) {
-            twig("failed to start the synchronizer!!! due to : $t")
-        }
-    }
-
-    fun onResetComplete() {
-        initTransactionUi()
-        startSynchronizer()
-        monitorStatus()
-    }
-
-    fun onClear() {
-        synchronizer.stop()
-    }
 
     private fun initTransactionUi() {
         binding.recyclerTransactions.layoutManager =
             LinearLayoutManager(activity, LinearLayoutManager.VERTICAL, false)
         adapter = UtxoAdapter()
         binding.recyclerTransactions.adapter = adapter
-        // lifecycleScope.launch {
-        //     address = synchronizer.getAddress()
-        //     synchronizer.receivedTransactions.onEach {
-        //         onTransactionsUpdated(it)
-        //     }.launchIn(this)
-        // }
     }
 
-    private fun startSynchronizer() {
-        lifecycleScope.apply {
-            synchronizer.start(this)
-        }
-    }
-
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun monitorStatus() {
-        synchronizer.status.collectWith(lifecycleScope, ::onStatus)
-        synchronizer.processorInfo.collectWith(lifecycleScope, ::onProcessorInfoUpdated)
-        synchronizer.progress.collectWith(lifecycleScope, ::onProgress)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .flatMapLatest { it.status }
+                        .collect { onStatus(it) }
+                }
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .flatMapLatest { it.progress }
+                        .collect { onProgress(it) }
+                }
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .flatMapLatest { it.processorInfo }
+                        .collect { onProcessorInfoUpdated(it) }
+                }
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .flatMapLatest { it.clearedTransactions }
+                        .collect { onTransactionsUpdated(it) }
+                }
+                launch {
+                    sharedViewModel.synchronizerFlow
+                        .filterNotNull()
+                        .collect {
+                            binding.inputAddress.setText(
+                                it.getTransparentAddress(Account.DEFAULT)
+                            )
+                        }
+                }
+            }
+        }
     }
 
     private fun onProcessorInfoUpdated(info: PirateCompactBlockProcessor.ProcessorInfo) {
@@ -254,7 +207,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
         if (i < 100) binding.textStatus.text = "Downloading blocks...$i%"
     }
 
-    private fun onStatus(status: Synchronizer.PirateStatus) {
+    private fun onStatus(status: PirateSynchronizer.PirateStatus) {
         this.status = status
         binding.textStatus.text = "Status: $status"
         if (isSynced) onSyncComplete()
@@ -264,7 +217,7 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
         binding.textStatus.visibility = View.INVISIBLE
     }
 
-    private fun onTransactionsUpdated(transactions: List<PirateConfirmedTransaction>) {
+    private fun onTransactionsUpdated(transactions: List<TransactionOverview>) {
         twig("got a new paged list of transactions of size ${transactions.size}")
         adapter.submitList(transactions)
     }
@@ -272,10 +225,12 @@ class ListUtxosFragment : BaseDemoFragment<FragmentListUtxosBinding>() {
     override fun onActionButtonClicked() {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                twig("current count: ${(synchronizer as PirateSdkSynchronizer).getTransactionCount()}")
-                twig("refreshing transactions")
-                (synchronizer as PirateSdkSynchronizer).refreshTransactions()
-                twig("current count: ${(synchronizer as PirateSdkSynchronizer).getTransactionCount()}")
+                sharedViewModel.synchronizerFlow.value?.let { synchronizer ->
+                    twig("current count: ${(synchronizer as PirateSdkSynchronizer).getTransactionCount()}")
+                    twig("refreshing transactions")
+                    synchronizer.refreshTransactions()
+                    twig("current count: ${synchronizer.getTransactionCount()}")
+                }
             }
         }
     }

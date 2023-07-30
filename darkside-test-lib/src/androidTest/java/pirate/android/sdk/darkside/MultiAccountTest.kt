@@ -1,6 +1,6 @@
 package pirate.android.sdk.darkside
 
-// import pirate.android.sdk.SdkSynchronizer
+// import pirate.android.sdk.PirateSdkSynchronizer
 // import pirate.android.sdk.db.entity.isSubmitSuccess
 // import pirate.android.sdk.test.ScopedTest
 // import pirate.android.sdk.internal.twig
@@ -51,7 +51,7 @@ package pirate.android.sdk.darkside
 //            validator.validateBalance(390000)
 //
 //            // check the extra viewing key balance!!!
-//            val account1Balance = (synchronizer as SdkSynchronizer).processor.getBalanceInfo(1)
+//            val account1Balance = (synchronizer as PirateSdkSynchronizer).processor.getBalanceInfo(1)
 //            assertEquals(10000, account1Balance.totalArrrtoshi)
 //            twig("done waiting for 663261!")
 //        }
