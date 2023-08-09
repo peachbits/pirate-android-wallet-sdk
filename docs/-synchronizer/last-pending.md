@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [PirateSynchronizer](index.md) / [lastPending](./last-pending.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [Synchronizer](index.md) / [lastPending](./last-pending.md)
 
 # lastPending
 

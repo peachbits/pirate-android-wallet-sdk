@@ -25,29 +25,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import pirate.android.sdk.PirateSynchronizer
+import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.demoapp.R
 import pirate.android.sdk.demoapp.fixture.WalletSnapshotFixture
 import pirate.android.sdk.demoapp.ui.common.DisableScreenTimeout
 import pirate.android.sdk.demoapp.ui.screen.home.viewmodel.WalletSnapshot
 
-@Preview
+@Preview(name = "Home")
 @Composable
-fun ComposablePreviewHome() {
+private fun ComposablePreviewHome() {
     MaterialTheme {
         Home(
             WalletSnapshotFixture.new(),
+            isTestnet = true,
             goBalance = {},
             goSend = {},
             goAddressDetails = {},
-            isTestnet = true,
+            goTransactions = {},
             goTestnetFaucet = {},
             resetSdk = {}
         )
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Suppress("LongParameterList")
 @Composable
 fun Home(
@@ -56,6 +56,7 @@ fun Home(
     goBalance: () -> Unit,
     goSend: () -> Unit,
     goAddressDetails: () -> Unit,
+    goTransactions: () -> Unit,
     goTestnetFaucet: () -> Unit,
     resetSdk: () -> Unit,
 ) {
@@ -67,7 +68,8 @@ fun Home(
             walletSnapshot,
             goBalance = goBalance,
             goSend = goSend,
-            goAddressDetails = goAddressDetails
+            goAddressDetails = goAddressDetails,
+            goTransactions = goTransactions
         )
     }
 }
@@ -126,12 +128,14 @@ private fun DebugMenu(
 }
 
 @Composable
+@Suppress("LongParameterList")
 private fun HomeMainContent(
     paddingValues: PaddingValues,
     walletSnapshot: WalletSnapshot,
     goBalance: () -> Unit,
     goSend: () -> Unit,
-    goAddressDetails: () -> Unit
+    goAddressDetails: () -> Unit,
+    goTransactions: () -> Unit
 ) {
     Column(
         Modifier
@@ -150,8 +154,12 @@ private fun HomeMainContent(
             Text(text = stringResource(id = R.string.menu_address))
         }
 
+        Button(goTransactions) {
+            Text(text = stringResource(id = R.string.menu_transactions))
+        }
+
         Text(text = stringResource(id = R.string.home_status, walletSnapshot.status.toString()))
-        if (walletSnapshot.status != PirateSynchronizer.PirateStatus.SYNCED) {
+        if (walletSnapshot.status != Synchronizer.Status.SYNCED) {
             @Suppress("MagicNumber")
             Text(text = stringResource(id = R.string.home_progress, walletSnapshot.progress.decimal * 100))
 

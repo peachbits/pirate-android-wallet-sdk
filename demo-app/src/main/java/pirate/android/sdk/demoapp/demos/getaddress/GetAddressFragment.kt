@@ -11,9 +11,10 @@ import pirate.android.sdk.demoapp.databinding.FragmentGetAddressBinding
 import pirate.android.sdk.demoapp.ext.requireApplicationContext
 import pirate.android.sdk.demoapp.util.ProvideAddressBenchmarkTrace
 import pirate.android.sdk.demoapp.util.fromResources
+import pirate.android.sdk.model.Account
+import pirate.android.sdk.model.UnifiedFullViewingKey
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateUnifiedFullViewingKey
+import pirate.android.sdk.tool.DerivationTool
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
@@ -23,7 +24,7 @@ import kotlinx.coroutines.launch
  */
 class GetAddressFragment : BaseDemoFragment<FragmentGetAddressBinding>() {
 
-    private lateinit var viewingKey: PirateUnifiedFullViewingKey
+    private lateinit var viewingKey: UnifiedFullViewingKey
 
     private fun displayAddress() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -32,21 +33,21 @@ class GetAddressFragment : BaseDemoFragment<FragmentGetAddressBinding>() {
                     sharedViewModel.synchronizerFlow.filterNotNull().collect { synchronizer ->
                         binding.unifiedAddress.apply {
                             reportTraceEvent(ProvideAddressBenchmarkTrace.Event.UNIFIED_ADDRESS_START)
-                            val uaddress = synchronizer.getUnifiedAddress()
+                            val uaddress = synchronizer.getUnifiedAddress(Account.DEFAULT)
                             reportTraceEvent(ProvideAddressBenchmarkTrace.Event.UNIFIED_ADDRESS_END)
                             text = uaddress
                             setOnClickListener { copyToClipboard(uaddress) }
                         }
                         binding.saplingAddress.apply {
                             reportTraceEvent(ProvideAddressBenchmarkTrace.Event.SAPLING_ADDRESS_START)
-                            val sapling = synchronizer.getSaplingAddress()
+                            val sapling = synchronizer.getSaplingAddress(Account.DEFAULT)
                             reportTraceEvent(ProvideAddressBenchmarkTrace.Event.SAPLING_ADDRESS_END)
                             text = sapling
                             setOnClickListener { copyToClipboard(sapling) }
                         }
                         binding.transparentAddress.apply {
                             reportTraceEvent(ProvideAddressBenchmarkTrace.Event.TRANSPARENT_ADDRESS_START)
-                            val transparent = synchronizer.getTransparentAddress()
+                            val transparent = synchronizer.getTransparentAddress(Account.DEFAULT)
                             reportTraceEvent(ProvideAddressBenchmarkTrace.Event.TRANSPARENT_ADDRESS_END)
                             text = transparent
                             setOnClickListener { copyToClipboard(transparent) }
@@ -84,7 +85,7 @@ class GetAddressFragment : BaseDemoFragment<FragmentGetAddressBinding>() {
     override fun onActionButtonClicked() {
         viewLifecycleOwner.lifecycleScope.launch {
             copyToClipboard(
-                PirateDerivationTool.derivePirateUnifiedAddress(
+                DerivationTool.getInstance().deriveUnifiedAddress(
                     viewingKey.encoding,
                     PirateNetwork.fromResources(requireApplicationContext())
                 ),

@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package pirate.android.sdk.darkside.reorgs // package pirate.android.sdk.integration
 //
 // import pirate.android.sdk.test.ScopedTest

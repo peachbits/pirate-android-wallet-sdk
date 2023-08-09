@@ -1,8 +1,8 @@
-[zcash-android-wallet-sdk](../../../../index.md) / [pirate.android.sdk.data](../../../index.md) / [PirateSdkSynchronizer](../../index.md) / [SyncState](../index.md) / [CacheOnly](./index.md)
+[zcash-android-wallet-sdk](../../../../index.md) / [pirate.android.sdk.data](../../../index.md) / [SdkSynchronizer](../../index.md) / [SyncState](../index.md) / [CacheOnly](./index.md)
 
 # CacheOnly
 
-`class CacheOnly : `[`PirateSdkSynchronizer.SyncState`](../index.md)
+`class CacheOnly : `[`SdkSynchronizer.SyncState`](../index.md)
 
 State for when compact blocks have been downloaded but not scanned. This state is typically achieved when the
 app was previously started but killed before the first scan took place. In this case, we do not need to

@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [PirateSdkSynchronizer](index.md) / [validateConsensusBranch](./validate-consensus-branch.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [validateConsensusBranch](./validate-consensus-branch.md)
 
 # validateConsensusBranch
 

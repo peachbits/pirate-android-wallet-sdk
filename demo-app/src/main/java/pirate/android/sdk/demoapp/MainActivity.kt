@@ -21,12 +21,11 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.viewbinding.ViewBinding
 import pirate.android.sdk.demoapp.util.fromResources
-import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
-import pirate.android.sdk.internal.service.LightWalletService
-import pirate.android.sdk.internal.twig
-import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.model.defaultForNetwork
+import pirate.lightwallet.client.LightWalletClient
+import pirate.lightwallet.client.model.LightWalletEndpoint
+import pirate.lightwallet.client.new
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 
@@ -45,7 +44,7 @@ class MainActivity :
      * this object because it would utilize the synchronizer, instead, which exposes APIs that
      * automatically sync with the server.
      */
-    var lightWalletService: LightWalletService? = null
+    var lightwalletClient: LightWalletClient? = null
         private set
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,7 +80,7 @@ class MainActivity :
 
     override fun onDestroy() {
         super.onDestroy()
-        lightWalletService?.shutdown()
+        lightwalletClient?.shutdown()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -109,9 +108,6 @@ class MainActivity :
             navController.navigate(R.id.nav_home)
             sharedViewModel.resetSDK()
             true
-        } else if (item.itemId == R.id.action_new_ui) {
-            startActivity(Intent(this, ComposeActivity::class.java))
-            true
         } else {
             super.onOptionsItemSelected(item)
         }
@@ -127,11 +123,11 @@ class MainActivity :
     //
 
     private fun initService() {
-        if (lightWalletService != null) {
-            lightWalletService?.shutdown()
+        if (lightwalletClient != null) {
+            lightwalletClient?.shutdown()
         }
         val network = PirateNetwork.fromResources(applicationContext)
-        lightWalletService = PirateLightWalletGrpcService.new(
+        lightwalletClient = LightWalletClient.new(
             applicationContext,
             LightWalletEndpoint.defaultForNetwork(network)
         )
@@ -159,7 +155,7 @@ class MainActivity :
         getSystemService<InputMethodManager>()?.hideSoftInputFromWindow(windowToken, 0)
     }
 
-    /* DrawerListener implementation */
+    // DrawerListener implementation
 
     @Suppress("EmptyFunctionBlock")
     override fun onDrawerStateChanged(newState: Int) {
@@ -169,13 +165,12 @@ class MainActivity :
     override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
     }
 
-    override fun onDrawerClosed(drawerView: View) {
-        twig("Drawer closed.")
+    override fun onDrawerOpened(drawerView: View) {
+        hideKeyboard()
     }
 
-    override fun onDrawerOpened(drawerView: View) {
-        twig("Drawer opened.")
-        hideKeyboard()
+    override fun onDrawerClosed(drawerView: View) {
+        // Do nothing
     }
 }
 

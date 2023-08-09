@@ -3,35 +3,35 @@ package pirate.android.sdk.type
 /**
  * Validation helper class, representing the types of addresses, either Shielded,
  * Transparent, Unified, or Invalid. Used in conjuction with
- * [pirate.android.sdk.PirateSynchronizer.validateAddress].
+ * [pirate.android.sdk.Synchronizer.validateAddress].
  */
-sealed class PirateAddressType {
+sealed class AddressType {
     /**
-     * Marker interface for valid [PirateAddressType] instances.
+     * Marker interface for valid [AddressType] instances.
      */
     interface Valid
 
     /**
-     * An instance of [PirateAddressType] corresponding to a valid z-addr.
+     * An instance of [AddressType] corresponding to a valid z-addr.
      */
-    object Shielded : Valid, PirateAddressType()
+    object Shielded : Valid, AddressType()
 
     /**
-     * An instance of [PirateAddressType] corresponding to a valid t-addr.
+     * An instance of [AddressType] corresponding to a valid t-addr.
      */
-    object Transparent : Valid, PirateAddressType()
+    object Transparent : Valid, AddressType()
 
     /**
-     * An instance of [PirateAddressType] corresponding to a valid ZIP 316 unified address.
+     * An instance of [AddressType] corresponding to a valid ZIP 316 unified address.
      */
-    object Unified : Valid, PirateAddressType()
+    object Unified : Valid, AddressType()
 
     /**
-     * An instance of [PirateAddressType] corresponding to an invalid address.
+     * An instance of [AddressType] corresponding to an invalid address.
      *
      * @param reason a description of why the address was invalid.
      */
-    class Invalid(val reason: String = "Invalid") : PirateAddressType()
+    class Invalid(val reason: String = "Invalid") : AddressType()
 
     /**
      * A convenience method that returns true when an instance of this class is invalid.

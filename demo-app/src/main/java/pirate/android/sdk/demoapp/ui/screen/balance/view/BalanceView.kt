@@ -12,30 +12,39 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import pirate.android.sdk.demoapp.R
-import pirate.android.sdk.demoapp.model.toArrrString
+import pirate.android.sdk.demoapp.fixture.WalletSnapshotFixture
+import pirate.android.sdk.demoapp.ui.screen.home.viewmodel.SendState
 import pirate.android.sdk.demoapp.ui.screen.home.viewmodel.WalletSnapshot
 import pirate.android.sdk.ext.PirateSdk
+import pirate.android.sdk.model.toArrrString
 
-// @Preview
-// @Composable
-// fun ComposablePreview() {
-//     MaterialTheme {
-//         Addresses()
-//     }
-// }
+@Preview(name = "Balance")
+@Composable
+private fun ComposablePreview() {
+    MaterialTheme {
+        Balance(
+            walletSnapshot = WalletSnapshotFixture.new(),
+            sendState = SendState.None,
+            onBack = {},
+            onShieldFunds = {}
+        )
+    }
+}
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Balance(
     walletSnapshot: WalletSnapshot,
+    sendState: SendState,
     onShieldFunds: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -46,6 +55,7 @@ fun Balance(
         BalanceMainContent(
             paddingValues = paddingValues,
             walletSnapshot,
+            sendState,
             onShieldFunds = onShieldFunds
         )
     }
@@ -73,6 +83,7 @@ private fun BalanceTopAppBar(onBack: () -> Unit) {
 private fun BalanceMainContent(
     paddingValues: PaddingValues,
     walletSnapshot: WalletSnapshot,
+    sendState: SendState,
     onShieldFunds: () -> Unit
 ) {
     Column(
@@ -133,5 +144,8 @@ private fun BalanceMainContent(
                 Text(stringResource(id = R.string.action_shield))
             }
         }
+
+        // Eventually there should be something to clear the status
+        Text(stringResource(id = R.string.send_status, sendState.toString()))
     }
 }

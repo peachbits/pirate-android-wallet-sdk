@@ -1,7 +1,7 @@
 package pirate.android.sdk.model
 
-import androidx.annotation.Keep
-import pirate.android.sdk.jni.PirateRustBackend
+import pirate.android.sdk.internal.jni.RustBackend
+import pirate.android.sdk.internal.model.JniUnifiedSpendingKey
 
 /**
  * A [ZIP 316](https://zips.z.cash/zip-0316) Unified Spending Key.
@@ -12,7 +12,7 @@ import pirate.android.sdk.jni.PirateRustBackend
  * derived at the time of its creation. As such, it is not suitable for long-term storage,
  * export/import, or backup purposes.
  */
-class PirateUnifiedSpendingKey private constructor(
+class UnifiedSpendingKey private constructor(
     val account: Account,
 
     /**
@@ -26,9 +26,10 @@ class PirateUnifiedSpendingKey private constructor(
     private val bytes: FirstClassByteArray
 ) {
 
-    // This constructor exists solely for the JNI
-    @Keep
-    internal constructor(account: Int, bytes: ByteArray) : this(Account(account), FirstClassByteArray(bytes.copyOf()))
+    internal constructor(uskJni: JniUnifiedSpendingKey) : this(
+        Account(uskJni.account),
+        FirstClassByteArray(uskJni.bytes.copyOf())
+    )
 
     /**
      * The binary encoding of the [ZIP 316](https://zips.z.cash/zip-0316) Unified Spending
@@ -41,13 +42,13 @@ class PirateUnifiedSpendingKey private constructor(
     fun copyBytes() = bytes.byteArray.copyOf()
 
     // Override to prevent leaking key to logs
-    override fun toString() = "PirateUnifiedSpendingKey(account=$account)"
+    override fun toString() = "UnifiedSpendingKey(account=$account)"
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as PirateUnifiedSpendingKey
+        other as UnifiedSpendingKey
 
         if (account != other.account) return false
         if (bytes != other.bytes) return false
@@ -66,18 +67,16 @@ class PirateUnifiedSpendingKey private constructor(
         /**
          * This method may fail if the [bytes] no longer represent a valid key.  A key could become invalid due to
          * network upgrades or other internal changes.  If a non-successful result is returned, clients are expected
-         * to use [PirateDerivationTool.derivePirateUnifiedSpendingKey] to regenerate the key from the seed.
+         * to use [DerivationTool.deriveUnifiedSpendingKey] to regenerate the key from the seed.
          *
-         * @return A validated PirateUnifiedSpendingKey.
+         * @return A validated UnifiedSpendingKey.
          */
-        suspend fun new(account: Account, bytes: ByteArray): Result<PirateUnifiedSpendingKey> {
+        suspend fun new(account: Account, bytes: ByteArray): Result<UnifiedSpendingKey> {
             val bytesCopy = bytes.copyOf()
-            PirateRustBackend.loadLibrary()
+            RustBackend.loadLibrary()
             return runCatching {
-                // We can ignore the Boolean returned from this, because if an error
-                // occurs the Rust side will throw.
-                PirateRustBackend.validatePirateUnifiedSpendingKey(bytesCopy)
-                PirateUnifiedSpendingKey(account, FirstClassByteArray(bytesCopy))
+                require(RustBackend.validateUnifiedSpendingKey(bytesCopy))
+                UnifiedSpendingKey(account, FirstClassByteArray(bytesCopy))
             }
         }
     }

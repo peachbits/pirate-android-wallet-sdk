@@ -2,7 +2,7 @@ package pirate.android.sdk.internal.ext
 
 import android.content.Context
 import pirate.android.sdk.ext.PirateSdk.MAX_BACKOFF_INTERVAL
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.internal.Twig
 import kotlinx.coroutines.delay
 import java.io.File
 import kotlin.random.Random
@@ -36,34 +36,8 @@ suspend inline fun retryUpTo(
                 throw exceptionWrapper(t)
             }
             val duration = (initialDelayMillis.toDouble() * Math.pow(2.0, failedAttempts.toDouble() - 1)).toLong()
-            twig("failed due to $t retrying ($failedAttempts/$retries) in ${duration}s...")
+            Twig.warn(t) { "Retrying ($failedAttempts/$retries) in ${duration}s..." }
             delay(duration)
-        }
-    }
-}
-
-/**
- * Execute the given block and if it fails, retry up to [retries] more times, using thread sleep
- * instead of suspending. If none of the retries succeed then throw the final error. This function
- * is intended to be called with no parameters, i.e., it is designed to use its defaults.
- *
- * @param retries the number of times to retry. Typically, this should be low.
- * @param sleepTime the amount of time to sleep in between retries. Typically, this should be an
- * amount of time that is hard to perceive.
- * @param block the block of logic to try.
- */
-inline fun retrySimple(retries: Int = 2, sleepTime: Long = 20L, block: (Int) -> Unit) {
-    var failedAttempts = 0
-    while (failedAttempts <= retries) {
-        @Suppress("TooGenericExceptionCaught")
-        try {
-            block(failedAttempts)
-            return
-        } catch (t: Throwable) {
-            failedAttempts++
-            if (failedAttempts > retries) throw t
-            twig("failed due to $t simply retrying ($failedAttempts/$retries) in ${sleepTime}ms...")
-            Thread.sleep(sleepTime)
         }
     }
 }
@@ -107,8 +81,7 @@ suspend inline fun retryWithBackoff(
                 duration = maxDelayMillis - Random.nextLong(1000L) // include jitter but don't exceed max delay
                 sequence /= 2
             }
-            twig("Failed due to $t caused by ${t.cause} backing off and retrying in ${duration}ms...")
-            twig(t)
+            Twig.warn(t) { "backing off and retrying in ${duration}ms..." }
             delay(duration)
         }
     }

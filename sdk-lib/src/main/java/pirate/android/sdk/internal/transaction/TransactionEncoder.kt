@@ -1,8 +1,8 @@
 package pirate.android.sdk.internal.transaction
 
-import pirate.android.sdk.internal.model.PirateEncodedTransaction
+import pirate.android.sdk.internal.model.EncodedTransaction
 import pirate.android.sdk.model.TransactionRecipient
-import pirate.android.sdk.model.PirateUnifiedSpendingKey
+import pirate.android.sdk.model.UnifiedSpendingKey
 import pirate.android.sdk.model.Arrrtoshi
 
 internal interface TransactionEncoder {
@@ -19,11 +19,11 @@ internal interface TransactionEncoder {
      * @return the successfully encoded transaction or an exception
      */
     suspend fun createTransaction(
-        usk: PirateUnifiedSpendingKey,
+        usk: UnifiedSpendingKey,
         amount: Arrrtoshi,
         recipient: TransactionRecipient,
         memo: ByteArray? = byteArrayOf()
-    ): PirateEncodedTransaction
+    ): EncodedTransaction
 
     /**
      * Creates a transaction that shields any transparent funds sent to the given usk's account.
@@ -32,10 +32,10 @@ internal interface TransactionEncoder {
      * @param memo the optional memo to include as part of the transaction.
      */
     suspend fun createShieldingTransaction(
-        usk: PirateUnifiedSpendingKey,
+        usk: UnifiedSpendingKey,
         recipient: TransactionRecipient,
         memo: ByteArray? = byteArrayOf()
-    ): PirateEncodedTransaction
+    ): EncodedTransaction
 
     /**
      * Utility function to help with validation. This is not called during [createTransaction]

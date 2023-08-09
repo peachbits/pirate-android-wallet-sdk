@@ -9,8 +9,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.PirateSynchronizer
-import pirate.android.sdk.block.PirateCompactBlockProcessor
+import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.block.CompactBlockProcessor
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.R
 import pirate.android.sdk.demoapp.databinding.FragmentGetBalanceBinding
@@ -19,12 +19,13 @@ import pirate.android.sdk.demoapp.util.SyncBlockchainBenchmarkTrace
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.convertArrrtoshiToArrrString
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.model.Account
-import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.PercentDecimal
+import pirate.android.sdk.model.WalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.tool.PirateDerivationTool
+import pirate.android.sdk.tool.DerivationTool
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -48,7 +49,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
-        // We rather hide options menu actions while actively using the PirateSynchronizer
+        // We rather hide options menu actions while actively using the Synchronizer
         menu.setGroupVisible(R.id.main_menu_group, false)
     }
 
@@ -68,7 +69,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
             setOnClickListener {
                 lifecycleScope.launch {
                     sharedViewModel.synchronizerFlow.value?.shieldFunds(
-                        PirateDerivationTool.derivePirateUnifiedSpendingKey(
+                        DerivationTool.getInstance().deriveUnifiedSpendingKey(
                             seed,
                             network,
                             Account.DEFAULT
@@ -126,7 +127,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
     }
 
     private fun onOrchardBalance(
-        orchardBalance: PirateWalletBalance?
+        orchardBalance: WalletBalance?
     ) {
         binding.orchardBalance.apply {
             text = orchardBalance.humanString()
@@ -134,7 +135,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
     }
 
     private fun onSaplingBalance(
-        saplingBalance: PirateWalletBalance?
+        saplingBalance: WalletBalance?
     ) {
         binding.saplingBalance.apply {
             text = saplingBalance.humanString()
@@ -142,7 +143,7 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
     }
 
     private fun onTransparentBalance(
-        transparentBalance: PirateWalletBalance?
+        transparentBalance: WalletBalance?
     ) {
         binding.transparentBalance.apply {
             text = transparentBalance.humanString()
@@ -159,37 +160,19 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
         }
     }
 
-    private fun onStatus(status: PirateSynchronizer.PirateStatus) {
-        twig("PirateSynchronizer status: $status")
+    private fun onStatus(status: Synchronizer.Status) {
+        Twig.debug { "Synchronizer status: $status" }
         // report benchmark event
         val traceEvents = when (status) {
-            PirateSynchronizer.PirateStatus.DOWNLOADING -> {
-                listOf(
-                    SyncBlockchainBenchmarkTrace.Event.BLOCKCHAIN_SYNC_START,
-                    SyncBlockchainBenchmarkTrace.Event.DOWNLOAD_START
-                )
+            Synchronizer.Status.SYNCING -> {
+                SyncBlockchainBenchmarkTrace.Event.BLOCKCHAIN_SYNC_START
             }
-            PirateSynchronizer.PirateStatus.VALIDATING -> {
-                listOf(
-                    SyncBlockchainBenchmarkTrace.Event.DOWNLOAD_END,
-                    SyncBlockchainBenchmarkTrace.Event.VALIDATION_START
-                )
-            }
-            PirateSynchronizer.PirateStatus.SCANNING -> {
-                listOf(
-                    SyncBlockchainBenchmarkTrace.Event.VALIDATION_END,
-                    SyncBlockchainBenchmarkTrace.Event.SCAN_START
-                )
-            }
-            PirateSynchronizer.PirateStatus.SYNCED -> {
-                listOf(
-                    SyncBlockchainBenchmarkTrace.Event.SCAN_END,
-                    SyncBlockchainBenchmarkTrace.Event.BLOCKCHAIN_SYNC_END
-                )
+            Synchronizer.Status.SYNCED -> {
+                SyncBlockchainBenchmarkTrace.Event.BLOCKCHAIN_SYNC_END
             }
             else -> null
         }
-        traceEvents?.forEach { reportTraceEvent(it) }
+        traceEvents?.let { reportTraceEvent(it) }
 
         binding.textStatus.text = "Status: $status"
         sharedViewModel.synchronizerFlow.value?.let { synchronizer ->
@@ -200,19 +183,19 @@ class GetBalanceFragment : BaseDemoFragment<FragmentGetBalanceBinding>() {
     }
 
     @Suppress("MagicNumber")
-    private fun onProgress(i: Int) {
-        if (i < 100) {
-            binding.textStatus.text = "Downloading blocks...$i%"
+    private fun onProgress(percent: PercentDecimal) {
+        if (percent.isLessThanHundredPercent()) {
+            binding.textStatus.text = "Syncing blocks...${percent.toPercentage()}%"
         }
     }
 
-    private fun onProcessorInfoUpdated(info: PirateCompactBlockProcessor.ProcessorInfo) {
-        if (info.isScanning) binding.textStatus.text = "Scanning blocks...${info.scanProgress}%"
+    private fun onProcessorInfoUpdated(info: CompactBlockProcessor.ProcessorInfo) {
+        if (info.isSyncing) binding.textStatus.text = "Syncing blocks...${info.syncProgress}%"
     }
 }
 
 @Suppress("MagicNumber")
-private fun PirateWalletBalance?.humanString() = if (null == this) {
+private fun WalletBalance?.humanString() = if (null == this) {
     "Calculating balance"
 } else {
     """

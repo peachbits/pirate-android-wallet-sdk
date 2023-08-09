@@ -24,6 +24,7 @@ pluginManagement {
         val kotlinVersion = extra["KOTLIN_VERSION"].toString()
         val kspVersion = extra["KSP_VERSION"].toString()
         val protobufVersion = extra["PROTOBUF_GRADLE_PLUGIN_VERSION"].toString()
+        val toolchainResolverVersion = extra["FOOJAY_TOOLCHAIN_RESOLVER_VERSION"].toString()
 
         id("com.android.application") version (androidGradlePluginVersion) apply (false)
         id("com.android.library") version (androidGradlePluginVersion) apply (false)
@@ -33,11 +34,16 @@ pluginManagement {
         id("com.google.protobuf") version (protobufVersion) apply (false)
         id("com.osacky.fulladle") version (fulladleVersion) apply (false)
         id("io.gitlab.arturbosch.detekt") version (detektVersion) apply (false)
+        id("org.gradle.toolchains.foojay-resolver-convention") version(toolchainResolverVersion) apply (false)
         id("org.jetbrains.dokka") version (dokkaVersion) apply (false)
         id("org.jetbrains.kotlin.android") version (kotlinVersion) apply (false)
         id("org.jetbrains.kotlin.plugin.allopen") version (kotlinVersion) apply (false)
         id("wtf.emulator.gradle") version (emulatorWtfGradlePluginVersion) apply (false)
     }
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention")
 }
 
 dependencyResolutionManagement {
@@ -70,6 +76,7 @@ dependencyResolutionManagement {
             val androidxAppcompatVersion = extra["ANDROIDX_APPCOMPAT_VERSION"].toString()
             val androidxComposeCompilerVersion = extra["ANDROIDX_COMPOSE_COMPILER_VERSION"].toString()
             val androidxComposeMaterial3Version = extra["ANDROIDX_COMPOSE_MATERIAL3_VERSION"].toString()
+            val androidxComposeMaterialIconsVersion = extra["ANDROIDX_COMPOSE_MATERIAL_ICONS_VERSION"].toString()
             val androidxComposeVersion = extra["ANDROIDX_COMPOSE_VERSION"].toString()
             val androidxConstraintLayoutVersion = extra["ANDROIDX_CONSTRAINT_LAYOUT_VERSION"].toString()
             val androidxCoreVersion = extra["ANDROIDX_CORE_VERSION"].toString()
@@ -80,23 +87,23 @@ dependencyResolutionManagement {
             val androidxNavigationVersion = extra["ANDROIDX_NAVIGATION_VERSION"].toString()
             val androidxNavigationComposeVersion = extra["ANDROIDX_NAVIGATION_COMPOSE_VERSION"].toString()
             val androidxNavigationFragmentVersion = extra["ANDROIDX_NAVIGATION_FRAGMENT_VERSION"].toString()
-            val androidxPagingVersion = extra["ANDROIDX_PAGING_VERSION"].toString()
             val androidxProfileInstallerVersion = extra["ANDROIDX_PROFILE_INSTALLER_VERSION"].toString()
             val androidxRoomVersion = extra["ANDROIDX_ROOM_VERSION"].toString()
             val androidxSecurityCryptoVersion = extra["ANDROIDX_SECURITY_CRYPTO_VERSION"].toString()
             val androidxTestJunitVersion = extra["ANDROIDX_TEST_JUNIT_VERSION"].toString()
             val androidxTestMacrobenchmarkVersion = extra["ANDROIDX_TEST_MACROBENCHMARK_VERSION"].toString()
             val androidxTestOrchestratorVersion = extra["ANDROIDX_TEST_ORCHESTRATOR_VERSION"].toString()
-            val androidxTestVersion = extra["ANDROIDX_TEST_VERSION"].toString()
+            val androidxTestCoreVersion = extra["ANDROIDX_TEST_CORE_VERSION"].toString()
+            val androidxTestRunnerVersion = extra["ANDROIDX_TEST_RUNNER_VERSION"].toString()
             val androidxTracingVersion = extra["ANDROIDX_TRACING_VERSION"].toString()
             val androidxUiAutomatorVersion = extra["ANDROIDX_UI_AUTOMATOR_VERSION"].toString()
             val bip39Version = extra["BIP39_VERSION"].toString()
             val coroutinesOkhttpVersion = extra["COROUTINES_OKHTTP"].toString()
             val flankVersion = extra["FLANK_VERSION"].toString()
             val googleMaterialVersion = extra["GOOGLE_MATERIAL_VERSION"].toString()
-            val grpcVersion = extra["GRPC_VERSION"].toString()
+            val grpcJavaVersion = extra["GRPC_VERSION"].toString()
+            val grpcKotlinVersion = extra["GRPC_KOTLIN_VERSION"].toString()
             val gsonVersion = extra["GSON_VERSION"].toString()
-            val guavaVersion = extra["GUAVA_VERSION"].toString()
             val javaVersion = extra["ANDROID_JVM_TARGET"].toString()
             val javaxAnnotationVersion = extra["JAVAX_ANNOTATION_VERSION"].toString()
             val junitVersion = extra["JUNIT_VERSION"].toString()
@@ -111,7 +118,7 @@ dependencyResolutionManagement {
 
             // Standalone versions
             version("flank", flankVersion)
-            version("grpc", grpcVersion)
+            version("grpc", grpcJavaVersion)
             version("java", javaVersion)
             version("kotlin", kotlinVersion)
             version("protoc", protocVersion)
@@ -123,8 +130,9 @@ dependencyResolutionManagement {
             library("gradle-plugin-rust", "org.mozilla.rust-android-gradle:plugin:$rustGradlePluginVersion")
 
             // Special cases used by the grpc gradle plugin
-            library("grpc-protoc", "io.grpc:protoc-gen-grpc-java:$grpcVersion")
-            library("protoc", "com.google.protobuf:protoc:$protocVersion")
+            library("protoc-compiler", "com.google.protobuf:protoc:$protocVersion")
+            library("protoc-gen-java", "io.grpc:protoc-gen-grpc-java:$grpcJavaVersion")
+            library("protoc-gen-kotlin", "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion")
 
             // Libraries
             library("androidx-annotation", "androidx.annotation:annotation:$androidxAnnotationVersion")
@@ -139,7 +147,6 @@ dependencyResolutionManagement {
             library("androidx-navigation-compose", "androidx.navigation:navigation-compose:$androidxNavigationComposeVersion")
             library("androidx-navigation-fragment", "androidx.navigation:navigation-fragment-ktx:$androidxNavigationFragmentVersion")
             library("androidx-navigation-ui", "androidx.navigation:navigation-ui-ktx:$androidxNavigationVersion")
-            library("androidx-paging", "androidx.paging:paging-runtime-ktx:$androidxPagingVersion")
             library("androidx-profileinstaller", "androidx.profileinstaller:profileinstaller:$androidxProfileInstallerVersion")
             library("androidx-room-compiler", "androidx.room:room-compiler:$androidxRoomVersion")
             library("androidx-room-core", "androidx.room:room-ktx:$androidxRoomVersion")
@@ -147,15 +154,16 @@ dependencyResolutionManagement {
             library("androidx-sqlite-framework", "androidx.sqlite:sqlite-framework:${androidxDatabaseVersion}")
             library("androidx-viewmodel-compose", "androidx.lifecycle:lifecycle-viewmodel-compose:$androidxLifecycleVersion")
             library("bip39", "cash.z.ecc.android:kotlin-bip39:$bip39Version")
-            library("grpc-android", "io.grpc:grpc-android:$grpcVersion")
-            library("grpc-okhttp", "io.grpc:grpc-okhttp:$grpcVersion")
-            library("grpc-protobuf", "io.grpc:grpc-protobuf-lite:$grpcVersion")
-            library("grpc-stub", "io.grpc:grpc-stub:$grpcVersion")
+            library("grpc-android", "io.grpc:grpc-android:$grpcJavaVersion")
+            library("grpc-kotlin", "com.google.protobuf:protobuf-kotlin-lite:$protocVersion")
+            library("grpc-kotlin-stub", "io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
+            library("grpc-okhttp", "io.grpc:grpc-okhttp:$grpcJavaVersion")
+            library("grpc-protobuf", "io.grpc:grpc-protobuf-lite:$grpcJavaVersion")
+            library("grpc-stub", "io.grpc:grpc-stub:$grpcJavaVersion")
             library("gson", "com.google.code.gson:gson:$gsonVersion")
-            library("guava", "com.google.guava:guava:$guavaVersion")
             library("javax-annotation", "javax.annotation:javax.annotation-api:$javaxAnnotationVersion")
             library("kotlin-reflect", "org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
-            library("kotlin-stdlib", "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+            library("kotlin-stdlib", "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion")
             library("kotlinx-coroutines-android", "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlinxCoroutinesVersion")
             library("kotlinx-coroutines-core", "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlinxCoroutinesVersion")
             library("kotlinx-datetime", "org.jetbrains.kotlinx:kotlinx-datetime:$kotlinxDateTimeVersion")
@@ -165,8 +173,8 @@ dependencyResolutionManagement {
             // Demo app
             library("androidx-compose-foundation", "androidx.compose.foundation:foundation:$androidxComposeVersion")
             library("androidx-compose-material3", "androidx.compose.material3:material3:$androidxComposeMaterial3Version")
-            library("androidx-compose-material-icons-core", "androidx.compose.material:material-icons-core:$androidxComposeVersion")
-            library("androidx-compose-material-icons-extended", "androidx.compose.material:material-icons-extended:$androidxComposeVersion")
+            library("androidx-compose-material-icons-core", "androidx.compose.material:material-icons-core:$androidxComposeMaterialIconsVersion")
+            library("androidx-compose-material-icons-extended", "androidx.compose.material:material-icons-extended:$androidxComposeMaterialIconsVersion")
             library("androidx-compose-tooling", "androidx.compose.ui:ui-tooling:$androidxComposeVersion")
             library("androidx-compose-ui", "androidx.compose.ui:ui:$androidxComposeVersion")
             library("androidx-compose-ui-fonts", "androidx.compose.ui:ui-text-google-fonts:$androidxComposeVersion")
@@ -179,15 +187,15 @@ dependencyResolutionManagement {
             library("androidx-espresso-contrib", "androidx.test.espresso:espresso-contrib:$androidxEspressoVersion")
             library("androidx-espresso-core", "androidx.test.espresso:espresso-core:$androidxEspressoVersion")
             library("androidx-espresso-intents", "androidx.test.espresso:espresso-intents:$androidxEspressoVersion")
-            library("androidx-test-core", "androidx.test:core:$androidxTestVersion")
+            library("androidx-test-core", "androidx.test:core:$androidxTestCoreVersion")
             library("androidx-test-junit", "androidx.test.ext:junit:$androidxTestJunitVersion")
             library("androidx-test-macrobenchmark", "androidx.benchmark:benchmark-macro-junit4:$androidxTestMacrobenchmarkVersion")
-            library("androidx-test-runner", "androidx.test:runner:$androidxTestVersion")
+            library("androidx-test-runner", "androidx.test:runner:$androidxTestRunnerVersion")
             library("androidx-test-orchestrator", "androidx.test:orchestrator:$androidxTestOrchestratorVersion")
             library("androidx-tracing", "androidx.tracing:tracing:$androidxTracingVersion")
             library("androidx-uiAutomator", "androidx.test.uiautomator:uiautomator:$androidxUiAutomatorVersion")
             library("coroutines-okhttp", "ru.gildor.coroutines:kotlin-coroutines-okhttp:$coroutinesOkhttpVersion")
-            library("grpc-testing", "io.grpc:grpc-testing:$grpcVersion")
+            library("grpc-testing", "io.grpc:grpc-testing:$grpcJavaVersion")
             library("junit-api", "org.junit.jupiter:junit-jupiter-api:$junitVersion")
             library("junit-engine", "org.junit.jupiter:junit-jupiter-engine:$junitVersion")
             library("junit-migration", "org.junit.jupiter:junit-jupiter-migrationsupport:$junitVersion")
@@ -201,8 +209,10 @@ dependencyResolutionManagement {
             bundle(
                 "grpc",
                 listOf(
-                    "grpc-okhttp",
                     "grpc-android",
+                    "grpc-kotlin",
+                    "grpc-kotlin-stub",
+                    "grpc-okhttp",
                     "grpc-protobuf",
                     "grpc-stub"
                 )
@@ -253,11 +263,22 @@ dependencyResolutionManagement {
     }
 }
 
+extra["GRADLE_BUILD_CACHE_DAYS"].toString().toIntOrNull()?.let {
+    buildCache {
+        local {
+            removeUnusedEntriesAfterDays = it
+        }
+    }
+}
+
 rootProject.name = "pirate-android-sdk"
 
 includeBuild("build-conventions")
 
+include("backend-lib")
 include("darkside-test-lib")
-include("sdk-lib")
 include("demo-app")
 include("demo-app-benchmark-test")
+include("lightwallet-client-lib")
+include("sdk-incubator-lib")
+include("sdk-lib")

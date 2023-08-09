@@ -1,10 +1,10 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [PirateSdkSynchronizer](index.md) / [cancelSend](./cancel-send.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [SdkSynchronizer](index.md) / [cancelSend](./cancel-send.md)
 
 # cancelSend
 
 `fun cancelSend(transaction: `[`SentTransaction`](../../pirate.android.sdk.entity/-sent-transaction/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)
 
-Overrides [PirateSynchronizer.cancelSend](../-synchronizer/cancel-send.md)
+Overrides [Synchronizer.cancelSend](../-synchronizer/cancel-send.md)
 
 Attempts to cancel a previously sent transaction. Typically, cancellation is only an option if the transaction
 has not yet been submitted to the server.

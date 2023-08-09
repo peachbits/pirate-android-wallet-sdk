@@ -5,16 +5,16 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.PirateSynchronizer
+import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.demoapp.util.fromResources
-import pirate.android.sdk.ext.BenchmarkingExt
 import pirate.android.sdk.ext.onFirst
-import pirate.android.sdk.fixture.BlockRangeFixture
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.model.defaultForNetwork
+import pirate.lightwallet.client.ext.BenchmarkingExt
+import pirate.lightwallet.client.fixture.BenchmarkingBlockRangeFixture
+import pirate.lightwallet.client.model.LightWalletEndpoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -71,29 +71,30 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
     private val lockoutIdFlow = MutableStateFlow<UUID?>(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val synchronizerOrLockout: Flow<InternalPirateSynchronizerStatus> = lockoutIdFlow.flatMapLatest { lockoutId ->
+    private val synchronizerOrLockout: Flow<InternalSynchronizerStatus> = lockoutIdFlow.flatMapLatest { lockoutId ->
         if (null != lockoutId) {
-            flowOf(InternalPirateSynchronizerStatus.Lockout(lockoutId))
+            flowOf(InternalSynchronizerStatus.Lockout(lockoutId))
         } else {
-            callbackFlow<InternalPirateSynchronizerStatus> {
+            callbackFlow<InternalSynchronizerStatus> {
                 // Use a BIP-39 library to convert a seed phrase into a byte array. Most wallets already
                 // have the seed stored
                 val seedBytes = Mnemonics.MnemonicCode(seedPhrase.value).toSeed()
 
                 val network = PirateNetwork.fromResources(application)
-                val synchronizer = PirateSynchronizer.new(
+                val synchronizer = Synchronizer.new(
                     application,
                     network,
                     lightWalletEndpoint = LightWalletEndpoint.defaultForNetwork(network),
                     seed = seedBytes,
                     birthday = if (BenchmarkingExt.isBenchmarking()) {
-                        BlockRangeFixture.new().start
+                        BlockHeight.new(PirateNetwork.Mainnet, BenchmarkingBlockRangeFixture.new().start)
                     } else {
                         birthdayHeight.value
-                    }
+                    },
+                    alias = OLD_UI_SYNCHRONIZER_ALIAS
                 )
 
-                send(InternalPirateSynchronizerStatus.Available(synchronizer))
+                send(InternalSynchronizerStatus.Available(synchronizer))
                 awaitClose {
                     synchronizer.close()
                 }
@@ -102,10 +103,10 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     // Note that seed and birthday shouldn't be changed once a synchronizer is first collected
-    val synchronizerFlow: StateFlow<PirateSynchronizer?> = synchronizerOrLockout.map {
+    val synchronizerFlow: StateFlow<Synchronizer?> = synchronizerOrLockout.map {
         when (it) {
-            is InternalPirateSynchronizerStatus.Available -> it.synchronizer
-            is InternalPirateSynchronizerStatus.Lockout -> null
+            is InternalSynchronizerStatus.Available -> it.synchronizer
+            is InternalSynchronizerStatus.Lockout -> null
         }
     }.stateIn(
         viewModelScope,
@@ -130,14 +131,14 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
                 lockoutIdFlow.value = lockoutId
 
                 synchronizerOrLockout
-                    .filterIsInstance<InternalPirateSynchronizerStatus.Lockout>()
+                    .filterIsInstance<InternalSynchronizerStatus.Lockout>()
                     .filter { it.id == lockoutId }
                     .onFirst {
-                        val didDelete = PirateSynchronizer.erase(
+                        val didDelete = Synchronizer.erase(
                             appContext = getApplication(),
                             network = PirateNetwork.fromResources(getApplication())
                         )
-                        twig("SDK erase result: $didDelete")
+                        Twig.debug { "SDK erase result: $didDelete" }
                     }
 
                 lockoutIdFlow.value = null
@@ -153,23 +154,24 @@ class SharedViewModel(application: Application) : AndroidViewModel(application) 
             Mnemonics.MnemonicCode(phrase).validate()
             true
         } catch (e: Mnemonics.WordCountException) {
-            twig("Seed phrase validation failed with WordCountException: ${e.message}, cause: ${e.cause}")
+            Twig.debug { "Seed phrase validation failed with WordCountException: ${e.message}, cause: ${e.cause}" }
             false
         } catch (e: Mnemonics.InvalidWordException) {
-            twig("Seed phrase validation failed with InvalidWordException: ${e.message}, cause: ${e.cause}")
+            Twig.debug { "Seed phrase validation failed with InvalidWordException: ${e.message}, cause: ${e.cause}" }
             false
         } catch (e: Mnemonics.ChecksumException) {
-            twig("Seed phrase validation failed with ChecksumException: ${e.message}, cause: ${e.cause}")
+            Twig.debug { "Seed phrase validation failed with ChecksumException: ${e.message}, cause: ${e.cause}" }
             false
         }
     }
 
-    private sealed class InternalPirateSynchronizerStatus {
-        class Available(val synchronizer: PirateSynchronizer) : InternalPirateSynchronizerStatus()
-        class Lockout(val id: UUID) : InternalPirateSynchronizerStatus()
+    private sealed class InternalSynchronizerStatus {
+        class Available(val synchronizer: Synchronizer) : InternalSynchronizerStatus()
+        class Lockout(val id: UUID) : InternalSynchronizerStatus()
     }
 
     companion object {
         private val DEFAULT_ANDROID_STATE_TIMEOUT = 5.seconds
+        internal const val OLD_UI_SYNCHRONIZER_ALIAS = "old_ui"
     }
 }

@@ -18,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -31,33 +32,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import pirate.android.sdk.demoapp.R
-import pirate.android.sdk.demoapp.fixture.WalletFixture
-import pirate.android.sdk.demoapp.model.Memo
-import pirate.android.sdk.demoapp.model.MonetarySeparators
-import pirate.android.sdk.demoapp.model.ZecSend
-import pirate.android.sdk.demoapp.model.ZecSendExt
-import pirate.android.sdk.demoapp.model.ZecString
-import pirate.android.sdk.demoapp.model.ZecStringExt
-import pirate.android.sdk.demoapp.model.toArrrString
+import pirate.android.sdk.demoapp.fixture.WalletSnapshotFixture
 import pirate.android.sdk.demoapp.ui.common.MINIMAL_WEIGHT
+import pirate.android.sdk.demoapp.ui.screen.home.viewmodel.SendState
 import pirate.android.sdk.demoapp.ui.screen.home.viewmodel.WalletSnapshot
 import pirate.android.sdk.demoapp.util.fromResources
+import pirate.android.sdk.fixture.WalletFixture
+import pirate.android.sdk.model.Memo
+import pirate.android.sdk.model.MonetarySeparators
 import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.ZecSend
+import pirate.android.sdk.model.ZecSendExt
+import pirate.android.sdk.model.ZecString
+import pirate.android.sdk.model.ZecStringExt
+import pirate.android.sdk.model.toArrrString
 
-// @Preview
-// @Composable
-// fun ComposablePreview() {
-//     MaterialTheme {
-//         Send()
-//     }
-// }
+@Preview(name = "Send")
+@Composable
+private fun ComposablePreview() {
+    MaterialTheme {
+        Send(
+            walletSnapshot = WalletSnapshotFixture.new(),
+            sendState = SendState.None,
+            onSend = {},
+            onBack = {}
+        )
+    }
+}
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Send(
     walletSnapshot: WalletSnapshot,
+    sendState: SendState,
     onSend: (ZecSend) -> Unit,
     onBack: () -> Unit
 ) {
@@ -67,6 +76,7 @@ fun Send(
         SendMainContent(
             paddingValues = paddingValues,
             walletSnapshot = walletSnapshot,
+            sendState = sendState,
             onSend = onSend
         )
     }
@@ -90,12 +100,12 @@ private fun SendTopAppBar(onBack: () -> Unit) {
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Suppress("LongMethod")
 private fun SendMainContent(
     paddingValues: PaddingValues,
     walletSnapshot: WalletSnapshot,
+    sendState: SendState,
     onSend: (ZecSend) -> Unit
 ) {
     val context = LocalContext.current
@@ -236,5 +246,7 @@ private fun SendMainContent(
         ) {
             Text(stringResource(id = R.string.send_button))
         }
+
+        Text(stringResource(id = R.string.send_status, sendState.toString()))
     }
 }

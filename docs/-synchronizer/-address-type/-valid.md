@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../../index.md) / [pirate.wallet.sdk](../../index.md) / [PirateSynchronizer](../index.md) / [PirateAddressType](index.md) / [Valid](./-valid.md)
+[zcash-android-wallet-sdk](../../../index.md) / [pirate.wallet.sdk](../../index.md) / [Synchronizer](../index.md) / [AddressType](index.md) / [Valid](./-valid.md)
 
 # Valid
 
@@ -8,5 +8,5 @@
 
 | Name | Summary |
 |---|---|
-| [Shielded](-shielded.md) | `object Shielded : `[`PirateSynchronizer.PirateAddressType.Valid`](./-valid.md)`, `[`PirateSynchronizer.PirateAddressType`](index.md) |
-| [Transparent](-transparent.md) | `object Transparent : `[`PirateSynchronizer.PirateAddressType.Valid`](./-valid.md)`, `[`PirateSynchronizer.PirateAddressType`](index.md) |
+| [Shielded](-shielded.md) | `object Shielded : `[`Synchronizer.AddressType.Valid`](./-valid.md)`, `[`Synchronizer.AddressType`](index.md) |
+| [Transparent](-transparent.md) | `object Transparent : `[`Synchronizer.AddressType.Valid`](./-valid.md)`, `[`Synchronizer.AddressType`](index.md) |

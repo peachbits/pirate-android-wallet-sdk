@@ -3,14 +3,17 @@ package pirate.fixture
 import pirate.android.sdk.internal.Files
 import pirate.android.sdk.internal.ext.existsSuspend
 import pirate.android.sdk.internal.ext.getDatabasePathSuspend
-import pirate.android.sdk.internal.ext.getNoBackupFilesDirCompat
+import pirate.android.sdk.internal.ext.getNoBackupFilesDirSuspend
 import pirate.android.sdk.test.getAppContext
 import kotlinx.coroutines.runBlocking
 import java.io.File
 
+/**
+ * Provides a unified way for getting fixture directories on the database root path for test purposes.
+ */
 object DatabasePathFixture {
     val NO_BACKUP_DIR_PATH: String = runBlocking {
-        getAppContext().getNoBackupFilesDirCompat().absolutePath
+        getAppContext().getNoBackupFilesDirSuspend().absolutePath
     }
     val DATABASE_DIR_PATH: String = runBlocking {
         getAppContext().getDatabasePathSuspend("temporary.db").parentFile.let { parentFile ->

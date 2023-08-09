@@ -1,9 +1,8 @@
 package pirate.android.sdk.internal.repository
 
-import pirate.android.sdk.internal.model.PirateEncodedTransaction
+import pirate.android.sdk.internal.model.DbTransactionOverview
+import pirate.android.sdk.internal.model.EncodedTransaction
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.Transaction
-import pirate.android.sdk.model.TransactionOverview
 import pirate.android.sdk.model.TransactionRecipient
 import kotlinx.coroutines.flow.Flow
 
@@ -19,6 +18,14 @@ internal interface DerivedDataRepository {
      * @return the last height scanned by this repository.
      */
     suspend fun lastScannedHeight(): BlockHeight
+
+    /**
+     * The height of the first transaction that hasn't been enhanced yet.
+     *
+     * @return the height of the first un-enhanced transaction in the repository, or null in case of all transaction
+     * enhanced or no entry found
+     */
+    suspend fun firstUnenhancedHeight(): BlockHeight?
 
     /**
      * The height of the first block in this repository. This is typically the checkpoint that was
@@ -39,7 +46,7 @@ internal interface DerivedDataRepository {
      *
      * @return the transaction or null when it cannot be found.
      */
-    suspend fun findPirateEncodedTransactionById(txId: Long): PirateEncodedTransaction?
+    suspend fun findEncodedTransactionById(txId: Long): EncodedTransaction?
 
     /**
      * Find all the newly scanned transactions in the given range, including transactions (like
@@ -52,9 +59,9 @@ internal interface DerivedDataRepository {
      *
      * @return a list of transactions that were mined in the given range, inclusive.
      */
-    suspend fun findNewTransactions(blockHeightRange: ClosedRange<BlockHeight>): List<TransactionOverview>
+    suspend fun findNewTransactions(blockHeightRange: ClosedRange<BlockHeight>): List<DbTransactionOverview>
 
-    suspend fun getOldestTransaction(): TransactionOverview?
+    suspend fun getOldestTransaction(): DbTransactionOverview?
 
     /**
      * Find the mined height that matches the given raw tx_id in bytes. This is useful for matching
@@ -96,20 +103,11 @@ internal interface DerivedDataRepository {
      * prior versions.
      */
 
-    /** A flow of all the inbound confirmed transactions */
-    val receivedTransactions: Flow<List<Transaction.Received>>
+    val allTransactions: Flow<List<DbTransactionOverview>>
 
-    /** A flow of all the outbound confirmed transactions */
-    val sentTransactions: Flow<List<Transaction.Sent>>
-
-    /** A flow of all the inbound and outbound confirmed transactions */
-    val allTransactions: Flow<List<TransactionOverview>>
-
-    fun getSentNoteIds(transactionId: Long): Flow<Long>
+    fun getNoteIds(transactionId: Long): Flow<Long>
 
     fun getRecipients(transactionId: Long): Flow<TransactionRecipient>
-
-    fun getReceivedNoteIds(transactionId: Long): Flow<Long>
 
     suspend fun close()
 }

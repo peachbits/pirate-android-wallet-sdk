@@ -1,8 +1,9 @@
 package pirate.android.sdk.internal
 
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.filters.MediumTest
 import androidx.test.filters.SmallTest
-import pirate.android.sdk.exception.PirateTransactionEncoderException
+import pirate.android.sdk.exception.TransactionEncoderException
 import pirate.android.sdk.internal.ext.getSha1Hash
 import pirate.android.sdk.internal.ext.listFilesSuspend
 import pirate.android.sdk.test.getAppContext
@@ -11,6 +12,7 @@ import pirate.fixture.SaplingParamsFixture
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import java.io.File
@@ -20,7 +22,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class PirateSaplingParamToolBasicTest {
+class SaplingParamToolBasicTest {
 
     @Before
     fun setup() {
@@ -43,8 +45,8 @@ class PirateSaplingParamToolBasicTest {
             SaplingParamsFixture.OUTPUT_FILE_HASH
         )
 
-        val saplingParamTool = PirateSaplingParamTool(
-            PirateSaplingParamToolProperties(
+        val saplingParamTool = SaplingParamTool(
+            SaplingParamToolProperties(
                 emptyList(),
                 SaplingParamsFixture
                     .DESTINATION_DIRECTORY,
@@ -64,7 +66,7 @@ class PirateSaplingParamToolBasicTest {
     @SmallTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun init_and_get_params_destination_dir_test() = runTest {
-        val destDir = PirateSaplingParamTool.new(getAppContext()).properties.paramsDirectory
+        val destDir = SaplingParamTool.new(getAppContext()).properties.paramsDirectory
 
         assertNotNull(destDir)
         assertEquals(
@@ -92,19 +94,19 @@ class PirateSaplingParamToolBasicTest {
         assertFalse(isFileInPlace(SaplingParamsFixture.DESTINATION_DIRECTORY, outputFile))
 
         // we need to use modified array of sapling parameters to pass through the SHA1 hashes validation
-        val destDir = PirateSaplingParamTool.initAndGetParamsDestinationDir(
-            PirateSaplingParamToolFixture.new(
+        val destDir = SaplingParamTool.initAndGetParamsDestinationDir(
+            SaplingParamToolFixture.new(
                 saplingParamsFiles = listOf(
                     SaplingParameters(
-                        PirateSaplingParamToolFixture.PARAMS_DIRECTORY,
-                        PirateSaplingParamTool.SPEND_PARAM_FILE_NAME,
-                        PirateSaplingParamTool.SPEND_PARAM_FILE_MAX_BYTES_SIZE,
+                        SaplingParamToolFixture.PARAMS_DIRECTORY,
+                        SaplingParamTool.SPEND_PARAM_FILE_NAME,
+                        SaplingParamTool.SPEND_PARAM_FILE_MAX_BYTES_SIZE,
                         spendFile.getSha1Hash()
                     ),
                     SaplingParameters(
-                        PirateSaplingParamToolFixture.PARAMS_DIRECTORY,
-                        PirateSaplingParamTool.OUTPUT_PARAM_FILE_NAME,
-                        PirateSaplingParamTool.OUTPUT_PARAM_FILE_MAX_BYTES_SIZE,
+                        SaplingParamToolFixture.PARAMS_DIRECTORY,
+                        SaplingParamTool.OUTPUT_PARAM_FILE_NAME,
+                        SaplingParamTool.OUTPUT_PARAM_FILE_MAX_BYTES_SIZE,
                         outputFile.getSha1Hash()
                     )
                 )
@@ -130,20 +132,20 @@ class PirateSaplingParamToolBasicTest {
     @MediumTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun ensure_params_exception_thrown_test() = runTest {
-        val saplingParamTool = PirateSaplingParamTool(
-            PirateSaplingParamToolFixture.new(
+        val saplingParamTool = SaplingParamTool(
+            SaplingParamToolFixture.new(
                 saplingParamsFiles = listOf(
                     SaplingParameters(
-                        PirateSaplingParamToolFixture.PARAMS_DIRECTORY,
+                        SaplingParamToolFixture.PARAMS_DIRECTORY,
                         "test_file_1",
-                        PirateSaplingParamTool.SPEND_PARAM_FILE_MAX_BYTES_SIZE,
-                        PirateSaplingParamTool.SPEND_PARAM_FILE_SHA1_HASH
+                        SaplingParamTool.SPEND_PARAM_FILE_MAX_BYTES_SIZE,
+                        SaplingParamTool.SPEND_PARAM_FILE_SHA1_HASH
                     ),
                     SaplingParameters(
-                        PirateSaplingParamToolFixture.PARAMS_DIRECTORY,
+                        SaplingParamToolFixture.PARAMS_DIRECTORY,
                         "test_file_0",
-                        PirateSaplingParamTool.OUTPUT_PARAM_FILE_MAX_BYTES_SIZE,
-                        PirateSaplingParamTool.OUTPUT_PARAM_FILE_SHA1_HASH
+                        SaplingParamTool.OUTPUT_PARAM_FILE_MAX_BYTES_SIZE,
+                        SaplingParamTool.OUTPUT_PARAM_FILE_SHA1_HASH
                     )
                 )
             )
@@ -164,8 +166,21 @@ class PirateSaplingParamToolBasicTest {
         )
 
         // the ensure params block should fail in validation phase, because we use a different params file names
-        assertFailsWith<PirateTransactionEncoderException.PirateMissingParamsException> {
-            saplingParamTool.ensureParams(PirateSaplingParamToolFixture.PARAMS_DIRECTORY)
+        assertFailsWith<TransactionEncoderException.MissingParamsException> {
+            saplingParamTool.ensureParams(SaplingParamToolFixture.PARAMS_DIRECTORY)
         }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    @SmallTest
+    fun sapling_params_path() = runTest {
+        val paramsDir = SaplingParamTool.new(ApplicationProvider.getApplicationContext()).properties.paramsDirectory
+        Assert.assertTrue(
+            "Invalid CacheDB params dir",
+            paramsDir.endsWith(
+                "no_backup/co.electricoin.zcash"
+            )
+        )
     }
 }

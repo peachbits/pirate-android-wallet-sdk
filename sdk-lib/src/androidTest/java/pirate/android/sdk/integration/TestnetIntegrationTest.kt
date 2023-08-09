@@ -2,35 +2,36 @@ package pirate.wallet.sdk.integration
 
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-
-import pirate.android.sdk.PirateSynchronizer.PirateStatus.SYNCED
+import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.Synchronizer.Status.SYNCED
 import pirate.android.sdk.ext.PirateSdk
 import pirate.android.sdk.ext.onFirst
-import pirate.android.sdk.internal.TroubleshootingTwig
 import pirate.android.sdk.internal.Twig
-import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
-import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.model.isSubmitSuccess
 import pirate.android.sdk.test.ScopedTest
 import pirate.android.sdk.tool.CheckpointTool
-import pirate.android.sdk.tool.PirateDerivationTool
+import pirate.android.sdk.tool.DerivationTool
+import pirate.lightwallet.client.LightWalletClient
+import pirate.lightwallet.client.model.BlockHeightUnsafe
+import pirate.lightwallet.client.model.LightWalletEndpoint
+import pirate.lightwallet.client.model.Response
+import pirate.lightwallet.client.new
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.BeforeClass
 import org.junit.Ignore
 import org.junit.Test
 import java.util.concurrent.CountDownLatch
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class TestnetIntegrationTest : ScopedTest() {
 
@@ -39,13 +40,14 @@ class TestnetIntegrationTest : ScopedTest() {
 
     @Test
     @Ignore("This test is broken")
-    fun testLatestBlockTest() {
-        val service = PirateLightWalletGrpcService.new(
+    fun testLatestBlockTest() = runTest {
+        val service = LightWalletClient.new(
             context,
             lightWalletEndpoint
         )
         val height = service.getLatestBlockHeight()
-        assertTrue(height > saplingActivation)
+        assertTrue(height is Response.Success<BlockHeightUnsafe>)
+        assertTrue((height as Response.Success<BlockHeightUnsafe>).result.value > saplingActivation.value)
     }
 
     @Test
@@ -63,7 +65,7 @@ class TestnetIntegrationTest : ScopedTest() {
     @Test
     @Ignore("This test is broken")
     fun getAddress() = runBlocking {
-        assertEquals(address, synchronizer.getUnifiedAddress())
+        assertEquals(address, synchronizer.getUnifiedAddress(Account.DEFAULT))
     }
 
     // This is an extremely slow test; it is disabled so that we can get CI set up
@@ -81,8 +83,7 @@ class TestnetIntegrationTest : ScopedTest() {
         }
 
         assertTrue(
-            availableBalance!!.value > 0,
-            "No funds available when we expected a balance greater than zero!"
+            availableBalance!!.value > 0
         )
     }
 
@@ -98,45 +99,43 @@ class TestnetIntegrationTest : ScopedTest() {
     }
 
     private suspend fun sendFunds(): Boolean {
-        val spendingKey = PirateDerivationTool.derivePirateUnifiedSpendingKey(seed, synchronizer.network, Account.DEFAULT)
+        val spendingKey = DerivationTool.getInstance().deriveUnifiedSpendingKey(
+            seed,
+            synchronizer.network,
+            Account.DEFAULT
+        )
         log("sending to address")
         synchronizer.sendToAddress(
             spendingKey,
             PirateSdk.MINERS_FEE,
             toAddress,
             "first mainnet tx from the SDK"
-        ).filter { it.isSubmitSuccess() }.onFirst {
-            log("DONE SENDING!!!")
-        }
-        log("returning true from sendFunds")
+        )
         return true
     }
 
     fun log(message: String) {
-        twig("\n---\n[TESTLOG]: $message\n---\n")
+        Twig.debug { "\n---\n[TESTLOG]: $message\n---\n" }
     }
 
     companion object {
-        init {
-            Twig.plant(PirateTroubleshootingTwig())
-        }
 
         val lightWalletEndpoint = LightWalletEndpoint("lightwalletd.testnet.z.cash", 9087, true)
         private const val birthdayHeight = 963150L
         private const val targetHeight = 663250
-        private const val seedPhrase =
-            "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
+        private const val seedPhrase = "still champion voice habit trend flight survey between bitter process" +
+            " artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread"
         val seed = "pirate.android.sdk.integration.IntegrationTest.seed.value.64bytes".toByteArray()
         val address = "zs1m30y59wxut4zk9w24d6ujrdnfnl42hpy0ugvhgyhr8s0guszutqhdj05c7j472dndjstulph74m"
         val toAddress = "zs1vp7kvlqr4n9gpehztr76lcn6skkss9p8keqs3nv8avkdtjrcctrvmk9a7u494kluv756jeee5k0"
 
         private val context = InstrumentationRegistry.getInstrumentation().context
-        private lateinit var synchronizer: PirateSynchronizer
+        private lateinit var synchronizer: Synchronizer
 
         @JvmStatic
         @BeforeClass
         fun startUp() {
-            synchronizer = PirateSynchronizer.newBlocking(
+            synchronizer = Synchronizer.newBlocking(
                 context,
                 PirateNetwork.Testnet,
                 lightWalletEndpoint =

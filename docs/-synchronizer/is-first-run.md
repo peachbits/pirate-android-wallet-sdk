@@ -1,10 +1,10 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [PirateSynchronizer](index.md) / [isFirstRun](./is-first-run.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [Synchronizer](index.md) / [isFirstRun](./is-first-run.md)
 
 # isFirstRun
 
 `abstract suspend fun isFirstRun(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)
 
-A flag to indicate that this is the first run of this PirateSynchronizer on this device. This is useful for knowing
+A flag to indicate that this is the first run of this Synchronizer on this device. This is useful for knowing
 whether to initialize databases or other required resources, as well as whether to show walk-throughs.
 
 **Return**

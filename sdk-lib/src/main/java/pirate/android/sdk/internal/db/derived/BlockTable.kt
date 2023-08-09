@@ -79,7 +79,7 @@ internal class BlockTable(private val zcashNetwork: PirateNetwork, private val s
     }
 }
 
-object BlockTableDefinition {
+internal object BlockTableDefinition {
     const val TABLE_NAME = "blocks" // $NON-NLS
 
     const val COLUMN_LONG_HEIGHT = "height" // $NON-NLS

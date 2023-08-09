@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 /**
- * Utility for removing some of the boilerplate around PirateSynchronizers and working with flows. Allows
+ * Utility for removing some of the boilerplate around Synchronizers and working with flows. Allows
  * for collecting all the elements of a flow with a given scope this is useful when you want to
  * launch multiple things in the same scope at once. Intuitively a developer may try:
  * ```

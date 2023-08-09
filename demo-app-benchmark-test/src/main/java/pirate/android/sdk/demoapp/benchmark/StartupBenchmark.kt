@@ -1,5 +1,7 @@
 package pirate.android.sdk.demoapp.benchmark
 
+import android.content.ComponentName
+import android.content.Intent
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.ExperimentalMetricApi
 import androidx.benchmark.macro.MacrobenchmarkScope
@@ -34,6 +36,7 @@ class StartupBenchmark : UiTestPrerequisites() {
 
     companion object {
         private const val APP_TARGET_PACKAGE_NAME = "pirate.android.sdk.demoapp.mainnet" // NON-NLS
+        private const val APP_TARGET_ACTIVITY_NAME = "pirate.android.sdk.demoapp.MainActivity" // NON-NLS
 
         private const val ADDRESS_SCREEN_SECTION = "ADDRESS_SCREEN" // NON-NLS
         private const val UNIFIED_ADDRESS_SECTION = "UNIFIED_ADDRESS" // NON-NLS
@@ -62,7 +65,7 @@ class StartupBenchmark : UiTestPrerequisites() {
             pressHome()
         }
     ) {
-        startActivityAndWait()
+        startLegacyActivityAndWait()
     }
 
     /**
@@ -83,7 +86,7 @@ class StartupBenchmark : UiTestPrerequisites() {
         startupMode = StartupMode.COLD,
         iterations = 5,
         measureBlock = {
-            startActivityAndWait()
+            startLegacyActivityAndWait()
             gotoAddressScreen()
             waitForAddressScreen()
             closeAddressScreen()
@@ -91,7 +94,7 @@ class StartupBenchmark : UiTestPrerequisites() {
     )
 
     private fun MacrobenchmarkScope.closeAddressScreen() {
-        // To close the Address screen and disconnect from SDK PirateSynchronizer
+        // To close the Address screen and disconnect from SDK Synchronizer
         device.pressBack()
     }
 
@@ -119,5 +122,13 @@ class StartupBenchmark : UiTestPrerequisites() {
             .clickAndWaitFor(Until.newWindow(), 2.seconds)
         // Navigate to Addresses screen
         device.findObject(By.text("Get Address")).click() // NON-NLS
+    }
+
+    private fun MacrobenchmarkScope.startLegacyActivityAndWait() {
+        val intent = Intent(Intent.ACTION_MAIN).apply {
+            component = ComponentName(APP_TARGET_PACKAGE_NAME, APP_TARGET_ACTIVITY_NAME)
+        }
+
+        startActivityAndWait(intent)
     }
 }

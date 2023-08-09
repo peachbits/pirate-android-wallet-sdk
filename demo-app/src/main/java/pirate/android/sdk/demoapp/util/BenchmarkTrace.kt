@@ -2,8 +2,9 @@ package pirate.android.sdk.demoapp.util
 
 import android.os.Looper
 import androidx.tracing.Trace
-import pirate.android.sdk.ext.BenchmarkingExt
-import pirate.android.sdk.internal.twig
+
+import pirate.android.sdk.internal.Twig
+import pirate.lightwallet.client.ext.BenchmarkingExt
 
 interface BenchmarkTrace {
     fun checkMainThread() {
@@ -20,7 +21,7 @@ interface BenchmarkTrace {
 
 object SyncBlockchainBenchmarkTrace : BenchmarkTrace {
     fun writeEvent(event: BenchmarkTrace.Event?) {
-        twig("New SyncBlockchain event: $event arrived.")
+        Twig.debug { "New SyncBlockchain event: $event arrived." }
         if (!BenchmarkingExt.isBenchmarking()) {
             return
         }
@@ -38,25 +39,8 @@ object SyncBlockchainBenchmarkTrace : BenchmarkTrace {
             Event.BLOCKCHAIN_SYNC_END -> {
                 Trace.endAsyncSection(Event.BLOCKCHAIN_SYNC_END.section, Event.BLOCKCHAIN_SYNC_END.cookie)
             }
-            Event.DOWNLOAD_START -> {
-                Trace.beginAsyncSection(Event.DOWNLOAD_START.section, Event.DOWNLOAD_START.cookie)
+            else -> { // nothing to write
             }
-            Event.DOWNLOAD_END -> {
-                Trace.endAsyncSection(Event.DOWNLOAD_END.section, Event.DOWNLOAD_END.cookie)
-            }
-            Event.VALIDATION_START -> {
-                Trace.beginAsyncSection(Event.VALIDATION_START.section, Event.VALIDATION_START.cookie)
-            }
-            Event.VALIDATION_END -> {
-                Trace.endAsyncSection(Event.VALIDATION_END.section, Event.VALIDATION_END.cookie)
-            }
-            Event.SCAN_START -> {
-                Trace.beginAsyncSection(Event.SCAN_START.section, Event.SCAN_START.cookie)
-            }
-            Event.SCAN_END -> {
-                Trace.endAsyncSection(Event.SCAN_END.section, Event.SCAN_END.cookie)
-            }
-            else -> { /* nothing to write */ }
         }
     }
 
@@ -77,37 +61,13 @@ object SyncBlockchainBenchmarkTrace : BenchmarkTrace {
         BLOCKCHAIN_SYNC_END {
             override val section: String = "BLOCKCHAIN_SYNC" // NON-NLS
             override val cookie: Int = 200
-        },
-        DOWNLOAD_START {
-            override val section: String = "DOWNLOAD" // NON-NLS
-            override val cookie: Int = 300
-        },
-        DOWNLOAD_END {
-            override val section: String = "DOWNLOAD" // NON-NLS
-            override val cookie: Int = 300
-        },
-        VALIDATION_START {
-            override val section: String = "VALIDATION" // NON-NLS
-            override val cookie: Int = 400
-        },
-        VALIDATION_END {
-            override val section: String = "VALIDATION" // NON-NLS
-            override val cookie: Int = 400
-        },
-        SCAN_START {
-            override val section: String = "SCAN" // NON-NLS
-            override val cookie: Int = 500
-        },
-        SCAN_END {
-            override val section: String = "SCAN" // NON-NLS
-            override val cookie: Int = 500
         }
     }
 }
 
 object ProvideAddressBenchmarkTrace : BenchmarkTrace {
     fun writeEvent(event: BenchmarkTrace.Event?) {
-        twig("New ProvideAddress event: $event arrived.")
+        Twig.debug { "New ProvideAddress event: $event arrived." }
         if (!BenchmarkingExt.isBenchmarking()) {
             return
         }
@@ -140,7 +100,8 @@ object ProvideAddressBenchmarkTrace : BenchmarkTrace {
             Event.TRANSPARENT_ADDRESS_END -> {
                 Trace.endAsyncSection(Event.TRANSPARENT_ADDRESS_END.section, Event.TRANSPARENT_ADDRESS_END.cookie)
             }
-            else -> { /* nothing to write */ }
+            else -> { // nothing to write
+            }
         }
     }
 

@@ -8,12 +8,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
-import pirate.android.sdk.PirateSynchronizer
-import pirate.android.sdk.block.PirateCompactBlockProcessor
+import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.block.CompactBlockProcessor
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.R
 import pirate.android.sdk.demoapp.databinding.FragmentListTransactionsBinding
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.internal.Twig
+import pirate.android.sdk.model.PercentDecimal
 import pirate.android.sdk.model.TransactionOverview
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filterNotNull
@@ -24,14 +25,14 @@ import kotlinx.coroutines.launch
  * List all transactions related to the given seed, since the given birthday. This begins by
  * downloading any missing blocks and then validating and scanning their contents. Once scan is
  * complete, the transactions are available in the database and can be accessed by any SQL tool.
- * By default, the SDK uses a PiratePagedTransactionRepository to provide transaction contents from the
+ * By default, the SDK uses a PagedTransactionRepository to provide transaction contents from the
  * database in a paged format that works natively with RecyclerViews.
  */
 @Suppress("TooManyFunctions")
 class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBinding>() {
     private lateinit var adapter: TransactionAdapter
-    private var status: PirateSynchronizer.PirateStatus? = null
-    private val isSynced get() = status == PirateSynchronizer.PirateStatus.SYNCED
+    private var status: Synchronizer.Status? = null
+    private val isSynced get() = status == Synchronizer.Status.SYNCED
 
     private fun initTransactionUI() {
         binding.recyclerTransactions.layoutManager =
@@ -65,7 +66,7 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
                 launch {
                     sharedViewModel.synchronizerFlow
                         .filterNotNull()
-                        .flatMapLatest { it.clearedTransactions }
+                        .flatMapLatest { it.transactions }
                         .collect { onTransactionsUpdated(it) }
                 }
             }
@@ -76,16 +77,16 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
     // Change listeners
     //
 
-    private fun onProcessorInfoUpdated(info: PirateCompactBlockProcessor.ProcessorInfo) {
-        if (info.isScanning) binding.textInfo.text = "Scanning blocks...${info.scanProgress}%"
+    private fun onProcessorInfoUpdated(info: CompactBlockProcessor.ProcessorInfo) {
+        if (info.isSyncing) binding.textInfo.text = "Syncing blocks...${info.syncProgress}%"
     }
 
     @Suppress("MagicNumber")
-    private fun onProgress(i: Int) {
-        if (i < 100) binding.textInfo.text = "Downloading blocks...$i%"
+    private fun onProgress(percent: PercentDecimal) {
+        if (percent.isLessThanHundredPercent()) binding.textInfo.text = "Syncing blocks...${percent.toPercentage()}%"
     }
 
-    private fun onStatus(status: PirateSynchronizer.PirateStatus) {
+    private fun onStatus(status: Synchronizer.Status) {
         this.status = status
         binding.textStatus.text = "Status: $status"
         if (isSynced) onSyncComplete()
@@ -96,7 +97,7 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
     }
 
     private fun onTransactionsUpdated(transactions: List<TransactionOverview>) {
-        twig("got a new paged list of transactions")
+        Twig.debug { "got a new paged list of transactions" }
         adapter.submitList(transactions)
 
         // show message when there are no transactions
@@ -132,7 +133,7 @@ class ListTransactionsFragment : BaseDemoFragment<FragmentListTransactionsBindin
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
-        // We rather hide options menu actions while actively using the PirateSynchronizer
+        // We rather hide options menu actions while actively using the Synchronizer
         menu.setGroupVisible(R.id.main_menu_group, false)
     }
 

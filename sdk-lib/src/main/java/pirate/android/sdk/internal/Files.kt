@@ -3,7 +3,7 @@ package pirate.android.sdk.internal
 import android.content.Context
 import pirate.android.sdk.internal.ext.canWriteSuspend
 import pirate.android.sdk.internal.ext.existsSuspend
-import pirate.android.sdk.internal.ext.getNoBackupFilesDirCompat
+import pirate.android.sdk.internal.ext.getNoBackupFilesDirSuspend
 import pirate.android.sdk.internal.ext.mkdirsSuspend
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -29,7 +29,7 @@ internal object Files {
      * to prevent multiple threads to invoke the function at the same time.
      */
     suspend fun getZcashNoBackupSubdirectory(context: Context): File {
-        val dir = File(context.getNoBackupFilesDirCompat(), NO_BACKUP_SUBDIRECTORY)
+        val dir = File(context.getNoBackupFilesDirSuspend(), NO_BACKUP_SUBDIRECTORY)
 
         accessMutex.withLock {
             if (!dir.existsSuspend()) {

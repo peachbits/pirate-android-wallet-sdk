@@ -1,7 +1,7 @@
 package pirate.android.sdk.internal
 
 import android.content.Context
-import pirate.android.sdk.exception.PirateTransactionEncoderException
+import pirate.android.sdk.exception.TransactionEncoderException
 import pirate.android.sdk.internal.ext.deleteRecursivelySuspend
 import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.ext.existsSuspend
@@ -20,7 +20,14 @@ import java.net.URL
 import java.nio.channels.Channels
 import kotlin.time.Duration.Companion.milliseconds
 
-internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProperties) {
+internal class SaplingParamTool(val properties: SaplingParamToolProperties) {
+
+    val spendParamsFile: File
+        get() = File(properties.paramsDirectory, SPEND_PARAM_FILE_NAME)
+
+    val outputParamsFile: File
+        get() = File(properties.paramsDirectory, OUTPUT_PARAM_FILE_NAME)
+
     companion object {
         /**
          * Maximum file size for the sapling spend params - 50MB
@@ -71,13 +78,13 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
 
         /**
          * Initialization of needed properties. This is necessary entry point for other operations from {@code
-         * PirateSaplingParamTool}. This type of implementation also simplifies its testing.
+         * SaplingParamTool}. This type of implementation also simplifies its testing.
          *
          * @param context
          */
-        internal suspend fun new(context: Context): PirateSaplingParamTool {
+        internal suspend fun new(context: Context): SaplingParamTool {
             val paramsDirectory = Files.getZcashNoBackupSubdirectory(context)
-            val toolProperties = PirateSaplingParamToolProperties(
+            val toolProperties = SaplingParamToolProperties(
                 paramsDirectory = paramsDirectory,
                 paramsLegacyDirectory = File(context.getCacheDirSuspend(), SAPLING_PARAMS_LEGACY_SUBDIRECTORY),
                 saplingParams = listOf(
@@ -95,7 +102,7 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
                     )
                 )
             )
-            return PirateSaplingParamTool(toolProperties)
+            return SaplingParamTool(toolProperties)
         }
 
         /**
@@ -105,23 +112,29 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
          *
          * @return params destination directory file
          */
-        internal suspend fun initAndGetParamsDestinationDir(toolProperties: PirateSaplingParamToolProperties): File {
+        internal suspend fun initAndGetParamsDestinationDir(toolProperties: SaplingParamToolProperties): File {
             checkFilesMutex.withLock {
                 toolProperties.saplingParams.forEach {
                     val legacyFile = File(toolProperties.paramsLegacyDirectory, it.fileName)
                     val currentFile = File(toolProperties.paramsDirectory, it.fileName)
 
                     if (legacyFile.existsSuspend() && isFileHashValid(legacyFile, it.fileHash)) {
-                        twig("Moving params file: ${it.fileName} from legacy folder to the currently used folder.")
+                        Twig.debug {
+                            "Moving params file: ${it.fileName} from legacy folder to the currently used " +
+                                "folder."
+                        }
                         currentFile.parentFile?.mkdirsSuspend()
                         if (!renameParametersFile(legacyFile, currentFile)) {
-                            twig("Failed while moving the params file: ${it.fileName} to the preferred location.")
+                            Twig.debug {
+                                "Failed while moving the params file: ${it.fileName} to the preferred " +
+                                    "location."
+                            }
                         }
                     } else {
-                        twig(
+                        Twig.debug {
                             "Legacy file either does not exist or is not valid. Will be fetched to the preferred " +
                                 "location."
-                        )
+                        }
                     }
                 }
                 // remove the params folder and its files - a new sapling files will be fetched to the preferred
@@ -144,7 +157,7 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
             return try {
                 fileHash == parametersFile.getSha1Hash()
             } catch (e: IOException) {
-                twig("Failed in comparing file's hashes with: ${e.message}, caused by: ${e.cause}.")
+                Twig.debug { "Failed in comparing file's hashes with: ${e.message}, caused by: ${e.cause}." }
                 false
             }
         }
@@ -164,7 +177,7 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
             return runCatching {
                 return@runCatching fromParamFile.renameToSuspend(toParamFile)
             }.onFailure {
-                twig("Failed while renaming parameters file with: $it")
+                Twig.debug(it) { "Failed while renaming parameters file" }
             }.getOrDefault(false)
         }
     }
@@ -173,43 +186,43 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
      * Checks the given directory for the output and spending params and calls [fetchParams] for those, which are
      * missing.
      *
-     * Note: Don't forget to call the entry point function {@code initPirateSaplingParamTool} first. Make sure you also
+     * Note: Don't forget to call the entry point function {@code initSaplingParamTool} first. Make sure you also
      * called {@code initAndGetParamsDestinationDir} previously, as it's always better to check the
      * legacy destination folder first.
      *
      * @param destinationDir the directory where the params should be stored.
      *
-     * @throws PirateTransactionEncoderException.PirateMissingParamsException in case of failure while checking sapling params
-     * @throws PirateTransactionEncoderException.PirateFetchParamsException
-     * @throws PirateTransactionEncoderException.ValidateParamsException
+     * @throws TransactionEncoderException.MissingParamsException in case of failure while checking sapling params
+     * @throws TransactionEncoderException.FetchParamsException
+     * @throws TransactionEncoderException.ValidateParamsException
      * files
      */
     @Throws(
-        PirateTransactionEncoderException.ValidateParamsException::class,
-        PirateTransactionEncoderException.PirateFetchParamsException::class,
-        PirateTransactionEncoderException.PirateMissingParamsException::class
+        TransactionEncoderException.ValidateParamsException::class,
+        TransactionEncoderException.FetchParamsException::class,
+        TransactionEncoderException.MissingParamsException::class
     )
     internal suspend fun ensureParams(destinationDir: File) {
         properties.saplingParams.filter {
             !File(it.destinationDirectory, it.fileName).existsSuspend()
         }.forEach {
             try {
-                twig("Attempting to download missing params: ${it.fileName}.")
+                Twig.debug { "Attempting to download missing params: ${it.fileName}." }
                 fetchParams(it)
-            } catch (e: PirateTransactionEncoderException.PirateFetchParamsException) {
-                twig(
+            } catch (e: TransactionEncoderException.FetchParamsException) {
+                Twig.debug {
                     "Failed to fetch param file ${it.fileName} due to: $e. The second attempt is starting with a " +
                         "little delay."
-                )
+                }
                 // Re-run the fetch with a little delay, if it failed previously (as it can be caused by network
                 // conditions). We do it only once, the next failure is delivered to the caller of this method.
                 delay(200.milliseconds)
                 fetchParams(it)
-            } catch (e: PirateTransactionEncoderException.ValidateParamsException) {
-                twig(
+            } catch (e: TransactionEncoderException.ValidateParamsException) {
+                Twig.debug {
                     "Failed to validate fetched param file ${it.fileName} due to: $e. The second attempt is starting" +
                         " now."
-                )
+                }
                 // Re-run the fetch for invalid param file immediately, if it failed previously. We do it again only
                 // once, the next failure is delivered to the caller of this method.
                 fetchParams(it)
@@ -217,8 +230,8 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
         }
 
         if (!validate(destinationDir)) {
-            twig("Fetching sapling params files failed.")
-            throw PirateTransactionEncoderException.PirateMissingParamsException
+            Twig.debug { "Fetching sapling params files failed." }
+            throw TransactionEncoderException.MissingParamsException
         }
     }
 
@@ -228,12 +241,12 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
      *
      * @param paramsToFetch parameters wrapper class, which holds information about it
      *
-     * @throws PirateTransactionEncoderException.PirateFetchParamsException if any error while downloading the params file occurs
-     * @throws PirateTransactionEncoderException.ValidateParamsException if a failure in validation of fetched file occurs
+     * @throws TransactionEncoderException.FetchParamsException if any error while downloading the params file occurs
+     * @throws TransactionEncoderException.ValidateParamsException if a failure in validation of fetched file occurs
      */
     @Throws(
-        PirateTransactionEncoderException.ValidateParamsException::class,
-        PirateTransactionEncoderException.PirateFetchParamsException::class
+        TransactionEncoderException.ValidateParamsException::class,
+        TransactionEncoderException.FetchParamsException::class
     )
     internal suspend fun fetchParams(paramsToFetch: SaplingParameters) {
         val url = URL("$CLOUD_PARAM_DIR_URL/${paramsToFetch.fileName}")
@@ -267,20 +280,20 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
                 // IOException - If some other I/O error occurs
                 finalizeAndReportError(
                     temporaryFile,
-                    exception = PirateTransactionEncoderException.PirateFetchParamsException(
+                    exception = TransactionEncoderException.FetchParamsException(
                         paramsToFetch,
                         "Error while fetching ${paramsToFetch.fileName}, caused by $exception."
                     )
                 )
             }.onSuccess {
-                twig(
+                Twig.debug {
                     "Fetch and write of the temporary ${temporaryFile.name} succeeded. Validating and moving it to " +
                         "the final destination."
-                )
+                }
                 if (!isFileHashValid(temporaryFile, paramsToFetch.fileHash)) {
                     finalizeAndReportError(
                         temporaryFile,
-                        exception = PirateTransactionEncoderException.ValidateParamsException(
+                        exception = TransactionEncoderException.ValidateParamsException(
                             paramsToFetch,
                             "Failed while validating fetched param file: ${paramsToFetch.fileName}."
                         )
@@ -291,7 +304,7 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
                     finalizeAndReportError(
                         temporaryFile,
                         resultFile,
-                        exception = PirateTransactionEncoderException.ValidateParamsException(
+                        exception = TransactionEncoderException.ValidateParamsException(
                             paramsToFetch,
                             "Failed while renaming result param file: ${paramsToFetch.fileName}."
                         )
@@ -301,13 +314,13 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
         }
     }
 
-    @Throws(PirateTransactionEncoderException.PirateFetchParamsException::class)
-    private suspend fun finalizeAndReportError(vararg files: File, exception: PirateTransactionEncoderException) {
+    @Throws(TransactionEncoderException.FetchParamsException::class)
+    private suspend fun finalizeAndReportError(vararg files: File, exception: TransactionEncoderException) {
         files.forEach {
             it.deleteSuspend()
         }
         exception.also {
-            twig(it)
+            Twig.debug(it) { "Error while fetching sapling params files." }
             throw it
         }
     }
@@ -319,7 +332,7 @@ internal class PirateSaplingParamTool(val properties: PirateSaplingParamToolProp
         ).all { paramFileName ->
             File(destinationDir, paramFileName).existsSuspend()
         }.also {
-            twig("Param files ${if (!it) "did not" else ""} both exist!")
+            Twig.debug { "Param files ${if (!it) "did not" else ""} both exist!" }
         }
     }
 }
@@ -337,7 +350,7 @@ internal data class SaplingParameters(
 /**
  * Sapling param tool helper properties. The goal of this implementation is to ease its testing.
  */
-internal data class PirateSaplingParamToolProperties(
+internal data class SaplingParamToolProperties(
     val saplingParams: List<SaplingParameters>,
     val paramsDirectory: File,
     val paramsLegacyDirectory: File

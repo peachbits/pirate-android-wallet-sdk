@@ -5,10 +5,11 @@ import cash.z.ecc.android.bip39.Mnemonics.MnemonicCode
 import cash.z.ecc.android.bip39.toSeed
 import pirate.android.sdk.annotation.MaintainedTest
 import pirate.android.sdk.annotation.TestPurpose
-import pirate.android.sdk.internal.PirateTroubleshootingTwig
-import pirate.android.sdk.internal.Twig
+import pirate.android.sdk.internal.Derivation
+import pirate.android.sdk.internal.deriveUnifiedAddress
+import pirate.android.sdk.internal.deriveUnifiedFullViewingKeysTypesafe
+import pirate.android.sdk.internal.jni.RustDerivationTool
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.tool.PirateDerivationTool
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.BeforeClass
@@ -22,21 +23,28 @@ import org.junit.runners.Parameterized
 class TransparentTest(val expected: Expected, val network: PirateNetwork) {
 
     @Test
-    fun derivePirateUnifiedFullViewingKeysFromSeedTest() = runBlocking {
-        val ufvks = PirateDerivationTool.derivePirateUnifiedFullViewingKeys(SEED, network = network)
+    fun deriveUnifiedFullViewingKeysFromSeedTest() = runBlocking {
+        val ufvks = RustDerivationTool.new().deriveUnifiedFullViewingKeysTypesafe(
+            SEED,
+            network = network,
+            numberOfAccounts =
+            Derivation.DEFAULT_NUMBER_OF_ACCOUNTS
+        )
         assertEquals(1, ufvks.size)
         val ufvk = ufvks.first()
-        assertEquals(expected.uAddr, PirateDerivationTool.deriveUnifiedAddress(ufvk.encoding, network = network))
-        // TODO: If we need this, change PirateDerivationTool to derive from the UFVK instead of the public key.
-        // assertEquals(expected.tAddr, PirateDerivationTool.deriveTransparentAddressFromPublicKey(ufvk.encoding,
+        assertEquals(expected.uAddr, RustDerivationTool.new().deriveUnifiedAddress(ufvk.encoding, network = network))
+        // TODO: If we need this, change DerivationTool to derive from the UFVK instead of the public key.
+        // assertEquals(expected.tAddr, DerivationTool.deriveTransparentAddressFromPublicKey(ufvk.encoding,
         //     network = network))
     }
 
     companion object {
-        const val PHRASE = "deputy visa gentle among clean scout farm drive comfort patch skin salt ranch cool ramp warrior drink narrow normal lunch behind salt deal person"
+        const val PHRASE = "deputy visa gentle among clean scout farm drive comfort patch skin salt ranch cool ramp" +
+            " warrior drink narrow normal lunch behind salt deal person"
         val MNEMONIC = MnemonicCode(PHRASE)
         val SEED = MNEMONIC.toSeed()
 
+        @Suppress("MaxLineLength")
         object ExpectedMainnet : Expected {
             override val tAddr = "t1PKtYdJJHhc3Pxowmznkg7vdTwnhEsCvR4"
             override val zAddr = "zs1yc4sgtfwwzz6xfsy2xsradzr6m4aypgxhfw2vcn3hatrh5ryqsr08sgpemlg39vdh9kfupx20py"
@@ -46,6 +54,7 @@ class TransparentTest(val expected: Expected, val network: PirateNetwork) {
             override val tpk = "03b1d7fb28d17c125b504d06b1530097e0a3c76ada184237e3bc0925041230a5af"
         }
 
+        @Suppress("MaxLineLength")
         object ExpectedTestnet : Expected {
             override val tAddr = "tm9v3KTsjXK8XWSqiwFjic6Vda6eHY9Mjjq"
             override val zAddr = "ztestsapling1wn3tw9w5rs55x5yl586gtk72e8hcfdq8zsnjzcu8p7ghm8lrx54axc74mvm335q7lmy3g0sqje6"
@@ -58,7 +67,6 @@ class TransparentTest(val expected: Expected, val network: PirateNetwork) {
         @BeforeClass
         @JvmStatic
         fun startup() {
-            Twig.plant(PirateTroubleshootingTwig(formatter = { "@TWIG $it" }))
         }
 
         @JvmStatic

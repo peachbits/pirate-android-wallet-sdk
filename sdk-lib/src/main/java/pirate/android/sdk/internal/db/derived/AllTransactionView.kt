@@ -4,9 +4,9 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import pirate.android.sdk.internal.db.CursorParser
 import pirate.android.sdk.internal.db.optBlobOrThrow
 import pirate.android.sdk.internal.db.queryAndMap
+import pirate.android.sdk.internal.model.DbTransactionOverview
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.FirstClassByteArray
-import pirate.android.sdk.model.TransactionOverview
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
 import kotlinx.coroutines.flow.first
@@ -20,11 +20,27 @@ internal class AllTransactionView(
 ) {
     companion object {
 
+        private const val COLUMN_SORT_HEIGHT = "sort_height" // $NON-NLS
+
+        private const val QUERY_LIMIT = "1" // $NON-NLS
+
+        private val COLUMNS = arrayOf(
+            "*", // $NON-NLS
+            @Suppress("MaxLineLength")
+            "IFNULL(${AllTransactionViewDefinition.COLUMN_INTEGER_MINED_HEIGHT}, ${UInt.MAX_VALUE}) AS $COLUMN_SORT_HEIGHT" // $NON-NLS
+        )
+
         private val ORDER_BY = String.format(
             Locale.ROOT,
             "%s DESC, %s DESC", // $NON-NLS
-            AllTransactionViewDefinition.COLUMN_INTEGER_MINED_HEIGHT,
+            COLUMN_SORT_HEIGHT,
             AllTransactionViewDefinition.COLUMN_INTEGER_ID
+        )
+
+        private val ORDER_BY_MINED_HEIGHT = String.format(
+            Locale.ROOT,
+            "%s ASC", // $NON-NLS
+            AllTransactionViewDefinition.COLUMN_INTEGER_MINED_HEIGHT
         )
 
         private val SELECTION_BLOCK_RANGE = String.format(
@@ -34,10 +50,18 @@ internal class AllTransactionView(
             AllTransactionViewDefinition.COLUMN_INTEGER_MINED_HEIGHT
         )
 
+        private val SELECTION_RAW_IS_NULL = String.format(
+            Locale.ROOT,
+            "%s IS NULL", // $NON-NLS
+            AllTransactionViewDefinition.COLUMN_BLOB_RAW
+        )
+
         private val PROJECTION_COUNT = arrayOf("COUNT(*)") // $NON-NLS
+
+        private val PROJECTION_MINED_HEIGHT = arrayOf(AllTransactionViewDefinition.COLUMN_INTEGER_MINED_HEIGHT)
     }
 
-    private val cursorParser: CursorParser<TransactionOverview> = CursorParser { cursor ->
+    private val cursorParser: CursorParser<DbTransactionOverview> = CursorParser { cursor ->
         val idColumnIndex = cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_INTEGER_ID)
         val minedHeightColumnIndex =
             cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_INTEGER_MINED_HEIGHT)
@@ -48,12 +72,9 @@ internal class AllTransactionView(
             cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_BLOB_RAW_TRANSACTION_ID)
         val expiryHeightIndex = cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_INTEGER_EXPIRY_HEIGHT)
         val rawIndex = cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_BLOB_RAW)
-        val netValueIndex = cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_LONG_VALUE)
+        val netValueIndex = cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_LONG_ACCOUNT_BALANCE_DELTA)
         val feePaidIndex = cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_LONG_FEE_PAID)
         val isChangeIndex = cursor.getColumnIndex(AllTransactionViewDefinition.COLUMN_BOOLEAN_IS_CHANGE)
-        val isWalletInternalIndex = cursor.getColumnIndex(
-            AllTransactionViewDefinition.COLUMN_BOOLEAN_IS_WALLET_INTERNAL
-        )
         val receivedNoteCountIndex = cursor.getColumnIndex(
             AllTransactionViewDefinition.COLUMN_INTEGER_RECEIVED_NOTE_COUNT
         )
@@ -65,11 +86,16 @@ internal class AllTransactionView(
         val isSent = netValueLong < 0
 
         val expiryHeightLong = cursor.getLong(expiryHeightIndex)
+        val minedHeightLong = cursor.getLong(minedHeightColumnIndex)
 
-        TransactionOverview(
+        DbTransactionOverview(
             id = cursor.getLong(idColumnIndex),
             rawId = FirstClassByteArray(cursor.getBlob(rawTransactionIdIndex)),
-            minedHeight = BlockHeight.new(zcashNetwork, cursor.getLong(minedHeightColumnIndex)),
+            minedHeight = if (0L == minedHeightLong) {
+                null
+            } else {
+                BlockHeight.new(zcashNetwork, minedHeightLong)
+            },
             expiryHeight = if (0L == expiryHeightLong) {
                 null
             } else {
@@ -81,7 +107,6 @@ internal class AllTransactionView(
             netValue = Arrrtoshi(netValueLong.absoluteValue),
             feePaid = Arrrtoshi(cursor.getLong(feePaidIndex)),
             isChange = cursor.getInt(isChangeIndex) != 0,
-            isWalletInternal = cursor.getInt(isWalletInternalIndex) != 0,
             receivedNoteCount = cursor.getInt(receivedNoteCountIndex),
             sentNoteCount = cursor.getInt(sentNoteCountIndex),
             memoCount = cursor.getInt(memoCountIndex),
@@ -98,6 +123,7 @@ internal class AllTransactionView(
     fun getAllTransactions() =
         sqliteDatabase.queryAndMap(
             table = AllTransactionViewDefinition.VIEW_NAME,
+            columns = COLUMNS,
             orderBy = ORDER_BY,
             cursorParser = cursorParser
         )
@@ -105,6 +131,7 @@ internal class AllTransactionView(
     fun getTransactionRange(blockHeightRange: ClosedRange<BlockHeight>) =
         sqliteDatabase.queryAndMap(
             table = AllTransactionViewDefinition.VIEW_NAME,
+            columns = COLUMNS,
             orderBy = ORDER_BY,
             selection = SELECTION_BLOCK_RANGE,
             selectionArgs = arrayOf(blockHeightRange.start.value, blockHeightRange.endInclusive.value),
@@ -114,10 +141,29 @@ internal class AllTransactionView(
     suspend fun getOldestTransaction() =
         sqliteDatabase.queryAndMap(
             table = AllTransactionViewDefinition.VIEW_NAME,
+            columns = COLUMNS,
             orderBy = ORDER_BY,
-            limit = "1",
+            limit = QUERY_LIMIT,
             cursorParser = cursorParser
         ).firstOrNull()
+
+    suspend fun firstUnenhancedHeight(): BlockHeight? {
+        val heightLong =
+            sqliteDatabase.queryAndMap(
+                table = AllTransactionViewDefinition.VIEW_NAME,
+                columns = PROJECTION_MINED_HEIGHT,
+                orderBy = ORDER_BY_MINED_HEIGHT,
+                selection = SELECTION_RAW_IS_NULL,
+                limit = QUERY_LIMIT,
+                cursorParser = { it.getLong(0) }
+            ).firstOrNull()
+
+        return if (heightLong != null) {
+            BlockHeight.new(zcashNetwork, heightLong)
+        } else {
+            null
+        }
+    }
 }
 
 internal object AllTransactionViewDefinition {
@@ -135,11 +181,9 @@ internal object AllTransactionViewDefinition {
 
     const val COLUMN_BLOB_RAW = "raw" // $NON-NLS
 
-    const val COLUMN_LONG_VALUE = "net_value" // $NON-NLS
+    const val COLUMN_LONG_ACCOUNT_BALANCE_DELTA = "account_balance_delta" // $NON-NLS
 
     const val COLUMN_LONG_FEE_PAID = "fee_paid" // $NON-NLS
-
-    const val COLUMN_BOOLEAN_IS_WALLET_INTERNAL = "is_wallet_internal" // $NON-NLS
 
     const val COLUMN_BOOLEAN_IS_CHANGE = "has_change" // $NON-NLS
 

@@ -1,20 +1,22 @@
 package pirate.android.sdk.darkside.test
 
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 
-import pirate.android.sdk.PirateSynchronizer
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.Darkside
-import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.PirateNetwork
+import pirate.lightwallet.client.internal.DarksideApi
+import pirate.lightwallet.client.internal.new
+import pirate.lightwallet.client.model.BlockHeightUnsafe
+import pirate.lightwallet.client.model.LightWalletEndpoint
 import io.grpc.StatusRuntimeException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert
 import org.junit.Assert.assertEquals
@@ -53,16 +55,17 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
     fun enterTheDarkside(): DarksideTestCoordinator = runBlocking {
         // verify that we are on the darkside
         try {
-            twig("entering the darkside")
             initiate()
-            synchronizer.getServerInfo().apply {
-                assertTrue(
-                    "Error: not on the darkside",
-                    vendor.contains("dark", true)
-                        or chainName.contains("dark", true)
-                )
-            }
-            twig("darkside initiation complete!")
+            // In the future, we may want to have the SDK internally verify being on the darkside by matching the
+            // network type
+
+            // synchronizer.getServerInfo().apply {
+            //     assertTrue(
+            //         "Error: not on the darkside",
+            //         vendor.contains("dark", true)
+            //             or chainName.contains("dark", true)
+            //     )
+            // }
         } catch (error: StatusRuntimeException) {
             Assert.fail(
                 "Error while fetching server status. Testing cannot begin due to:" +
@@ -76,10 +79,8 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
      * Setup the synchronizer and darksidewalletd with their initial state
      */
     fun initiate() {
-        twig("*************** INITIALIZING TEST COORDINATOR (ONLY ONCE) ***********************")
-        val channel = synchronizer.channel
-        darkside = DarksideApi(channel)
-        darkside.reset()
+        darkside = DarksideApi.new(ApplicationProvider.getApplicationContext(), LightWalletEndpoint.Darkside)
+        darkside.reset(BlockHeightUnsafe(wallet.network.saplingActivationHeight.value))
     }
 
 //    fun triggerSmallReorg() {
@@ -97,25 +98,17 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
      */
     fun await(timeout: Long = 60_000L, targetHeight: BlockHeight? = null) = runBlocking {
         ScopedTest.timeoutWith(this, timeout) {
-            twig("***  Waiting up to ${timeout / 1_000}s for sync ***")
-            synchronizer.status.onEach {
-                twig("got processor status $it")
-                if (it == PirateSynchronizer.Status.DISCONNECTED) {
-                    twig("waiting a bit before giving up on connection...")
-                } else if (targetHeight != null && synchronizer.processor.getLastScannedHeight() < targetHeight) {
-                    twig("awaiting new blocks from server...")
-                }
-            }.map {
+            synchronizer.status.map { status ->
                 // whenever we're waiting for a target height, for simplicity, if we're sleeping,
                 // and in between polls, then consider it that we're not synced
-                if (targetHeight != null && synchronizer.processor.getLastScannedHeight() < targetHeight) {
-                    twig("switching status to DOWNLOADING because we're still waiting for height $targetHeight")
-                    PirateSynchronizer.Status.DOWNLOADING
+                if (targetHeight != null &&
+                    (synchronizer.processorInfo.first().lastSyncedHeight?.let { it < targetHeight }) == true
+                ) {
+                    Synchronizer.Status.SYNCING
                 } else {
-                    it
+                    status
                 }
-            }.filter { it == PirateSynchronizer.Status.SYNCED }.first()
-            twig("***  Done waiting for sync! ***")
+            }.filter { it == Synchronizer.Status.SYNCED }.first()
         }
     }
 
@@ -134,13 +127,12 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
 //    }
 
     fun stall(delay: Long = 5000L) = runBlocking {
-        twig("***  Stalling for ${delay}ms ***")
         delay(delay)
     }
 
-    //
-    // Validation
-    //
+//
+// Validation
+//
 
     inner class DarksideTestValidator {
 
@@ -161,35 +153,24 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
             )
         }
 
-        fun validateMinHeightDownloaded(minHeight: BlockHeight) = runBlocking<Unit> {
+        fun validateMinHeightSynced(minHeight: BlockHeight) = runBlocking<Unit> {
             val info = synchronizer.processorInfo.first()
-            val lastDownloadedHeight = info.lastDownloadedHeight
-            assertNotNull(lastDownloadedHeight)
+            val lastSyncedHeight = info.lastSyncedHeight
+            assertNotNull(lastSyncedHeight)
             assertTrue(
-                "Expected to have at least downloaded $minHeight but the last downloaded block was" +
-                    " $lastDownloadedHeight! Full details: $info",
-                lastDownloadedHeight!! >= minHeight
+                "Expected to have at least synced $minHeight but the last synced block was" +
+                    " $lastSyncedHeight! Full details: $info",
+                lastSyncedHeight!! >= minHeight
             )
         }
 
-        fun validateMinHeightScanned(minHeight: BlockHeight) = runBlocking<Unit> {
-            val info = synchronizer.processorInfo.first()
-            val lastScannedHeight = info.lastScannedHeight
-            assertNotNull(lastScannedHeight)
-            assertTrue(
-                "Expected to have at least scanned $minHeight but the last scanned block was" +
-                    " $lastScannedHeight! Full details: $info",
-                lastScannedHeight!! >= minHeight
-            )
-        }
-
-        fun validateMaxHeightScanned(maxHeight: BlockHeight) = runBlocking<Unit> {
-            val lastDownloadedHeight = synchronizer.processorInfo.first().lastScannedHeight
-            assertNotNull(lastDownloadedHeight)
+        fun validateMaxHeightSynced(maxHeight: BlockHeight) = runBlocking<Unit> {
+            val lastSyncedHeight = synchronizer.processorInfo.first().lastSyncedHeight
+            assertNotNull(lastSyncedHeight)
             assertTrue(
                 "Did not expect to be synced beyond $maxHeight but we are synced to" +
-                    " $lastDownloadedHeight",
-                lastDownloadedHeight!! <= maxHeight
+                    " $lastSyncedHeight",
+                lastSyncedHeight!! <= maxHeight
             )
         }
 
@@ -210,12 +191,19 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
         fun validateMinBalance(available: Long = -1, total: Long = -1) {
             val balance = synchronizer.saplingBalances.value
             if (available > 0) {
-                assertTrue("invalid available balance. Expected a minimum of $available but found ${balance?.available}", available <= balance?.available?.value!!)
+                assertTrue(
+                    "invalid available balance. Expected a minimum of $available but found ${balance?.available}",
+                    available <= balance?.available?.value!!
+                )
             }
             if (total > 0) {
-                assertTrue("invalid total balance. Expected a minimum of $total but found ${balance?.total}", total <= balance?.total?.value!!)
+                assertTrue(
+                    "invalid total balance. Expected a minimum of $total but found ${balance?.total}",
+                    total <= balance?.total?.value!!
+                )
             }
         }
+
         suspend fun validateBalance(available: Long = -1, total: Long = -1, account: Account) {
             val balance = synchronizer.processor.getBalanceInfo(account)
             if (available > 0) {
@@ -227,9 +215,9 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
         }
     }
 
-    //
-    // Chain Creations
-    //
+//
+// Chain Creations
+//
 
     inner class DarksideChainMaker {
         var lastTipHeight: BlockHeight? = null
@@ -244,30 +232,29 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
             tipHeight: BlockHeight = startHeight + 100
         ): DarksideChainMaker = apply {
             darkside
-                .reset(startHeight)
+                .reset(BlockHeightUnsafe(startHeight.value))
                 .stageBlocks(blocksUrl)
             applyTipHeight(tipHeight)
         }
 
         fun stageTransaction(url: String, targetHeight: BlockHeight): DarksideChainMaker = apply {
-            darkside.stageTransactions(url, targetHeight)
+            darkside.stageTransactions(url, BlockHeightUnsafe(targetHeight.value))
         }
 
         fun stageTransactions(targetHeight: BlockHeight, vararg urls: String): DarksideChainMaker = apply {
             urls.forEach {
-                darkside.stageTransactions(it, targetHeight)
+                darkside.stageTransactions(it, BlockHeightUnsafe(targetHeight.value))
             }
         }
 
         fun stageEmptyBlocks(startHeight: BlockHeight, count: Int = 10): DarksideChainMaker = apply {
-            darkside.stageEmptyBlocks(startHeight, count)
+            darkside.stageEmptyBlocks(BlockHeightUnsafe(startHeight.value), count)
         }
 
         fun stageEmptyBlock() = stageEmptyBlocks(lastTipHeight!! + 1, 1)
 
         fun applyTipHeight(tipHeight: BlockHeight): DarksideChainMaker = apply {
-            twig("applying tip height of $tipHeight")
-            darkside.applyBlocks(tipHeight)
+            darkside.applyBlocks(BlockHeightUnsafe(tipHeight.value))
             lastTipHeight = tipHeight
         }
 
@@ -277,26 +264,30 @@ class DarksideTestCoordinator(val wallet: TestWallet) {
          * The chain starts at block 663150 and ends at block 663250
          */
         fun makeSimpleChain() {
+            @Suppress("MaxLineLength")
             darkside
-                .reset(DEFAULT_START_HEIGHT)
+                .reset(BlockHeightUnsafe(DEFAULT_START_HEIGHT.value))
                 .stageBlocks("https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/tx-incoming/blocks.txt")
             applyTipHeight(DEFAULT_START_HEIGHT + 100)
         }
 
         fun advanceBy(numEmptyBlocks: Int) {
             val nextBlock = lastTipHeight!! + 1
-            twig("adding $numEmptyBlocks empty blocks to the chain starting at $nextBlock")
-            darkside.stageEmptyBlocks(nextBlock, numEmptyBlocks)
+            darkside.stageEmptyBlocks(BlockHeightUnsafe(nextBlock.value), numEmptyBlocks)
             applyTipHeight(nextBlock + numEmptyBlocks)
         }
 
         fun applyPendingTransactions(targetHeight: BlockHeight = lastTipHeight!! + 1) {
             stageEmptyBlocks(lastTipHeight!! + 1, (targetHeight.value - lastTipHeight!!.value).toInt())
-            darkside.stageTransactions(darkside.getSentTransactions()?.iterator(), targetHeight)
+            darkside.stageTransactions(
+                darkside.getSentTransactions()?.iterator(),
+                BlockHeightUnsafe(targetHeight.value)
+            )
             applyTipHeight(targetHeight)
         }
     }
 
+    @Suppress("MaxLineLength")
     companion object {
         /**
          * This is a special localhost value on the Android emulator, which allows it to contact

@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [PirateSynchronizer](index.md) / [cancelSend](./cancel-send.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [Synchronizer](index.md) / [cancelSend](./cancel-send.md)
 
 # cancelSend
 

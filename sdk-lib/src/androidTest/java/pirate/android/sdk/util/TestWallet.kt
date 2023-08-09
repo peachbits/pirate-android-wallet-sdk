@@ -3,29 +3,23 @@ package pirate.android.sdk.util
 import androidx.test.platform.app.InstrumentationRegistry
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.PirateSdkSynchronizer
-import pirate.android.sdk.PirateSynchronizer
+import pirate.android.sdk.SdkSynchronizer
+import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.internal.Twig
-import pirate.android.sdk.internal.service.PirateLightWalletGrpcService
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.internal.deriveUnifiedSpendingKey
+import pirate.android.sdk.internal.jni.RustDerivationTool
 import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.Testnet
-import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.WalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.model.isPending
-import pirate.android.sdk.tool.PirateDerivationTool
+import pirate.lightwallet.client.model.LightWalletEndpoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
@@ -61,30 +55,30 @@ class TestWallet(
     // Although runBlocking isn't great, this usage is OK because this is only used within the
     // automated tests
 
+    private val account = Account.DEFAULT
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val seed: ByteArray = Mnemonics.MnemonicCode(seedPhrase).toSeed()
     private val spendingKey =
-        runBlocking { PirateDerivationTool.derivePirateUnifiedSpendingKey(seed, network = network, Account.DEFAULT) }
-    val synchronizer: PirateSdkSynchronizer = PirateSynchronizer.newBlocking(
+        runBlocking { RustDerivationTool.new().deriveUnifiedSpendingKey(seed, network = network, account) }
+    val synchronizer: SdkSynchronizer = Synchronizer.newBlocking(
         context,
         network,
         alias,
         lightWalletEndpoint = endpoint,
         seed = seed,
         startHeight
-    ) as PirateSdkSynchronizer
-    val service = (synchronizer.processor.downloader.lightWalletService as PirateLightWalletGrpcService)
+    ) as SdkSynchronizer
 
     val available get() = synchronizer.saplingBalances.value?.available
     val unifiedAddress =
-        runBlocking { synchronizer.getUnifiedAddress(Account.DEFAULT) }
+        runBlocking { synchronizer.getUnifiedAddress(account) }
     val transparentAddress =
-        runBlocking { synchronizer.getTransparentAddress(Account.DEFAULT) }
+        runBlocking { synchronizer.getTransparentAddress(account) }
     val birthdayHeight get() = synchronizer.latestBirthdayHeight
     val networkName get() = synchronizer.network.networkName
 
-    suspend fun transparentBalance(): PirateWalletBalance {
-        synchronizer.refreshUtxos(transparentAddress, synchronizer.latestBirthdayHeight)
+    suspend fun transparentBalance(): WalletBalance {
+        synchronizer.refreshUtxos(account, synchronizer.latestBirthdayHeight)
         return synchronizer.getTransparentBalance(transparentAddress)
     }
 
@@ -96,12 +90,9 @@ class TestWallet(
             }
         }
 
-        twig("Awaiting next SYNCED status")
-
         // block until synced
-        synchronizer.status.first { it == PirateSynchronizer.PirateStatus.SYNCED }
+        synchronizer.status.first { it == Synchronizer.Status.SYNCED }
         killSwitch.cancel()
-        twig("Synced!")
         return this
     }
 
@@ -110,13 +101,7 @@ class TestWallet(
         memo: String = "",
         amount: Arrrtoshi = Arrrtoshi(500L)
     ): TestWallet {
-        Twig.sprout("$alias sending")
         synchronizer.sendToAddress(spendingKey, amount, address, memo)
-            .takeWhile { it.isPending(null) }
-            .collect {
-                twig("Updated transaction: $it")
-            }
-        Twig.clip("$alias sending")
         return this
     }
 
@@ -126,19 +111,15 @@ class TestWallet(
     }
 
     suspend fun shieldFunds(): TestWallet {
-        twig("checking $transparentAddress for transactions!")
-        synchronizer.refreshUtxos(transparentAddress, BlockHeight.new(PirateNetwork.Mainnet, 935000)).let { count ->
-            twig("FOUND $count new UTXOs")
+        synchronizer.refreshUtxos(Account.DEFAULT, BlockHeight.new(PirateNetwork.Mainnet, 935000)).let { count ->
+            Twig.debug { "FOUND $count new UTXOs" }
         }
 
         synchronizer.getTransparentBalance(transparentAddress).let { walletBalance ->
-            twig("FOUND utxo balance of total: ${walletBalance.total}  available: ${walletBalance.available}")
+            Twig.debug { "FOUND utxo balance of total: ${walletBalance.total}  available: ${walletBalance.available}" }
 
             if (walletBalance.available.value > 0L) {
                 synchronizer.shieldFunds(spendingKey)
-                    .onCompletion { twig("done shielding funds") }
-                    .catch { twig("Failed with $it") }
-                    .collect()
             }
         }
 
@@ -147,32 +128,28 @@ class TestWallet(
 
     suspend fun join(timeout: Long? = null): TestWallet {
         // block until stopped
-        twig("Staying alive until synchronizer is stopped!")
+        Twig.debug { "Staying alive until synchronizer is stopped!" }
         if (timeout != null) {
-            twig("Scheduling a stop in ${timeout}ms")
+            Twig.debug { "Scheduling a stop in ${timeout}ms" }
             walletScope.launch {
                 delay(timeout)
                 synchronizer.close()
             }
         }
-        synchronizer.status.first { it == PirateSynchronizer.PirateStatus.STOPPED }
-        twig("Stopped!")
+        synchronizer.status.first { it == Synchronizer.Status.STOPPED }
+        Twig.debug { "Stopped!" }
         return this
     }
 
     companion object {
-        init {
-            Twig.enabled(true)
-        }
     }
 
-    // TODO [843]: Ktlint 0.48.1 (remove this suppress)
-    // TODO [843]: https://github.com/zcash/zcash-android-wallet-sdk/issues/843
-    @Suppress("ktlint:no-semi")
     enum class Backups(val seedPhrase: String, val testnetBirthday: BlockHeight, val mainnetBirthday: BlockHeight) {
-        // TODO: get the proper birthday values for these wallets
+        // TODO [#902]: Get the proper birthday values for test wallets
+        // TODO [#902]: https://github.com/zcash/zcash-android-wallet-sdk/issues/902
         DEFAULT(
-            "column rhythm acoustic gym cost fit keen maze fence seed mail medal shrimp tell relief clip cannon foster soldier shallow refuse lunar parrot banana",
+            "column rhythm acoustic gym cost fit keen maze fence seed mail medal shrimp tell relief clip" +
+                " cannon foster soldier shallow refuse lunar parrot banana",
             BlockHeight.new(
                 PirateNetwork.Testnet,
                 1_355_928
@@ -180,7 +157,8 @@ class TestWallet(
             BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
         ),
         SAMPLE_WALLET(
-            "input frown warm senior anxiety abuse yard prefer churn reject people glimpse govern glory crumble swallow verb laptop switch trophy inform friend permit purpose",
+            "input frown warm senior anxiety abuse yard prefer churn reject people glimpse govern glory" +
+                " crumble swallow verb laptop switch trophy inform friend permit purpose",
             BlockHeight.new(
                 PirateNetwork.Testnet,
                 1_330_190
@@ -188,7 +166,8 @@ class TestWallet(
             BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
         ),
         DEV_WALLET(
-            "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread",
+            "still champion voice habit trend flight survey between bitter process artefact blind carbon" +
+                " truly provide dizzy crush flush breeze blouse charge solid fish spread",
             BlockHeight.new(
                 PirateNetwork.Testnet,
                 1_000_000
@@ -196,7 +175,8 @@ class TestWallet(
             BlockHeight.new(PirateNetwork.Mainnet, 991645)
         ),
         ALICE(
-            "quantum whisper lion route fury lunar pelican image job client hundred sauce chimney barely life cliff spirit admit weekend message recipe trumpet impact kitten",
+            "quantum whisper lion route fury lunar pelican image job client hundred sauce chimney barely" +
+                " life cliff spirit admit weekend message recipe trumpet impact kitten",
             BlockHeight.new(
                 PirateNetwork.Testnet,
                 1_330_190
@@ -204,12 +184,13 @@ class TestWallet(
             BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
         ),
         BOB(
-            "canvas wine sugar acquire garment spy tongue odor hole cage year habit bullet make label human unit option top calm neutral try vocal arena",
+            "canvas wine sugar acquire garment spy tongue odor hole cage year habit bullet make label human" +
+                " unit option top calm neutral try vocal arena",
             BlockHeight.new(
                 PirateNetwork.Testnet,
                 1_330_190
             ),
             BlockHeight.new(PirateNetwork.Mainnet, 1_000_000)
-        );
+        )
     }
 }

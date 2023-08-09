@@ -8,8 +8,6 @@
     <string name="action_faucet">Testnet Faucet</string>
     <string name="action_reset_sdk">Reset SDK</string>
 
-    <string name="action_new_ui">New UI</string>
-
     <!-- Drawer Menu -->
     <string name="menu_home">Home</string>
     <string name="menu_private_key">Get Private Key</string>
@@ -19,7 +17,7 @@
     <string name="menu_block">Get Block</string>
     <string name="menu_block_range">Get Block Range</string>
     <string name="menu_decrypt">Decrypt Block</string>
-    <string name="menu_transactions">List Transactions</string>
+    <string name="menu_transactions">Transactions</string>
     <string name="menu_utxos">List UTXOs</string>
     <string name="menu_send">Send</string>
 
@@ -33,12 +31,13 @@
     <string name="sapling_address">Sapling address</string>
     <string name="transparent_address">Transparent address</string>
     <string name="action_shield">Shield Funds</string>
+    <string name="send_status">Send status: <xliff:g id="status" example="Idle">%1$s</xliff:g></string>
 
     <string name="unified_address_tag">Zcash unified address</string>
     <string name="sapling_address_tag">Zcash sapling address</string>
     <string name="transparent_address_tag">Zcash transparent address</string>
-    <string name="address_copied" formatted="true"><xliff:g id="address" example="t1TdMMj5zzMtt...">Copied to
-        clipboard: %1$s</xliff:g></string>
+    <string name="address_copied" formatted="true">Copied to clipboard: <xliff:g id="address"
+        example="t1TdMMj5zzMtt...">%1$s</xliff:g></string>
 
     <string name="configure_seed">Please select your wallet secret phrase</string>
     <string name="person_alyssa">Alyssa P. Hacker</string>

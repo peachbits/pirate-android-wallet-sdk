@@ -1,9 +1,10 @@
 package pirate.android.sdk.util
 
+import pirate.android.sdk.internal.deriveUnifiedAddress
+import pirate.android.sdk.internal.jni.RustDerivationTool
 import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.PirateNetwork
-import cash.z.ecc.android.sdk.test.readFileLinesInFlow
-import pirate.android.sdk.tool.PirateDerivationTool
+import pirate.android.sdk.test.readFileLinesInFlow
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -31,7 +32,7 @@ class AddressGeneratorUtil {
             .map { seedPhrase ->
                 mnemonics.toSeed(seedPhrase.toCharArray())
             }.map { seed ->
-                PirateDerivationTool.deriveUnifiedAddress(seed, PirateNetwork.Mainnet, Account.DEFAULT)
+                RustDerivationTool.new().deriveUnifiedAddress(seed, PirateNetwork.Mainnet, Account.DEFAULT)
             }.collect { address ->
                 println("xrxrx2\t$address")
                 assertTrue(address.startsWith("u1"))

@@ -3,16 +3,16 @@ package pirate.android.sdk.internal.ext
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.internal.Twig
 import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
 @Deprecated(message = InsecureWarning.message)
-class PirateSampleSpendingKeyProvider(private val seedValue: String) : ReadWriteProperty<Any?, String> {
+class SampleSpendingKeyProvider(private val seedValue: String) : ReadWriteProperty<Any?, String> {
 
     override fun setValue(thisRef: Any?, property: KProperty<*>, value: String) {
-        twig("Set value called on property: $property, with value: $value.")
+        Twig.debug { "Set value called on property: $property, with value: $value." }
     }
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): String {
@@ -27,7 +27,7 @@ class PirateSampleSpendingKeyProvider(private val seedValue: String) : ReadWrite
 }
 
 @Deprecated(message = InsecureWarning.message)
-class PirateSampleSeedProvider(val seed: ByteArray) : ReadOnlyProperty<Any?, ByteArray> {
+class SampleSeedProvider(val seed: ByteArray) : ReadOnlyProperty<Any?, ByteArray> {
     constructor(seedValue: String) : this(seedValue.toByteArray())
     override fun getValue(thisRef: Any?, property: KProperty<*>): ByteArray {
         return seed
@@ -35,7 +35,7 @@ class PirateSampleSeedProvider(val seed: ByteArray) : ReadOnlyProperty<Any?, Byt
 }
 
 @Deprecated(message = InsecureWarning.message)
-class PirateBlockingSeedProvider(val seed: ByteArray, val delay: Long = 5000L) : ReadOnlyProperty<Any?, ByteArray> {
+class BlockingSeedProvider(val seed: ByteArray, val delay: Long = 5000L) : ReadOnlyProperty<Any?, ByteArray> {
     constructor(seedValue: String, delayMillis: Long = 5000L) : this(seedValue.toByteArray(), delayMillis)
     override fun getValue(thisRef: Any?, property: KProperty<*>): ByteArray {
         Thread.sleep(delay)
@@ -44,7 +44,7 @@ class PirateBlockingSeedProvider(val seed: ByteArray, val delay: Long = 5000L) :
 }
 
 @Deprecated(message = InsecureWarning.message)
-class PirateSimpleProvider<T>(var value: T) : ReadWriteProperty<Any?, T> {
+class SimpleProvider<T>(var value: T) : ReadWriteProperty<Any?, T> {
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
         return value
     }
@@ -55,7 +55,7 @@ class PirateSimpleProvider<T>(var value: T) : ReadWriteProperty<Any?, T> {
 }
 
 @Deprecated(message = InsecureWarning.message)
-class PirateBlockingProvider<T>(var value: T, val delay: Long = 5000L) : ReadWriteProperty<Any?, T> {
+class BlockingProvider<T>(var value: T, val delay: Long = 5000L) : ReadWriteProperty<Any?, T> {
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
         Thread.sleep(delay)
         return value
@@ -85,7 +85,7 @@ class PirateBlockingProvider<T>(var value: T, val delay: Long = 5000L) : ReadWri
  */
 @Suppress("HardwareIds", "UtilityClassWithPublicConstructor")
 @Deprecated(message = InsecureWarning.message)
-class PirateSeedGenerator {
+class SeedGenerator {
     companion object {
         @Deprecated(message = InsecureWarning.message)
         fun getDeviceId(appContext: Context): String {

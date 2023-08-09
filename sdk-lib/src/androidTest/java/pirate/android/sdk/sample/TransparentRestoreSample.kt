@@ -1,3 +1,5 @@
+@file:Suppress("MaxLineLength")
+
 package pirate.android.sdk.sample
 
 import androidx.test.filters.LargeTest
@@ -32,16 +34,14 @@ class TransparentRestoreSample {
 //    val walletSandbox = SimpleWallet(SEED_PHRASE, "WalletC")
 //    val walletZ2T = SimpleWallet(SEED_PHRASE, "WalletZ2T")
 //    val externalTransparentAddress =
-//        PirateDerivationTool.deriveTransparentAddress(Mnemonics.MnemonicCode(RANDOM_PHRASE).toSeed(), Testnet)
+//        DerivationTool.deriveTransparentAddress(Mnemonics.MnemonicCode(RANDOM_PHRASE).toSeed(), Testnet)
 
     //    @Test
     fun sendZ2Texternal() = runBlocking {
-        twig("Syncing WalletExt")
         val extWallet = TestWallet(TestWallet.Backups.ALICE, alias = "WalletE")
         extWallet.sync()
 //        extWallet.send(542, walletSandbox.transparentAddress, "External funds memo is lost, though")
         delay(1000)
-        twig("Done sending funds to external address (Z->T COMPLETE!)")
     }
 
     //    @Test
@@ -49,21 +49,21 @@ class TransparentRestoreSample {
 //        walletSandbox.sync()
 //        walletZ2T.send(543, externalTransparentAddress, "External funds memo is lost, though")
         delay(1000)
-        twig("Done sending funds to external address (Z->T COMPLETE!)")
     }
 
 //    @Test
     fun autoShield() = runBlocking<Unit> {
         val wallet = TestWallet(TestWallet.Backups.SAMPLE_WALLET, alias = "WalletC")
         wallet.sync()
-        twig("Done syncing wallet!")
         val tbalance = wallet.transparentBalance()
         val address = wallet.transparentAddress
 
-        twig("t-avail: ${tbalance.available}  t-total: ${tbalance.total}")
-        Assert.assertTrue("Not enough funds to run sample. Expected some Arrrtoshi but found ${tbalance.available}. Try adding funds to $address", tbalance.available.value > 0)
+        Assert.assertTrue(
+            "Not enough funds to run sample. Expected some Arrrtoshi but found ${tbalance.available}. " +
+                "Try adding funds to $address",
+            tbalance.available.value > 0
+        )
 
-        twig("Shielding available transparent funds!")
 //        wallet.shieldFunds()
     }
 
@@ -126,15 +126,12 @@ class TransparentRestoreSample {
             )
         )
         //        val job = walletA.walletScope.launch {
-        //            twig("Syncing WalletA")
         //            walletA.sync()
         //        }
-        twig("Syncing WalletSandbox")
         walletSandbox.sync()
         //        job.join()
         delay(500)
 
-        twig("Done syncing both wallets!")
         //        val value = walletA.available
         //        val address = walletA.shieldedAddress
         //        Assert.assertTrue("Not enough funds to run sample. Expected at least $TX_VALUE Arrrtoshi but found $value. Try adding funds to $address", value >= TX_VALUE)
@@ -143,8 +140,6 @@ class TransparentRestoreSample {
         //        walletA.send(TX_VALUE, walletA.transparentAddress, "${TransparentRestoreSample::class.java.simpleName} z->t")
 
         walletSandbox.rewindToHeight(BlockHeight.new(PirateNetwork.Testnet, 1339178))
-        twig("Done REWINDING!")
-        twig("T-ADDR (for the win!): ${walletSandbox.transparentAddress}")
         delay(500)
         //        walletB.sync()
         // rewind database B to height then rescan
@@ -161,22 +156,22 @@ class TransparentRestoreSample {
 //        )
 //        private val context = InstrumentationRegistry.getInstrumentation().context
 //        private val seed: ByteArray = Mnemonics.MnemonicCode(seedPhrase).toSeed()
-//        private val shieldedSpendingKey = PirateDerivationTool.deriveSpendingKeys(seed, Testnet)[0]
-//        private val transparentAccountPrivateKey = PirateDerivationTool.deriveTransparentAccountPrivateKey(seed, Testnet)
+//        private val shieldedSpendingKey = DerivationTool.deriveSpendingKeys(seed, Testnet)[0]
+//        private val transparentAccountPrivateKey = DerivationTool.deriveTransparentAccountPrivateKey(seed, Testnet)
 //        private val host = "lightwalletd.testnet.electriccoin.co"
-//        private val initializer = PirateInitializer(context) { config ->
+//        private val initializer = Initializer(context) { config ->
 //            config.importWallet(seed, startHeight)
 //            config.setNetwork(Testnet, host)
 //            config.alias = alias
 //        }
 //
-//        val synchronizer = PirateSynchronizer(initializer)
+//        val synchronizer = Synchronizer(initializer)
 //        val available get() = synchronizer.latestBalance.availableArrrtoshi
-//        val shieldedAddress = PirateDerivationTool.deriveShieldedAddress(seed, Testnet)
-//        val transparentAddress = PirateDerivationTool.deriveTransparentAddress(seed, Testnet)
+//        val shieldedAddress = DerivationTool.deriveShieldedAddress(seed, Testnet)
+//        val transparentAddress = DerivationTool.deriveTransparentAddress(seed, Testnet)
 //        val birthdayHeight get() = synchronizer.latestBirthdayHeight
 //
-//        suspend fun transparentBalance(): PirateWalletBalance {
+//        suspend fun transparentBalance(): WalletBalance {
 //            synchronizer.refreshUtxos(transparentAddress, synchronizer.latestBirthdayHeight)
 //            return synchronizer.getTransparentBalance(transparentAddress)
 //        }
@@ -239,7 +234,7 @@ class TransparentRestoreSample {
 //                    synchronizer.stop()
 //                }
 //            }
-//            synchronizer.status.first { it == PirateSynchronizer.PirateStatus.STOPPED }
+//            synchronizer.status.first { it == Synchronizer.Status.STOPPED }
 //            twig("Stopped!")
 //            return this
 //        }

@@ -8,16 +8,16 @@ import org.junit.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
-class PirateUnifiedSpendingKeyTest {
+class UnifiedSpendingKeyTest {
     @Test
     @SmallTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun factory_copies_bytes() = runTest {
-        val spendingKey = WalletFixture.getPirateUnifiedSpendingKey()
+        val spendingKey = WalletFixture.getUnifiedSpendingKey()
         val expected = spendingKey.copyBytes().copyOf()
 
         val bytes = spendingKey.copyBytes()
-        val newSpendingKey = PirateUnifiedSpendingKey.new(spendingKey.account, bytes)
+        val newSpendingKey = UnifiedSpendingKey.new(spendingKey.account, bytes)
         bytes.clear()
 
         assertContentEquals(expected, newSpendingKey.getOrThrow().copyBytes())
@@ -27,10 +27,10 @@ class PirateUnifiedSpendingKeyTest {
     @SmallTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun get_copies_bytes() = runTest {
-        val spendingKey = WalletFixture.getPirateUnifiedSpendingKey()
+        val spendingKey = WalletFixture.getUnifiedSpendingKey()
 
         val expected = spendingKey.copyBytes()
-        val newSpendingKey = PirateUnifiedSpendingKey.new(spendingKey.account, expected)
+        val newSpendingKey = UnifiedSpendingKey.new(spendingKey.account, expected)
 
         newSpendingKey.getOrThrow().copyBytes().clear()
 
@@ -42,8 +42,8 @@ class PirateUnifiedSpendingKeyTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     fun toString_does_not_leak() = runTest {
         assertEquals(
-            "PirateUnifiedSpendingKey(account=Account(value=0))",
-            WalletFixture.getPirateUnifiedSpendingKey().toString()
+            "UnifiedSpendingKey(account=Account(value=0))",
+            WalletFixture.getUnifiedSpendingKey().toString()
         )
     }
 }

@@ -1,0 +1,66 @@
+[package]
+name = "pirate-android-wallet-sdk"
+version = "0.0.4"
+authors = [
+    "Jack Grigg <jack@z.cash>",
+    "Kevin Gorham <kevin.gorham@z.cash>",
+]
+description = "JNI backend for the Android wallet SDK"
+publish = false
+edition = "2018"
+rust-version = "1.60"
+
+[dependencies]
+failure = "0.1"
+hdwallet = "0.3.1"
+hdwallet-bitcoin = "0.3"
+hex = "0.4"
+jni = { version = "0.20", default-features = false }
+schemer = "0.2"
+secp256k1 = "0.21"
+secrecy = "0.8"
+zcash_address = "0.2"
+zcash_client_backend = { version = "0.9", features = ["transparent-inputs", "unstable"] }
+zcash_client_sqlite = { version = "0.7.1", features = ["transparent-inputs", "unstable"] }
+zcash_primitives = "0.11"
+zcash_proofs = "0.11"
+orchard = { version = "0.4", default-features = false }
+
+# Initialization
+rayon = "1.7"
+
+# Logging
+log-panics = "2.0.0"
+paranoid-android = "0.2"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+# Conditional access to newer NDK features
+dlopen2 = "0.4"
+libc = "0.2"
+
+## Uncomment this to test librustzcash changes locally
+[patch.crates-io]
+#zcash_client_backend = { path = '../../librustzcash/zcash_client_backend' }
+#zcash_client_sqlite = { path = '../../librustzcash/zcash_client_sqlite' }
+#zcash_primitives = { path = '../../librustzcash/zcash_primitives' }
+#zcash_proofs = { path = '../../librustzcash/zcash_proofs' }
+#zcash_address = { path = '../../librustzcash/components/zcash_address' }
+
+
+# Uncomment this to test someone else's librustzcash changes in a branch
+#[patch.crates-io]
+zcash_client_backend = {git = 'https://github.com/piratenetwork/librustzcash', rev = '8c121ca621e41bbd952de11c27d896be9977e35e'}
+zcash_client_sqlite = {git = 'https://github.com/piratenetwork/librustzcash', rev = '8c121ca621e41bbd952de11c27d896be9977e35e'}
+zcash_primitives = {git = 'https://github.com/piratenetwork/librustzcash', rev = '8c121ca621e41bbd952de11c27d896be9977e35e'}
+zcash_proofs = {git = 'https://github.com/piratenetwork/librustzcash', rev = '8c121ca621e41bbd952de11c27d896be9977e35e'}
+zcash_address = { git = 'https://github.com/piratenetwork/librustzcash', rev = '8c121ca621e41bbd952de11c27d896be9977e35e'}
+
+[features]
+mainnet = ["zcash_client_sqlite/mainnet"]
+testnet = []
+
+[lib]
+name = "piratewalletsdk"
+path = "src/main/rust/lib.rs"
+crate-type = ["staticlib", "cdylib"]

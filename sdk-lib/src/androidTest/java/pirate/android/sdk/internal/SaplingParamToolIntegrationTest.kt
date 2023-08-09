@@ -2,7 +2,7 @@ package pirate.android.sdk.internal
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
-import pirate.android.sdk.exception.PirateTransactionEncoderException
+import pirate.android.sdk.exception.TransactionEncoderException
 import pirate.android.sdk.internal.ext.listFilesSuspend
 import pirate.android.sdk.test.getAppContext
 import pirate.fixture.SaplingParamsFixture
@@ -28,7 +28,7 @@ import kotlin.test.assertTrue
         "validation failed on CI."
 )
 @RunWith(AndroidJUnit4::class)
-class PirateSaplingParamToolIntegrationTest {
+class SaplingParamToolIntegrationTest {
 
     private val spendSaplingParams = SaplingParamsFixture.new()
 
@@ -51,7 +51,7 @@ class PirateSaplingParamToolIntegrationTest {
     @Test
     @LargeTest
     fun test_files_exists() = runBlocking {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
         saplingParamTool.fetchParams(spendSaplingParams)
         saplingParamTool.fetchParams(outputSaplingParams)
@@ -66,7 +66,7 @@ class PirateSaplingParamToolIntegrationTest {
     @Test
     @LargeTest
     fun output_file_exists() = runBlocking {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
         saplingParamTool.fetchParams(spendSaplingParams)
         File(spendSaplingParams.destinationDirectory, spendSaplingParams.fileName).delete()
@@ -79,7 +79,7 @@ class PirateSaplingParamToolIntegrationTest {
     @Test
     @LargeTest
     fun spend_file_exists() = runBlocking {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
         saplingParamTool.fetchParams(outputSaplingParams)
         File(outputSaplingParams.destinationDirectory, outputSaplingParams.fileName).delete()
@@ -101,7 +101,7 @@ class PirateSaplingParamToolIntegrationTest {
             SaplingParamsFixture.OUTPUT_FILE_NAME
         )
 
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
         saplingParamTool.ensureParams(SaplingParamsFixture.DESTINATION_DIRECTORY)
 
@@ -116,7 +116,7 @@ class PirateSaplingParamToolIntegrationTest {
     @Test
     @LargeTest
     fun check_correct_spend_param_file_size() = runBlocking {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
         saplingParamTool.fetchParams(spendSaplingParams)
 
@@ -132,7 +132,7 @@ class PirateSaplingParamToolIntegrationTest {
     @Test
     @LargeTest
     fun check_correct_output_param_file_size() = runBlocking {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
         saplingParamTool.fetchParams(outputSaplingParams)
 
@@ -149,11 +149,11 @@ class PirateSaplingParamToolIntegrationTest {
     @LargeTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun fetch_params_uninitialized_test() = runTest {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
         SaplingParamsFixture.DESTINATION_DIRECTORY.delete()
 
-        assertFailsWith<PirateTransactionEncoderException.PirateFetchParamsException> {
+        assertFailsWith<TransactionEncoderException.BalanceException> {
             saplingParamTool.fetchParams(spendSaplingParams)
         }
 
@@ -164,9 +164,9 @@ class PirateSaplingParamToolIntegrationTest {
     @LargeTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun fetch_params_incorrect_hash_test() = runTest {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
-        assertFailsWith<PirateTransactionEncoderException.ValidateParamsException> {
+        assertFailsWith<TransactionEncoderException.ValidateParamsException> {
             saplingParamTool.fetchParams(
                 SaplingParamsFixture.new(
                     fileName = SaplingParamsFixture.OUTPUT_FILE_NAME,
@@ -183,9 +183,9 @@ class PirateSaplingParamToolIntegrationTest {
     @LargeTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun fetch_params_incorrect_max_file_size_test() = runTest {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
-        assertFailsWith<PirateTransactionEncoderException.ValidateParamsException> {
+        assertFailsWith<TransactionEncoderException.ValidateParamsException> {
             saplingParamTool.fetchParams(
                 SaplingParamsFixture.new(
                     fileName = SaplingParamsFixture.OUTPUT_FILE_NAME,
@@ -202,11 +202,11 @@ class PirateSaplingParamToolIntegrationTest {
     @LargeTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun fetch_param_manual_recover_test_from_fetch_params_exception() = runTest {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
-        SaplingParamsFixture.DESTINATION_DIRECTORY.delete() // will cause the PirateFetchParamsException
+        SaplingParamsFixture.DESTINATION_DIRECTORY.delete() // will cause the BalanceException
 
-        val exception = assertFailsWith<PirateTransactionEncoderException.PirateFetchParamsException> {
+        val exception = assertFailsWith<TransactionEncoderException.BalanceException> {
             saplingParamTool.fetchParams(outputSaplingParams)
         }
 
@@ -220,7 +220,7 @@ class PirateSaplingParamToolIntegrationTest {
         assertFalse(expectedOutputFile.exists())
 
         // to set up the missing deleted folder
-        PirateSaplingParamTool.initAndGetParamsDestinationDir(saplingParamTool.properties)
+        SaplingParamTool.initAndGetParamsDestinationDir(saplingParamTool.properties)
 
         // re-try with parameters returned by the exception
         saplingParamTool.fetchParams(exception.parameters)
@@ -232,7 +232,7 @@ class PirateSaplingParamToolIntegrationTest {
     @LargeTest
     @OptIn(ExperimentalCoroutinesApi::class)
     fun fetch_param_manual_recover_test_from_validate_params_exception() = runTest {
-        val saplingParamTool = PirateSaplingParamTool.new(getAppContext())
+        val saplingParamTool = SaplingParamTool.new(getAppContext())
 
         val expectedOutputFile = File(
             SaplingParamsFixture.DESTINATION_DIRECTORY,
@@ -246,7 +246,7 @@ class PirateSaplingParamToolIntegrationTest {
             SaplingParamsFixture.SPEND_FILE_HASH // will cause the ValidateParamsException
         )
 
-        val exception = assertFailsWith<PirateTransactionEncoderException.ValidateParamsException> {
+        val exception = assertFailsWith<TransactionEncoderException.ValidateParamsException> {
             saplingParamTool.fetchParams(outputSaplingParams)
         }
 

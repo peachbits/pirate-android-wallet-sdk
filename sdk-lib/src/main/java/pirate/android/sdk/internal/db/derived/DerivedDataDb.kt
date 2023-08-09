@@ -2,15 +2,19 @@ package pirate.android.sdk.internal.db.derived
 
 import android.content.Context
 import androidx.sqlite.db.SupportSQLiteDatabase
+import pirate.android.sdk.internal.Backend
 import pirate.android.sdk.internal.NoBackupContextWrapper
+import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.db.ReadOnlySupportSqliteOpenHelper
 import pirate.android.sdk.internal.ext.tryWarn
+import pirate.android.sdk.internal.initAccountsTable
+import pirate.android.sdk.internal.initBlocksTable
 import pirate.android.sdk.internal.model.Checkpoint
-import pirate.android.sdk.jni.PirateRustBackend
+import pirate.android.sdk.model.UnifiedFullViewingKey
 import pirate.android.sdk.model.PirateNetwork
-import pirate.android.sdk.type.PirateUnifiedFullViewingKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.File
 
 internal class DerivedDataDb private constructor(
     zcashNetwork: PirateNetwork,
@@ -24,13 +28,7 @@ internal class DerivedDataDb private constructor(
 
     val allTransactionView = AllTransactionView(zcashNetwork, sqliteDatabase)
 
-    val sentTransactionView = SentTransactionView(zcashNetwork, sqliteDatabase)
-
-    val receivedTransactionView = ReceivedTransactionView(zcashNetwork, sqliteDatabase)
-
-    val sentNotesTable = SentNoteTable(zcashNetwork, sqliteDatabase)
-
-    val receivedNotesTable = ReceivedNoteTable(zcashNetwork, sqliteDatabase)
+    val txOutputsView = TxOutputsView(zcashNetwork, sqliteDatabase)
 
     suspend fun close() {
         withContext(Dispatchers.IO) {
@@ -46,36 +44,40 @@ internal class DerivedDataDb private constructor(
         @Suppress("LongParameterList", "SpreadOperator")
         suspend fun new(
             context: Context,
-            rustBackend: PirateRustBackend,
+            backend: Backend,
+            databaseFile: File,
             zcashNetwork: PirateNetwork,
             checkpoint: Checkpoint,
             seed: ByteArray?,
-            viewingKeys: List<PirateUnifiedFullViewingKey>
+            viewingKeys: List<UnifiedFullViewingKey>
         ): DerivedDataDb {
-            rustBackend.initDataDb(seed)
+            backend.initDataDb(seed)
 
-            // TODO [#681]: consider converting these to typed exceptions in the welding layer
-            // TODO [#681]: https://github.com/zcash/zcash-android-wallet-sdk/issues/681
-            tryWarn(
-                "Did not initialize the blocks table. It probably was already initialized.",
-                ifContains = "table is not empty"
-            ) {
-                rustBackend.initBlocksTable(checkpoint)
-            }
-
-            tryWarn(
-                "Did not initialize the accounts table. It probably was already initialized.",
-                ifContains = "table is not empty"
-            ) {
-                rustBackend.initAccountsTable(*viewingKeys.toTypedArray())
+            runCatching {
+                // TODO [#681]: consider converting these to typed exceptions in the welding layer
+                // TODO [#681]: https://github.com/zcash/zcash-android-wallet-sdk/issues/681
+                tryWarn(
+                    message = "Did not initialize the blocks table. It probably was already initialized.",
+                    ifContains = "table is not empty"
+                ) {
+                    backend.initBlocksTable(checkpoint)
+                }
+                tryWarn(
+                    message = "Did not initialize the accounts table. It probably was already initialized.",
+                    ifContains = "table is not empty"
+                ) {
+                    backend.initAccountsTable(*viewingKeys.toTypedArray())
+                }
+            }.onFailure {
+                Twig.error { "Failed to init derived data database with $it" }
             }
 
             val database = ReadOnlySupportSqliteOpenHelper.openExistingDatabaseAsReadOnly(
                 NoBackupContextWrapper(
                     context,
-                    rustBackend.dataDbFile.parentFile!!
+                    databaseFile.parentFile!!
                 ),
-                rustBackend.dataDbFile,
+                databaseFile,
                 DATABASE_VERSION
             )
 

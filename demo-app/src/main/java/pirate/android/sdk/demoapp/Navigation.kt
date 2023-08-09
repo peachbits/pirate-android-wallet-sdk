@@ -11,7 +11,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptionsBuilder
@@ -21,19 +20,20 @@ import androidx.navigation.compose.rememberNavController
 import pirate.android.sdk.demoapp.NavigationTargets.BALANCE
 import pirate.android.sdk.demoapp.NavigationTargets.HOME
 import pirate.android.sdk.demoapp.NavigationTargets.SEND
+import pirate.android.sdk.demoapp.NavigationTargets.TRANSACTIONS
 import pirate.android.sdk.demoapp.NavigationTargets.WALLET_ADDRESS_DETAILS
 import pirate.android.sdk.demoapp.ui.screen.addresses.view.Addresses
 import pirate.android.sdk.demoapp.ui.screen.balance.view.Balance
 import pirate.android.sdk.demoapp.ui.screen.home.view.Home
 import pirate.android.sdk.demoapp.ui.screen.home.viewmodel.WalletViewModel
 import pirate.android.sdk.demoapp.ui.screen.send.view.Send
+import pirate.android.sdk.demoapp.ui.screen.transactions.view.Transactions
 import pirate.android.sdk.demoapp.util.AndroidApiVersion
 import pirate.android.sdk.demoapp.util.fromResources
 import pirate.android.sdk.model.PirateNetwork
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 @Suppress("LongMethod")
 internal fun ComposeActivity.Navigation() {
@@ -61,6 +61,7 @@ internal fun ComposeActivity.Navigation() {
                             // An improvement here in the future would be showing a snackbar or error dialog.
                         }
                     },
+                    goTransactions = { navController.navigateJustOnce(TRANSACTIONS) },
                     resetSdk = { walletViewModel.resetSdk() }
                 )
             }
@@ -73,7 +74,11 @@ internal fun ComposeActivity.Navigation() {
                 Balance(
                     walletSnapshot,
                     onShieldFunds = { walletViewModel.shieldFunds() },
-                    onBack = { navController.popBackStackJustOnce(BALANCE) },
+                    sendState = walletViewModel.sendState.collectAsStateWithLifecycle().value,
+                    onBack = {
+                        walletViewModel.clearSendOrShieldState()
+                        navController.popBackStackJustOnce(BALANCE)
+                    },
                 )
             }
         }
@@ -111,12 +116,25 @@ internal fun ComposeActivity.Navigation() {
             } else {
                 Send(
                     walletSnapshot = walletSnapshot,
+                    sendState = walletViewModel.sendState.collectAsStateWithLifecycle().value,
                     onSend = {
-                        // In the future, consider observing the flow and providing UI updates
                         walletViewModel.send(it)
-                        navController.popBackStackJustOnce(SEND)
                     },
-                    onBack = { navController.popBackStackJustOnce(SEND) }
+                    onBack = {
+                        walletViewModel.clearSendOrShieldState()
+                        navController.popBackStackJustOnce(SEND)
+                    }
+                )
+            }
+        }
+        composable(TRANSACTIONS) {
+            val synchronizer = walletViewModel.synchronizer.collectAsStateWithLifecycle().value
+            if (null == synchronizer) {
+                // Display loading indicator
+            } else {
+                Transactions(
+                    synchronizer = synchronizer,
+                    onBack = { navController.popBackStackJustOnce(TRANSACTIONS) }
                 )
             }
         }
@@ -158,11 +176,7 @@ private fun copyToClipboard(
     scope: CoroutineScope,
     snackbarHostState: SnackbarHostState
 ) {
-    val clipboardManager = if (AndroidApiVersion.isAtLeastM) {
-        context.getSystemService(ClipboardManager::class.java)
-    } else {
-        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    }
+    val clipboardManager = context.getSystemService(ClipboardManager::class.java)
 
     val data = ClipData.newPlainText(
         tag,
@@ -199,4 +213,6 @@ object NavigationTargets {
     const val WALLET_ADDRESS_DETAILS = "wallet_address_details" // NON-NLS
 
     const val SEND = "send" // NON-NLS
+
+    const val TRANSACTIONS = "transactions" // NON-NLS
 }

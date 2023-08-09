@@ -1,9 +1,9 @@
 package pirate.android.sdk.demoapp.preference
 
-import pirate.android.sdk.demoapp.model.PersistableWallet
 import pirate.android.sdk.demoapp.preference.api.PreferenceProvider
 import pirate.android.sdk.demoapp.preference.model.entry.Key
 import pirate.android.sdk.demoapp.preference.model.entry.PreferenceDefault
+import pirate.android.sdk.model.PersistableWallet
 import org.json.JSONObject
 
 data class PersistableWalletPreferenceDefault(

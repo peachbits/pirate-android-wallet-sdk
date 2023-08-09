@@ -2,7 +2,7 @@ package pirate.android.sdk.internal.db.derived
 
 import androidx.sqlite.db.SupportSQLiteDatabase
 import pirate.android.sdk.internal.db.queryAndMap
-import pirate.android.sdk.internal.model.PirateEncodedTransaction
+import pirate.android.sdk.internal.model.EncodedTransaction
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.FirstClassByteArray
 import pirate.android.sdk.model.PirateNetwork
@@ -66,7 +66,7 @@ internal class TransactionTable(
             cursorParser = { it.getLong(0) }
         ).first()
 
-    suspend fun findPirateEncodedTransactionById(id: Long): PirateEncodedTransaction? {
+    suspend fun findEncodedTransactionById(id: Long): EncodedTransaction? {
         return sqliteDatabase.queryAndMap(
             table = TransactionTableDefinition.TABLE_NAME,
             columns = PROJECTION_ENCODED_TRANSACTION,
@@ -85,7 +85,7 @@ internal class TransactionTable(
                 BlockHeight.new(zcashNetwork, it.getLong(heightIndex))
             }
 
-            PirateEncodedTransaction(
+            EncodedTransaction(
                 FirstClassByteArray(txid),
                 FirstClassByteArray(raw),
                 expiryHeight
@@ -118,7 +118,7 @@ internal class TransactionTable(
     }
 }
 
-object TransactionTableDefinition {
+internal object TransactionTableDefinition {
     const val TABLE_NAME = "transactions" // $NON-NLS
 
     const val COLUMN_INTEGER_ID = "id_tx" // $NON-NLS

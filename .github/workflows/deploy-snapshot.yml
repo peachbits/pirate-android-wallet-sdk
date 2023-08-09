@@ -28,12 +28,12 @@ jobs:
     steps:
       - name: Checkout
         timeout-minutes: 1
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       # Gradle Wrapper validation can be flaky
       # https://github.com/gradle/wrapper-validation-action/issues/40
       - name: Gradle Wrapper Validation
         timeout-minutes: 1
-        uses: gradle/wrapper-validation-action@55e685c48d84285a5b0418cd094606e199cca3b6
+        uses: gradle/wrapper-validation-action@8d49e559aae34d3e0eb16cde532684bc9702762b
 
   check_secrets:
     environment: deployment
@@ -59,10 +59,10 @@ jobs:
     steps:
       - name: Checkout
         timeout-minutes: 1
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
       - name: Setup
         id: setup
-        timeout-minutes: 30
+        timeout-minutes: 40
         uses: ./.github/actions/setup
       # While not strictly necessary, this sanity checks the build before attempting to upload.
       # This adds minimal additional build time, since most of the work is cached and re-used
@@ -94,7 +94,7 @@ jobs:
       - name: Upload Artifacts
         if: ${{ always() }}
         uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce
-        timeout-minutes: 2
+        timeout-minutes: 3
         with:
           name: Snapshot binaries
           path: ~/artifacts

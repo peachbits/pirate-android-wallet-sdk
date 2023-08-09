@@ -1,45 +1,34 @@
 package pirate.android.sdk
 
 import android.content.Context
-import pirate.android.sdk.block.PirateCompactBlockProcessor
+import pirate.android.sdk.block.CompactBlockProcessor
 import pirate.android.sdk.ext.PirateSdk
-import pirate.android.sdk.internal.PirateSaplingParamTool
+import pirate.android.sdk.internal.Derivation
+import pirate.android.sdk.internal.SaplingParamTool
 import pirate.android.sdk.internal.db.DatabaseCoordinator
 import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.LightWalletEndpoint
-import pirate.android.sdk.model.PendingTransaction
-import pirate.android.sdk.model.Transaction
+import pirate.android.sdk.model.PercentDecimal
 import pirate.android.sdk.model.TransactionOverview
 import pirate.android.sdk.model.TransactionRecipient
-import pirate.android.sdk.model.PirateUnifiedSpendingKey
-import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.UnifiedSpendingKey
+import pirate.android.sdk.model.WalletBalance
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.tool.CheckpointTool
-import pirate.android.sdk.tool.PirateDerivationTool
-import pirate.android.sdk.type.PirateAddressType
-import pirate.android.sdk.type.PirateConsensusMatchType
-import pirate.wallet.sdk.rpc.Service
+import pirate.android.sdk.tool.DerivationTool
+import pirate.android.sdk.type.AddressType
+import pirate.android.sdk.type.ConsensusMatchType
+import pirate.lightwallet.client.model.LightWalletEndpoint
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.runBlocking
 import java.io.Closeable
 
-/**
- * Primary interface for interacting with the SDK. Defines the contract that specific
- * implementations like [MockPirateSynchronizer] and [PirateSdkSynchronizer] fulfill. Given the language-level
- * support for coroutines, we favor their use in the SDK and incorporate that choice into this
- * contract.
- */
 @Suppress("TooManyFunctions")
-interface PirateSynchronizer {
+interface Synchronizer {
 
-    //
-    // Flows
-    //
-
-    /* PirateStatus */
+    // Status
 
     /**
      * The network to which this synchronizer is connected and from which it is processing blocks.
@@ -47,24 +36,25 @@ interface PirateSynchronizer {
     val network: PirateNetwork
 
     /**
-     * A flow of values representing the [PirateStatus] of this PirateSynchronizer. As the status changes, a new
+     * A flow of values representing the [Status] of this Synchronizer. As the status changes, a new
      * value will be emitted by this flow.
      */
-    val status: Flow<PirateStatus>
+    val status: Flow<Status>
 
     /**
-     * A flow of progress values, typically corresponding to this PirateSynchronizer downloading blocks.
-     * Typically, any non- zero value below 100 indicates that progress indicators can be shown and
-     * a value of 100 signals that progress is complete and any progress indicators can be hidden.
+     * A flow of progress values, typically corresponding to this Synchronizer downloading blocks.
+     * Typically, any non-zero value below `PercentDecimal.ONE_HUNDRED_PERCENT` indicates that progress indicators can
+     * be shown and a value of `PercentDecimal.ONE_HUNDRED_PERCENT` signals that progress is complete and any progress
+     * indicators can be hidden.
      */
-    val progress: Flow<Int>
+    val progress: Flow<PercentDecimal>
 
     /**
      * A flow of processor details, updated every time blocks are processed to include the latest
      * block height, blocks downloaded and blocks scanned. Similar to the [progress] flow but with a
      * lot more detail.
      */
-    val processorInfo: Flow<PirateCompactBlockProcessor.ProcessorInfo>
+    val processorInfo: Flow<CompactBlockProcessor.ProcessorInfo>
 
     /**
      * The latest height observed on the network, which does not necessarily correspond to the
@@ -76,40 +66,22 @@ interface PirateSynchronizer {
     /**
      * A stream of balance values for the orchard pool. Includes the available and total balance.
      */
-    val orchardBalances: StateFlow<PirateWalletBalance?>
+    val orchardBalances: StateFlow<WalletBalance?>
 
     /**
      * A stream of balance values for the sapling pool. Includes the available and total balance.
      */
-    val saplingBalances: StateFlow<PirateWalletBalance?>
+    val saplingBalances: StateFlow<WalletBalance?>
 
     /**
      * A stream of balance values for the transparent pool. Includes the available and total balance.
      */
-    val transparentBalances: StateFlow<PirateWalletBalance?>
-
-    /* Transactions */
-
-    /**
-     * A flow of all the outbound pending transaction that have been sent but are awaiting
-     * confirmations.
-     */
-    val pendingTransactions: Flow<List<PendingTransaction>>
+    val transparentBalances: StateFlow<WalletBalance?>
 
     /**
      * A flow of all the transactions that are on the blockchain.
      */
-    val clearedTransactions: Flow<List<TransactionOverview>>
-
-    /**
-     * A flow of all transactions related to sending funds.
-     */
-    val sentTransactions: Flow<List<Transaction.Sent>>
-
-    /**
-     * A flow of all transactions related to receiving funds.
-     */
-    val receivedTransactions: Flow<List<Transaction.Received>>
+    val transactions: Flow<List<TransactionOverview>>
 
     //
     // Latest Properties
@@ -152,40 +124,40 @@ interface PirateSynchronizer {
      * @param seed the wallet's seed phrase.
      *
      * @return the newly created ZIP 316 account identifier, along with the binary
-     * encoding of the `PirateUnifiedSpendingKey` for the newly created account.
+     * encoding of the `UnifiedSpendingKey` for the newly created account.
      */
     // This is not yet ready to be a public API
-    // suspend fun createAccount(seed: ByteArray): PirateUnifiedSpendingKey
+    // suspend fun createAccount(seed: ByteArray): UnifiedSpendingKey
 
     /**
      * Gets the current unified address for the given account.
      *
-     * @param accountId the optional accountId whose address is of interest. By default, the first
-     * account is used.
+     * @param account the account whose address is of interest. Use Account.DEFAULT to get a result for the first
+     * account.
      *
      * @return the current unified address for the given account.
      */
-    suspend fun getUnifiedAddress(account: Account = Account.DEFAULT): String
+    suspend fun getUnifiedAddress(account: Account): String
 
     /**
      * Gets the legacy Sapling address corresponding to the current unified address for the given account.
      *
-     * @param account the optional accountId whose address is of interest. By default, the first
-     * account is used.
+     * @param account the account whose address is of interest. Use Account.DEFAULT to get a result for the first
+     * account.
      *
      * @return a legacy Sapling address for the given account.
      */
-    suspend fun getSaplingAddress(account: Account = Account.DEFAULT): String
+    suspend fun getSaplingAddress(account: Account): String
 
     /**
      * Gets the legacy transparent address corresponding to the current unified address for the given account.
      *
-     * @param account the optional accountId whose address is of interest. By default, the first
-     * account is used.
+     * @param account the account whose address is of interest. Use Account.DEFAULT to get a result for the first
+     * account.
      *
      * @return a legacy transparent address for the given account.
      */
-    suspend fun getTransparentAddress(account: Account = Account.DEFAULT): String
+    suspend fun getTransparentAddress(account: Account): String
 
     /**
      * Sends zatoshi.
@@ -200,21 +172,21 @@ interface PirateSynchronizer {
      * useful for updating the UI without needing to poll. Of course, polling is always an option
      * for any wallet that wants to ignore this return value.
      */
-    fun sendToAddress(
-        usk: PirateUnifiedSpendingKey,
+    suspend fun sendToAddress(
+        usk: UnifiedSpendingKey,
         amount: Arrrtoshi,
         toAddress: String,
         memo: String = ""
-    ): Flow<PendingTransaction>
+    ): Long
 
-    fun shieldFunds(
-        usk: PirateUnifiedSpendingKey,
+    suspend fun shieldFunds(
+        usk: UnifiedSpendingKey,
         memo: String = PirateSdk.DEFAULT_SHIELD_FUNDS_MEMO_PREFIX
-    ): Flow<PendingTransaction>
+    ): Long
 
     /**
      * Returns true when the given address is a valid z-addr. Invalid addresses will throw an
-     * exception. Valid z-addresses have these characteristics: //TODO copy info from related ZIP
+     * exception. See valid z-addresses characteristics in related ZIP.
      *
      * @param address the address to validate.
      *
@@ -226,7 +198,7 @@ interface PirateSynchronizer {
 
     /**
      * Returns true when the given address is a valid t-addr. Invalid addresses will throw an
-     * exception. Valid t-addresses have these characteristics: //TODO copy info from related ZIP
+     * exception. See valid t-addresses characteristics in related ZIP.
      *
      * @param address the address to validate.
      *
@@ -258,46 +230,43 @@ interface PirateSynchronizer {
      * function compares the server's branch id to this SDK's and returns information that helps
      * determine whether they match.
      *
-     * @return an instance of [PirateConsensusMatchType] that is essentially a wrapper for both branch ids
+     * @return an instance of [ConsensusMatchType] that is essentially a wrapper for both branch ids
      * and provides helper functions for communicating detailed errors to the user.
      */
-    suspend fun validateConsensusBranch(): PirateConsensusMatchType
+    suspend fun validateConsensusBranch(): ConsensusMatchType
 
     /**
      * Validates the given address, returning information about why it is invalid. This is a
      * convenience method that combines the behavior of [isValidShieldedAddr],
      * [isValidTransparentAddr], and [isValidUnifiedAddr] into one call so that the developer
      * doesn't have to worry about handling the exceptions that they throw. Rather, exceptions
-     * are converted to [PirateAddressType.Invalid] which has a `reason` property describing why it is
+     * are converted to [AddressType.Invalid] which has a `reason` property describing why it is
      * invalid.
      *
      * @param address the address to validate.
      *
-     * @return an instance of [PirateAddressType] providing validation info regarding the given address.
+     * @return an instance of [AddressType] providing validation info regarding the given address.
      */
-    suspend fun validateAddress(address: String): PirateAddressType
+    suspend fun validateAddress(address: String): AddressType
 
     /**
-     * Convenience function that exposes the underlying server information, like its name and
-     * consensus branch id. Most wallets should already have a different source of truth for the
-     * server(s) with which they operate and thereby not need this function.
-     */
-    suspend fun getServerInfo(): Service.LightdInfo
-
-    /**
-     * Download all UTXOs for the given address and store any new ones in the database.
+     * Download all UTXOs for the given account addresses and store any new ones in the database.
      *
-     * @return the number of utxos that were downloaded and addded to the UTXO table.
+     * @param account The Account, for which all addresses blocks will be downloaded. Use Account.DEFAULT to get a
+     * result for the first account.
+     * @param since The BlockHeight, from which blocks will be downloaded.
+     *
+     * @return the number of utxos that were downloaded and added to the UTXO table.
      */
     suspend fun refreshUtxos(
-        tAddr: String,
+        account: Account,
         since: BlockHeight = network.saplingActivationHeight
     ): Int?
 
     /**
      * Returns the balance that the wallet knows about. This should be called after [refreshUtxos].
      */
-    suspend fun getTransparentBalance(tAddr: String): PirateWalletBalance
+    suspend fun getTransparentBalance(tAddr: String): WalletBalance
 
     suspend fun getNearestRewindHeight(height: BlockHeight): BlockHeight
 
@@ -329,8 +298,8 @@ interface PirateSynchronizer {
      * Gets or sets a global error handler. This is a useful hook for handling unexpected critical
      * errors.
      *
-     * @return true when the error has been handled and the PirateSynchronizer should attempt to continue.
-     * False when the error is unrecoverable and the PirateSynchronizer should [stop].
+     * @return true when the error has been handled and the Synchronizer should attempt to continue.
+     * False when the error is unrecoverable and the Synchronizer should [stop].
      */
     var onCriticalErrorHandler: ((Throwable?) -> Boolean)?
 
@@ -374,53 +343,44 @@ interface PirateSynchronizer {
     var onChainErrorHandler: ((BlockHeight, BlockHeight) -> Any)?
 
     /**
-     * Represents the status of this PirateSynchronizer, which is useful for communicating to the user.
+     * Represents the status of this Synchronizer, which is useful for communicating to the user.
      */
-    enum class PirateStatus {
+    enum class Status {
         /**
-         * Indicates that [stop] has been called on this PirateSynchronizer and it will no longer be used.
+         * Indicates that [stop] has been called on this Synchronizer and it will no longer be used.
          */
         STOPPED,
 
         /**
-         * Indicates that this PirateSynchronizer is disconnected from its lightwalletd server.
+         * Indicates that this Synchronizer is disconnected from its lightwalletd server.
          * When set, a UI element may want to turn red.
          */
         DISCONNECTED,
 
         /**
-         * Indicates that this PirateSynchronizer is actively preparing to start, which usually involves
-         * setting up database tables, migrations or taking other maintenance steps that need to
-         * occur after an upgrade.
-         */
-        PREPARING,
-
-        /**
-         * Indicates that this PirateSynchronizer is actively downloading new blocks from the server.
-         */
-        DOWNLOADING,
-
-        /**
-         * Indicates that this PirateSynchronizer is actively validating new blocks that were downloaded
+         * Indicates that the Synchronizer is actively syncing new blocks. It goes through these stages internally:
+         * downloading new blocks, validating these blocks, then scanning them, deleting the temporary persisted block
+         * files, and enhancing transaction details at the end.
+         *
+         * In the downloading stage, the Synchronizer is actively downloading new blocks from the
+         * server.
+         *
+         * In the validating stage, the Synchronizer is actively validating new blocks that were downloaded
          * from the server. Blocks need to be verified before they are scanned. This confirms that
          * each block is chain-sequential, thereby detecting missing blocks and reorgs.
-         */
-        VALIDATING,
-
-        /**
-         * Indicates that this PirateSynchronizer is actively decrypting new blocks that were downloaded
+         *
+         * In the scanning stage, Synchronizer is actively decrypting new blocks that were downloaded
          * from the server.
+         *
+         * In the deleting stage are all temporary persisted block files removed from the persistence.
+         *
+         * In the enhancing stage is the Synchronizer actively enhancing newly scanned blocks with additional
+         * transaction details, fetched from the server.
          */
-        SCANNING,
+        SYNCING,
 
         /**
-         * Indicates that this PirateSynchronizer is actively enhancing newly scanned blocks with
-         * additional transaction details, fetched from the server.
-         */
-        ENHANCING,
-
-        /**
-         * Indicates that this PirateSynchronizer is fully up to date and ready for all wallet functions.
+         * Indicates that this Synchronizer is fully up to date and ready for all wallet functions.
          * When set, a UI element may want to turn green. In this state, the balance can be trusted.
          */
         SYNCED
@@ -439,12 +399,12 @@ interface PirateSynchronizer {
          * client wishes to change the server endpoint, the active synchronizer will need to be stopped and a new
          * instance created with a new value.
          * @param seed the wallet's seed phrase. This is required the first time a new wallet is set up. For
-         * subsequent calls, seed is only needed if [PirateInitializerException.SeedRequired] is thrown.
+         * subsequent calls, seed is only needed if [InitializeException.SeedRequired] is thrown.
          * @param birthday Block height representing the "birthday" of the wallet.  When creating a new wallet, see
          * [BlockHeight.ofLatestCheckpoint].  When restoring an existing wallet, use block height that was first used
          * to create the wallet.  If that value is unknown, null is acceptable but will result in longer
-         * sync times.  After sync completes, the birthday can be determined from [PirateSynchronizer.latestBirthdayHeight].
-         * @throws PirateInitializerException.SeedRequired Indicates clients need to call this method again, providing the
+         * sync times.  After sync completes, the birthday can be determined from [Synchronizer.latestBirthdayHeight].
+         * @throws InitializeException.SeedRequired Indicates clients need to call this method again, providing the
          * seed bytes.
          * @throws IllegalStateException If multiple instances of synchronizer with the same network+alias are
          * active at the same time.  Call `close` to finish one synchronizer before starting another one with the same
@@ -452,9 +412,9 @@ interface PirateSynchronizer {
          */
         /*
          * If customized initialization is required (e.g. for dependency injection or testing), see
-         * [DefaultPirateSynchronizerFactory].
+         * [DefaultSynchronizerFactory].
          */
-        @Suppress("LongParameterList")
+        @Suppress("LongParameterList", "LongMethod")
         suspend fun new(
             context: Context,
             zcashNetwork: PirateNetwork,
@@ -462,12 +422,12 @@ interface PirateSynchronizer {
             lightWalletEndpoint: LightWalletEndpoint,
             seed: ByteArray?,
             birthday: BlockHeight?
-        ): CloseablePirateSynchronizer {
+        ): CloseableSynchronizer {
             val applicationContext = context.applicationContext
 
             validateAlias(alias)
 
-            val saplingParamTool = PirateSaplingParamTool.new(applicationContext)
+            val saplingParamTool = SaplingParamTool.new(applicationContext)
 
             val loadedCheckpoint = CheckpointTool.loadNearest(
                 applicationContext,
@@ -476,57 +436,60 @@ interface PirateSynchronizer {
             )
 
             val coordinator = DatabaseCoordinator.getInstance(context)
+            // The pending transaction database no longer exists, so we can delete the file
+            coordinator.deletePendingTransactionDatabase(zcashNetwork, alias)
 
-            val rustBackend = DefaultPirateSynchronizerFactory.defaultPirateRustBackend(
-                applicationContext,
+            val backend = DefaultSynchronizerFactory.defaultBackend(
                 zcashNetwork,
                 alias,
-                loadedCheckpoint.height,
-                saplingParamTool
+                saplingParamTool,
+                coordinator
             )
 
-            val blockStore = DefaultPirateSynchronizerFactory.defaultPirateCompactBlockRepository(
-                applicationContext,
-                coordinator.cacheDbFile(zcashNetwork, alias),
-                zcashNetwork
-            )
+            val blockStore =
+                DefaultSynchronizerFactory
+                    .defaultCompactBlockRepository(coordinator.fsBlockDbRoot(zcashNetwork, alias), backend)
 
             val viewingKeys = seed?.let {
-                PirateDerivationTool.derivePirateUnifiedFullViewingKeys(
+                DerivationTool.getInstance().deriveUnifiedFullViewingKeys(
                     seed,
                     zcashNetwork,
-                    1
+                    Derivation.DEFAULT_NUMBER_OF_ACCOUNTS
                 ).toList()
             } ?: emptyList()
 
-            val repository = DefaultPirateSynchronizerFactory.defaultDerivedDataRepository(
+            val repository = DefaultSynchronizerFactory.defaultDerivedDataRepository(
                 applicationContext,
-                rustBackend,
+                backend,
+                coordinator.dataDbFile(zcashNetwork, alias),
                 zcashNetwork,
                 loadedCheckpoint,
                 seed,
                 viewingKeys
             )
 
-            val service = DefaultPirateSynchronizerFactory.defaultService(applicationContext, lightWalletEndpoint)
-            val encoder = DefaultPirateSynchronizerFactory.defaultEncoder(rustBackend, saplingParamTool, repository)
-            val downloader = DefaultPirateSynchronizerFactory.defaultDownloader(service, blockStore)
-            val txManager = DefaultPirateSynchronizerFactory.defaultTxManager(
-                applicationContext,
-                zcashNetwork,
-                alias,
+            val service = DefaultSynchronizerFactory.defaultService(applicationContext, lightWalletEndpoint)
+            val encoder = DefaultSynchronizerFactory.defaultEncoder(backend, saplingParamTool, repository)
+            val downloader = DefaultSynchronizerFactory.defaultDownloader(service, blockStore)
+            val txManager = DefaultSynchronizerFactory.defaultTxManager(
                 encoder,
                 service
             )
-            val processor = DefaultPirateSynchronizerFactory.defaultProcessor(rustBackend, downloader, repository)
+            val processor = DefaultSynchronizerFactory.defaultProcessor(
+                backend,
+                downloader,
+                repository,
+                birthday
+                    ?: zcashNetwork.saplingActivationHeight
+            )
 
-            return PirateSdkSynchronizer.new(
+            return SdkSynchronizer.new(
                 zcashNetwork,
                 alias,
                 repository,
                 txManager,
                 processor,
-                rustBackend
+                backend
             )
         }
 
@@ -545,14 +508,14 @@ interface PirateSynchronizer {
             lightWalletEndpoint: LightWalletEndpoint,
             seed: ByteArray?,
             birthday: BlockHeight?
-        ): CloseablePirateSynchronizer = runBlocking {
+        ): CloseableSynchronizer = runBlocking {
             new(context, zcashNetwork, alias, lightWalletEndpoint, seed, birthday)
         }
 
         /**
          * Delete the databases associated with this wallet. This removes all compact blocks and
          * data derived from those blocks. Although most data can be regenerated by setting up a new
-         * PirateSynchronizer instance with the seed, there are two special cases where data is not retained:
+         * Synchronizer instance with the seed, there are two special cases where data is not retained:
          * 1. Outputs created with a `null` OVK
          * 2. The UA to which a transaction was sent (recovery from seed will only reveal the receiver, not the full UA)
          *
@@ -567,11 +530,11 @@ interface PirateSynchronizer {
             appContext: Context,
             network: PirateNetwork,
             alias: String = PirateSdk.DEFAULT_ALIAS
-        ): Boolean = PirateSdkSynchronizer.erase(appContext, network, alias)
+        ): Boolean = SdkSynchronizer.erase(appContext, network, alias)
     }
 }
 
-interface CloseablePirateSynchronizer : PirateSynchronizer, Closeable
+interface CloseableSynchronizer : Synchronizer, Closeable
 
 /**
  * Validate that the alias doesn't contain malicious characters by enforcing simple rules which

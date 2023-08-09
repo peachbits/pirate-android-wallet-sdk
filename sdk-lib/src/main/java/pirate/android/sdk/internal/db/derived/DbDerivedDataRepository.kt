@@ -1,10 +1,9 @@
 package pirate.android.sdk.internal.db.derived
 
-import pirate.android.sdk.internal.model.PirateEncodedTransaction
+import pirate.android.sdk.internal.model.DbTransactionOverview
+import pirate.android.sdk.internal.model.EncodedTransaction
 import pirate.android.sdk.internal.repository.DerivedDataRepository
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.Transaction
-import pirate.android.sdk.model.TransactionOverview
 import pirate.android.sdk.model.TransactionRecipient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +21,10 @@ internal class DbDerivedDataRepository(
         return derivedDataDb.blockTable.lastScannedHeight()
     }
 
+    override suspend fun firstUnenhancedHeight(): BlockHeight? {
+        return derivedDataDb.allTransactionView.firstUnenhancedHeight()
+    }
+
     override suspend fun firstScannedHeight(): BlockHeight {
         return derivedDataDb.blockTable.firstScannedHeight()
     }
@@ -30,11 +33,11 @@ internal class DbDerivedDataRepository(
         return derivedDataDb.blockTable.count() > 0
     }
 
-    override suspend fun findPirateEncodedTransactionById(txId: Long): PirateEncodedTransaction? {
-        return derivedDataDb.transactionTable.findPirateEncodedTransactionById(txId)
+    override suspend fun findEncodedTransactionById(txId: Long): EncodedTransaction? {
+        return derivedDataDb.transactionTable.findEncodedTransactionById(txId)
     }
 
-    override suspend fun findNewTransactions(blockHeightRange: ClosedRange<BlockHeight>): List<TransactionOverview> =
+    override suspend fun findNewTransactions(blockHeightRange: ClosedRange<BlockHeight>): List<DbTransactionOverview> =
         derivedDataDb.allTransactionView.getTransactionRange(blockHeightRange).toList()
 
     override suspend fun getOldestTransaction() = derivedDataDb.allTransactionView.getOldestTransaction()
@@ -57,20 +60,14 @@ internal class DbDerivedDataRepository(
         // toInt() should be safe because we expect very few accounts
         .toInt()
 
-    override val receivedTransactions: Flow<List<Transaction.Received>>
-        get() = invalidatingFlow.map { derivedDataDb.receivedTransactionView.getReceivedTransactions().toList() }
-    override val sentTransactions: Flow<List<Transaction.Sent>>
-        get() = invalidatingFlow.map { derivedDataDb.sentTransactionView.getSentTransactions().toList() }
-    override val allTransactions: Flow<List<TransactionOverview>>
+    override val allTransactions: Flow<List<DbTransactionOverview>>
         get() = invalidatingFlow.map { derivedDataDb.allTransactionView.getAllTransactions().toList() }
 
-    override fun getSentNoteIds(transactionId: Long) = derivedDataDb.sentNotesTable.getSentNoteIds(transactionId)
-    override fun getRecipients(transactionId: Long): Flow<TransactionRecipient> {
-        return derivedDataDb.sentNotesTable.getRecipients(transactionId)
-    }
+    override fun getNoteIds(transactionId: Long) = derivedDataDb.txOutputsView.getNoteIds(transactionId)
 
-    override fun getReceivedNoteIds(transactionId: Long) =
-        derivedDataDb.receivedNotesTable.getReceivedNoteIds(transactionId)
+    override fun getRecipients(transactionId: Long): Flow<TransactionRecipient> {
+        return derivedDataDb.txOutputsView.getRecipients(transactionId)
+    }
 
     override suspend fun close() {
         derivedDataDb.close()

@@ -1,6 +1,7 @@
 package pirate.android.sdk.demoapp
 
 import android.content.Context
+import pirate.android.sdk.WalletCoordinator
 import pirate.android.sdk.demoapp.preference.EncryptedPreferenceKeys
 import pirate.android.sdk.demoapp.preference.EncryptedPreferenceSingleton
 import pirate.android.sdk.demoapp.util.LazyWithArgument

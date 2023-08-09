@@ -16,14 +16,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import pirate.android.sdk.demoapp.R
-import pirate.android.sdk.demoapp.fixture.WalletFixture
-import pirate.android.sdk.demoapp.model.PersistableWallet
-import pirate.android.sdk.demoapp.model.SeedPhrase
+import pirate.android.sdk.fixture.WalletFixture
+import pirate.android.sdk.model.PersistableWallet
+import pirate.android.sdk.model.SeedPhrase
 import pirate.android.sdk.model.PirateNetwork
 
-@Preview
+@Preview(name = "Seed")
 @Composable
-fun ComposablePreview() {
+private fun ComposablePreview() {
     MaterialTheme {
         Seed(
             PirateNetwork.Mainnet,
@@ -34,7 +34,6 @@ fun ComposablePreview() {
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun Seed(
     zcashNetwork: PirateNetwork,
     onExistingWallet: (PersistableWallet) -> Unit,

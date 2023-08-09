@@ -1,10 +1,10 @@
-[zcash-android-wallet-sdk](../../../../index.md) / [pirate.android.sdk.data](../../../index.md) / [PirateSdkSynchronizer](../../index.md) / [SyncState](../index.md) / [ReadyToProcess](index.md) / [&lt;init&gt;](./-init-.md)
+[zcash-android-wallet-sdk](../../../../index.md) / [pirate.android.sdk.data](../../../index.md) / [SdkSynchronizer](../../index.md) / [SyncState](../index.md) / [ReadyToProcess](index.md) / [&lt;init&gt;](./-init-.md)
 
 # &lt;init&gt;
 
 `ReadyToProcess(startingBlockHeight: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = Int.MAX_VALUE)`
 
-The final state of the PirateSynchronizer, when all initialization is complete and the starting block is known.
+The final state of the Synchronizer, when all initialization is complete and the starting block is known.
 
 ### Parameters
 

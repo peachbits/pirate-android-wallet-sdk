@@ -1,15 +1,13 @@
 package pirate.android.sdk.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.CloseablePirateSynchronizer
-import pirate.android.sdk.PirateSdkSynchronizer
-import pirate.android.sdk.PirateSynchronizer
-import pirate.android.sdk.internal.PirateTroubleshootingTwig
-import pirate.android.sdk.internal.Twig
+import pirate.android.sdk.CloseableSynchronizer
+import pirate.android.sdk.SdkSynchronizer
+import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.LightWalletEndpoint
-import pirate.android.sdk.model.PiratehNetwork
+import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.model.defaultForNetwork
+import pirate.lightwallet.client.model.LightWalletEndpoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -24,33 +22,31 @@ import org.junit.Test
 class DataDbScannerUtil {
     private val context = InstrumentationRegistry.getInstrumentation().context
 
-    private val host = "lightwalletd.pirate.black"
+    private val host = "lightd1.pirate.black"
     private val port = 443
     private val alias = "ScannerUtil"
 
 //    private val mnemonics = SimpleMnemonics()
-//    private val caceDbPath = PirateInitializer.cacheDbPath(context, alias)
+//    private val caceDbPath = Initializer.cacheDbPath(context, alias)
 
-//    private val downloader = PirateCompactBlockDownloader(
-//        PirateLightWalletGrpcService(context, host, port),
-//        PirateCompactBlockDbStore(context, caceDbPath)
+//    private val downloader = CompactBlockDownloader(
+//        LightWalletGrpcService(context, host, port),
+//        CompactBlockDbStore(context, caceDbPath)
 //    )
 
-//    private val processor = PirateCompactBlockProcessor(downloader)
+//    private val processor = CompactBlockProcessor(downloader)
 
-//    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
+//    private val rustBackend = RustBackend.init(context, cacheDbName, dataDbName)
 
     private val birthdayHeight = 600_000L
-    private lateinit var synchronizer: CloseablePirateSynchronizer
+    private lateinit var synchronizer: CloseableSynchronizer
 
     @Before
     fun setup() {
-        Twig.plant(PirateTroubleshootingTwig())
 //        cacheBlocks()
     }
 
     private fun cacheBlocks() = runBlocking {
-//        twig("downloading compact blocks...")
 //        val latestBlockHeight = downloader.getLatestBlockHeight()
 //        val lastDownloaded = downloader.getLastDownloadedHeight()
 //        val blockRange = (Math.max(birthday, lastDownloaded))..latestBlockHeight
@@ -67,7 +63,7 @@ class DataDbScannerUtil {
     @Test
     @Ignore("This test is broken")
     fun scanExistingDb() {
-        synchronizer = PirateSynchronizer.newBlocking(
+        synchronizer = Synchronizer.newBlocking(
             context,
             PirateNetwork.Mainnet,
             lightWalletEndpoint = LightWalletEndpoint
@@ -80,7 +76,7 @@ class DataDbScannerUtil {
         )
 
         println("sync!")
-        val scope = (synchronizer as PirateSdkSynchronizer).coroutineScope
+        val scope = (synchronizer as SdkSynchronizer).coroutineScope
 
         scope.launch {
             synchronizer.status.collect { status ->
@@ -118,7 +114,7 @@ class DataDbScannerUtil {
 //                        - can we be more stateless and thereby improve the flexibility of this code?!!!
 //                      */
 //                synchronizer?.stop()
-//                synchronizer = PirateSynchronizer(context, initializer)
+//                synchronizer = Synchronizer(context, initializer)
 //
 // //            deleteDb(dataDbPath)
 // //            initWallet(seed)

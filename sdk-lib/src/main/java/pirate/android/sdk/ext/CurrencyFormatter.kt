@@ -4,7 +4,7 @@ package pirate.android.sdk.ext
 
 import pirate.android.sdk.ext.Conversions.USD_FORMATTER
 import pirate.android.sdk.ext.Conversions.ARRR_FORMATTER
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.model.Arrrtoshi
 import java.math.BigDecimal
 import java.math.MathContext
@@ -335,7 +335,7 @@ fun String?.safelyConvertToBigDecimal(): BigDecimal? {
         val sanitizedInput = this.filter { it.isDigit() or (it == '.') }
         BigDecimal.ZERO.max(BigDecimal(sanitizedInput, MathContext.DECIMAL128))
     } catch (nfe: NumberFormatException) {
-        twig("Exception while converting String to BigDecimal: ${nfe.message} caused by: ${nfe.cause}")
+        Twig.debug(nfe) { "Exception while converting String to BigDecimal" }
         null
     }
     return result

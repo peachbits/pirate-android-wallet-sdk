@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [PirateSdkSynchronizer](index.md) / [onSubmissionErrorHandler](./on-submission-error-handler.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [onSubmissionErrorHandler](./on-submission-error-handler.md)
 
 # onSubmissionErrorHandler
 

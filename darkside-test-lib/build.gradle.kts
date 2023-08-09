@@ -2,16 +2,10 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("zcash-sdk.android-conventions")
-    id("kotlin-kapt")
 }
 
 android {
-    namespace = "cash.z.ecc.android.sdk.darkside"
-
-    defaultConfig {
-        //targetSdk = 30 //Integer.parseInt(project.property("targetSdkVersion"))
-        multiDexEnabled = true
-    }
+    namespace = "pirate.android.sdk.darkside"
 
     buildTypes {
         create("benchmark") {
@@ -23,6 +17,7 @@ android {
 }
 
 dependencies {
+    implementation(projects.lightwalletClientLib)
     implementation(projects.sdkLib)
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines.core)

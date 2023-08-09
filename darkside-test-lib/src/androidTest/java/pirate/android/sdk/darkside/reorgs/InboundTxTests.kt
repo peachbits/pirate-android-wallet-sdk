@@ -3,7 +3,6 @@ package pirate.android.sdk.darkside.reorgs
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import pirate.android.sdk.darkside.test.DarksideTestCoordinator
 import pirate.android.sdk.darkside.test.ScopedTest
-import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateNetwork
 import org.junit.BeforeClass
@@ -14,13 +13,8 @@ import org.junit.runner.RunWith
 class InboundTxTests : ScopedTest() {
 
     @Test
-    fun testTargetBlock_downloaded() {
-        validator.validateMinHeightDownloaded(firstBlock)
-    }
-
-    @Test
-    fun testTargetBlock_scanned() {
-        validator.validateMinHeightScanned(BlockHeight.new(PirateNetwork.Mainnet, targetTxBlock.value - 1))
+    fun testTargetBlock_synced() {
+        validator.validateMinHeightSynced(firstBlock)
     }
 
     @Test
@@ -35,7 +29,6 @@ class InboundTxTests : ScopedTest() {
 
     @Test
     fun testTxCountAfter() {
-        twig("ADDING TRANSACTIONS!!!")
         // add 2 transactions to block 663188 and 'mine' that block
         addTransactions(targetTxBlock, tx663174, tx663188)
         sithLord.await(timeout = 30_000L, targetHeight = targetTxBlock)
@@ -50,6 +43,7 @@ class InboundTxTests : ScopedTest() {
             .applyTipHeight(targetHeight)
     }
 
+    @Suppress("MaxLineLength")
     companion object {
         private const val blocksUrl = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/basic-reorg/before-reorg.txt"
         private const val tx663174 = "https://raw.githubusercontent.com/zcash-hackworks/darksidewalletd-test-data/master/transactions/recv/0821a89be7f2fc1311792c3fa1dd2171a8cdfb2effd98590cbd5ebcdcfcf491f.txt"

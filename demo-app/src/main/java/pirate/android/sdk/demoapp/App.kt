@@ -2,7 +2,7 @@ package pirate.android.sdk.demoapp
 
 import androidx.multidex.MultiDexApplication
 
-import pirate.android.sdk.demoapp.util.Twig
+import pirate.android.sdk.internal.Twig
 
 class App : MultiDexApplication() {
 
@@ -14,9 +14,6 @@ class App : MultiDexApplication() {
 
         if (BuildConfig.DEBUG) {
             StrictModeHelper.enableStrictMode()
-
-            // This is an internal API to the Pirate SDK to enable logging; it could change in the future
-            pirate.android.sdk.internal.Twig.enabled(true)
         } else {
             // In release builds, logs should be stripped by R8 rules
             Twig.assertLoggingStripped()

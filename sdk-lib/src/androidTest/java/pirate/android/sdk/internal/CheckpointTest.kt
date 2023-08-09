@@ -1,7 +1,14 @@
-package cash.z.ecc.android.sdk.internal
+package pirate.android.sdk.internal
 
 import androidx.test.filters.SmallTest
 import pirate.android.sdk.internal.model.Checkpoint
+import pirate.android.sdk.internal.model.ext.KEY_EPOCH_SECONDS
+import pirate.android.sdk.internal.model.ext.KEY_HASH
+import pirate.android.sdk.internal.model.ext.KEY_HEIGHT
+import pirate.android.sdk.internal.model.ext.KEY_TREE
+import pirate.android.sdk.internal.model.ext.KEY_VERSION
+import pirate.android.sdk.internal.model.ext.VERSION_1
+import pirate.android.sdk.internal.model.ext.from
 import pirate.fixture.CheckpointFixture
 import pirate.fixture.toJson
 import org.json.JSONObject

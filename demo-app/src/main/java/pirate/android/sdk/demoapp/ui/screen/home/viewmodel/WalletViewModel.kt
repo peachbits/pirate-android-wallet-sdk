@@ -5,38 +5,37 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.bip39.toSeed
-import pirate.android.sdk.PirateSynchronizer
-import pirate.android.sdk.block.PirateCompactBlockProcessor
-import pirate.android.sdk.demoapp.WalletCoordinator
+import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.WalletCoordinator
+import pirate.android.sdk.block.CompactBlockProcessor
 import pirate.android.sdk.demoapp.getInstance
-import pirate.android.sdk.demoapp.model.PercentDecimal
-import pirate.android.sdk.demoapp.model.PersistableWallet
-import pirate.android.sdk.demoapp.model.WalletAddresses
-import pirate.android.sdk.demoapp.model.ZecSend
-import pirate.android.sdk.demoapp.model.send
 import pirate.android.sdk.demoapp.preference.EncryptedPreferenceKeys
 import pirate.android.sdk.demoapp.preference.EncryptedPreferenceSingleton
 import pirate.android.sdk.demoapp.ui.common.ANDROID_STATE_FLOW_TIMEOUT
 import pirate.android.sdk.demoapp.ui.common.throttle
-import pirate.android.sdk.demoapp.util.Twig
+import pirate.android.sdk.demoapp.util.fromResources
+import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.model.Account
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.PendingTransaction
-import pirate.android.sdk.model.PirateWalletBalance
+import pirate.android.sdk.model.PercentDecimal
+import pirate.android.sdk.model.PersistableWallet
+import pirate.android.sdk.model.WalletAddresses
+import pirate.android.sdk.model.WalletBalance
 import pirate.android.sdk.model.Arrrtoshi
-import pirate.android.sdk.model.isMined
-import pirate.android.sdk.model.isSubmitSuccess
-import pirate.android.sdk.tool.PirateDerivationTool
+import pirate.android.sdk.model.PirateNetwork
+import pirate.android.sdk.model.ZecSend
+import pirate.android.sdk.model.send
+import pirate.android.sdk.tool.DerivationTool
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -63,7 +62,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
     private val persistWalletMutex = Mutex()
 
     /**
-     * PirateSynchronizer that is retained long enough to survive configuration changes.
+     * Synchronizer that is retained long enough to survive configuration changes.
      */
     val synchronizer = walletCoordinator.synchronizer.stateIn(
         viewModelScope,
@@ -91,7 +90,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
             val bip39Seed = withContext(Dispatchers.IO) {
                 Mnemonics.MnemonicCode(it.seedPhrase.joinToString()).toSeed()
             }
-            PirateDerivationTool.derivePirateUnifiedSpendingKey(
+            DerivationTool.getInstance().deriveUnifiedSpendingKey(
                 seed = bip39Seed,
                 network = it.network,
                 account = Account.DEFAULT
@@ -128,6 +127,10 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
             null
         )
 
+    private val mutableSendState = MutableStateFlow<SendState>(SendState.None)
+
+    val sendState: StateFlow<SendState> = mutableSendState
+
     /**
      * Creates a wallet asynchronously and then persists it.  Clients observe
      * [secretState] to see the side effects.  This would be used for a user creating a new wallet.
@@ -140,7 +143,7 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
         val application = getApplication<Application>()
 
         viewModelScope.launch {
-            val newWallet = PersistableWallet.new(application)
+            val newWallet = PersistableWallet.new(application, PirateNetwork.fromResources(application))
             persistExistingWallet(newWallet)
         }
     }
@@ -161,36 +164,57 @@ class WalletViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     /**
-     * Asynchronously sends funds.
+     * Asynchronously sends funds.  Note that two sending operations cannot occur at the same time.
+     *
+     * Observe the result via [sendState].
      */
     fun send(zecSend: ZecSend) {
-        // Note that if synchronizer is null this will silently fail
+        if (sendState.value is SendState.Sending) {
+            return
+        }
+
+        mutableSendState.value = SendState.Sending
+
         val synchronizer = synchronizer.value
         if (null != synchronizer) {
             viewModelScope.launch {
                 val spendingKey = spendingKey.filterNotNull().first()
-                synchronizer.send(spendingKey, zecSend)
+                runCatching { synchronizer.send(spendingKey, zecSend) }
+                    .onSuccess { mutableSendState.value = SendState.Sent(it) }
+                    .onFailure { mutableSendState.value = SendState.Error(it) }
             }
         } else {
-            Twig.info { "Unable to send funds" }
+            SendState.Error(IllegalStateException("Unable to send funds because synchronizer is not loaded."))
         }
     }
 
     /**
-     * Asynchronously shields transparent funds.
+     * Asynchronously shields transparent funds.  Note that two shielding operations cannot occur at the same time.
+     *
+     * Observe the result via [sendState].
      */
     fun shieldFunds() {
-        // Note that if synchronizer is null this will silently fail
-        val synchronizer = synchronizer.value
+        if (sendState.value is SendState.Sending) {
+            return
+        }
 
+        mutableSendState.value = SendState.Sending
+
+        val synchronizer = synchronizer.value
         if (null != synchronizer) {
             viewModelScope.launch {
                 val spendingKey = spendingKey.filterNotNull().first()
-                synchronizer.shieldFunds(spendingKey)
+                kotlin.runCatching { synchronizer.shieldFunds(spendingKey) }
+                    .onSuccess { mutableSendState.value = SendState.Sent(it) }
+                    .onFailure { mutableSendState.value = SendState.Error(it) }
             }
         } else {
-            Twig.info { "Unable to shield funds" }
+            SendState.Error(IllegalStateException("Unable to send funds because synchronizer is not loaded."))
         }
+    }
+
+    fun clearSendOrShieldState() {
+        mutableSendState.value = SendState.None
     }
 
     /**
@@ -221,61 +245,77 @@ sealed class SecretState {
     class Ready(val persistableWallet: PersistableWallet) : SecretState()
 }
 
+sealed class SendState {
+    object None : SendState() {
+        override fun toString(): String = "None"
+    }
+    object Sending : SendState() {
+        override fun toString(): String = "Sending"
+    }
+    class Sent(val localTxId: Long) : SendState() {
+        override fun toString(): String = "Sent"
+    }
+    class Error(val error: Throwable) : SendState() {
+        override fun toString(): String = "Error ${error.message}"
+    }
+}
+
 /**
- * Represents all kind of PirateSynchronizer errors
+ * Represents all kind of Synchronizer errors
  */
-// TODO [#529] https://github.com/zcash/secant-android-wallet/issues/529
-sealed class PirateSynchronizerError {
+// TODO [#529]: Localize Synchronizer Errors
+// TODO [#529]: https://github.com/zcash/secant-android-wallet/issues/529
+sealed class SynchronizerError {
     abstract fun getCauseMessage(): String?
 
-    class Critical(val error: Throwable?) : PirateSynchronizerError() {
+    class Critical(val error: Throwable?) : SynchronizerError() {
         override fun getCauseMessage(): String? = error?.localizedMessage
     }
 
-    class Processor(val error: Throwable?) : PirateSynchronizerError() {
+    class Processor(val error: Throwable?) : SynchronizerError() {
         override fun getCauseMessage(): String? = error?.localizedMessage
     }
 
-    class Submission(val error: Throwable?) : PirateSynchronizerError() {
+    class Submission(val error: Throwable?) : SynchronizerError() {
         override fun getCauseMessage(): String? = error?.localizedMessage
     }
 
-    class Setup(val error: Throwable?) : PirateSynchronizerError() {
+    class Setup(val error: Throwable?) : SynchronizerError() {
         override fun getCauseMessage(): String? = error?.localizedMessage
     }
 
-    class Chain(val x: BlockHeight, val y: BlockHeight) : PirateSynchronizerError() {
+    class Chain(val x: BlockHeight, val y: BlockHeight) : SynchronizerError() {
         override fun getCauseMessage(): String = "$x, $y"
     }
 }
 
-private fun PirateSynchronizer.toCommonError(): Flow<PirateSynchronizerError?> = callbackFlow {
+private fun Synchronizer.toCommonError(): Flow<SynchronizerError?> = callbackFlow {
     // just for initial default value emit
     trySend(null)
 
     onCriticalErrorHandler = {
         Twig.error { "WALLET - Error Critical: $it" }
-        trySend(PirateSynchronizerError.Critical(it))
+        trySend(SynchronizerError.Critical(it))
         false
     }
     onProcessorErrorHandler = {
         Twig.error { "WALLET - Error Processor: $it" }
-        trySend(PirateSynchronizerError.Processor(it))
+        trySend(SynchronizerError.Processor(it))
         false
     }
     onSubmissionErrorHandler = {
         Twig.error { "WALLET - Error Submission: $it" }
-        trySend(PirateSynchronizerError.Submission(it))
+        trySend(SynchronizerError.Submission(it))
         false
     }
     onSetupErrorHandler = {
         Twig.error { "WALLET - Error Setup: $it" }
-        trySend(PirateSynchronizerError.Setup(it))
+        trySend(SynchronizerError.Setup(it))
         false
     }
     onChainErrorHandler = { x, y ->
         Twig.error { "WALLET - Error Chain: $x, $y" }
-        trySend(PirateSynchronizerError.Chain(x, y))
+        trySend(SynchronizerError.Chain(x, y))
     }
 
     awaitClose {
@@ -285,41 +325,28 @@ private fun PirateSynchronizer.toCommonError(): Flow<PirateSynchronizerError?> =
 
 // No good way around needing magic numbers for the indices
 @Suppress("MagicNumber")
-private fun PirateSynchronizer.toWalletSnapshot() =
+private fun Synchronizer.toWalletSnapshot() =
     combine(
         status, // 0
         processorInfo, // 1
         orchardBalances, // 2
         saplingBalances, // 3
         transparentBalances, // 4
-        pendingTransactions.distinctUntilChanged(), // 5
-        progress, // 6
-        toCommonError() // 7
+        progress, // 5
+        toCommonError() // 6
     ) { flows ->
-        val pendingCount = (flows[5] as List<*>)
-            .filterIsInstance(PendingTransaction::class.java)
-            .count {
-                it.isSubmitSuccess() && !it.isMined()
-            }
-        val orchardBalance = flows[2] as PirateWalletBalance?
-        val saplingBalance = flows[3] as PirateWalletBalance?
-        val transparentBalance = flows[4] as PirateWalletBalance?
-
-        val progressPercentDecimal = (flows[6] as Int).let { value ->
-            if (value > PercentDecimal.MAX || value < PercentDecimal.MIN) {
-                PercentDecimal.ZERO_PERCENT
-            }
-            PercentDecimal((flows[6] as Int) / 100f)
-        }
+        val orchardBalance = flows[2] as WalletBalance?
+        val saplingBalance = flows[3] as WalletBalance?
+        val transparentBalance = flows[4] as WalletBalance?
+        val progressPercentDecimal = (flows[5] as PercentDecimal)
 
         WalletSnapshot(
-            flows[0] as PirateSynchronizer.PirateStatus,
-            flows[1] as PirateCompactBlockProcessor.ProcessorInfo,
-            orchardBalance ?: PirateWalletBalance(Arrrtoshi(0), Arrrtoshi(0)),
-            saplingBalance ?: PirateWalletBalance(Arrrtoshi(0), Arrrtoshi(0)),
-            transparentBalance ?: PirateWalletBalance(Arrrtoshi(0), Arrrtoshi(0)),
-            pendingCount,
+            flows[0] as Synchronizer.Status,
+            flows[1] as CompactBlockProcessor.ProcessorInfo,
+            orchardBalance ?: WalletBalance(Arrrtoshi(0), Arrrtoshi(0)),
+            saplingBalance ?: WalletBalance(Arrrtoshi(0), Arrrtoshi(0)),
+            transparentBalance ?: WalletBalance(Arrrtoshi(0), Arrrtoshi(0)),
             progressPercentDecimal,
-            flows[7] as PirateSynchronizerError?
+            flows[6] as SynchronizerError?
         )
     }

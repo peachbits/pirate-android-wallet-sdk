@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [PirateSdkSynchronizer](index.md) / [isValidTransparentAddr](./is-valid-transparent-addr.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [SdkSynchronizer](index.md) / [isValidTransparentAddr](./is-valid-transparent-addr.md)
 
 # isValidTransparentAddr
 

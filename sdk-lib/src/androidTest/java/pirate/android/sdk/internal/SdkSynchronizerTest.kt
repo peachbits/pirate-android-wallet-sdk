@@ -2,18 +2,18 @@ package pirate.android.sdk.internal
 
 import androidx.test.filters.SmallTest
 import androidx.test.platform.app.InstrumentationRegistry
-import cash.z.ecc.android.bip39.Mnemonics
-import pirate.android.sdk.PirateSynchronizer
+import pirate.android.bip39.Mnemonics
+import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.fixture.WalletFixture
-import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.model.defaultForNetwork
+import pirate.lightwallet.client.model.LightWalletEndpoint
 import kotlinx.coroutines.test.runTest
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
-class PirateSdkSynchronizerTest {
+class SdkSynchronizerTest {
 
     @Test
     @SmallTest
@@ -23,7 +23,7 @@ class PirateSdkSynchronizerTest {
         val alias = UUID.randomUUID().toString()
 
         // In the future, inject fake networking component so that it doesn't require hitting the network
-        PirateSynchronizer.new(
+        Synchronizer.new(
             InstrumentationRegistry.getInstrumentation().context,
             PirateNetwork.Mainnet,
             alias,
@@ -32,7 +32,7 @@ class PirateSdkSynchronizerTest {
             birthday = null
         ).use {
             assertFailsWith<IllegalStateException> {
-                PirateSynchronizer.new(
+                Synchronizer.new(
                     InstrumentationRegistry.getInstrumentation().context,
                     PirateNetwork.Mainnet,
                     alias,
@@ -52,7 +52,7 @@ class PirateSdkSynchronizerTest {
         val alias = UUID.randomUUID().toString()
 
         // In the future, inject fake networking component so that it doesn't require hitting the network
-        PirateSynchronizer.new(
+        Synchronizer.new(
             InstrumentationRegistry.getInstrumentation().context,
             PirateNetwork.Mainnet,
             alias,
@@ -62,7 +62,7 @@ class PirateSdkSynchronizerTest {
         ).use {}
 
         // Second instance should succeed because first one was closed
-        PirateSynchronizer.new(
+        Synchronizer.new(
             InstrumentationRegistry.getInstrumentation().context,
             PirateNetwork.Mainnet,
             alias,

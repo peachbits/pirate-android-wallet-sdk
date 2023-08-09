@@ -9,28 +9,20 @@ import android.widget.TextView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import pirate.android.sdk.PirateSynchronizer
-import pirate.android.sdk.block.PirateCompactBlockProcessor
+import pirate.android.sdk.Synchronizer
+import pirate.android.sdk.block.CompactBlockProcessor
 import pirate.android.sdk.demoapp.BaseDemoFragment
 import pirate.android.sdk.demoapp.DemoConstants
 import pirate.android.sdk.demoapp.R
 import pirate.android.sdk.demoapp.databinding.FragmentSendBinding
 import pirate.android.sdk.demoapp.util.mainActivity
-import pirate.android.sdk.ext.collectWith
 import pirate.android.sdk.ext.convertArrrtoshiToArrrString
 import pirate.android.sdk.ext.convertArrrToArrrtoshi
 import pirate.android.sdk.ext.toArrrString
-import pirate.android.sdk.internal.Twig
-import pirate.android.sdk.internal.twig
-import pirate.android.sdk.model.PendingTransaction
-import pirate.android.sdk.model.PirateUnifiedSpendingKey
-import pirate.android.sdk.model.PirateWalletBalance
-import pirate.android.sdk.model.isCreated
-import pirate.android.sdk.model.isCreating
-import pirate.android.sdk.model.isFailedEncoding
-import pirate.android.sdk.model.isFailedSubmit
-import pirate.android.sdk.model.isMined
-import pirate.android.sdk.model.isSubmitSuccess
+import pirate.android.sdk.model.PercentDecimal
+import pirate.android.sdk.model.UnifiedSpendingKey
+import pirate.android.sdk.model.WalletBalance
+
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -52,13 +44,13 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
 
     // in a normal app, this would be stored securely with the trusted execution environment (TEE)
     // but since this is a demo, we'll derive it on the fly
-    private lateinit var spendingKey: PirateUnifiedSpendingKey
+    private lateinit var spendingKey: UnifiedSpendingKey
 
     //
     // Observable properties (done without livedata or flows for simplicity)
     //
 
-    private var balance: PirateWalletBalance? = null
+    private var balance: WalletBalance? = null
         set(value) {
             field = value
             onUpdateSendButton()
@@ -66,7 +58,6 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
     private var isSending = false
         set(value) {
             field = value
-            if (value) Twig.sprout("Sending") else Twig.clip("Sending")
             onUpdateSendButton()
         }
     private var isSyncing = true
@@ -125,10 +116,10 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
     // Change listeners
     //
 
-    private fun onStatus(status: PirateSynchronizer.PirateStatus) {
+    private fun onStatus(status: Synchronizer.Status) {
         binding.textStatus.text = "Status: $status"
-        isSyncing = status != PirateSynchronizer.PirateStatus.SYNCED
-        if (status == PirateSynchronizer.PirateStatus.SCANNING) {
+        isSyncing = status != Synchronizer.Status.SYNCED
+        if (status == Synchronizer.Status.SYNCING) {
             binding.textBalance.text = "Calculating balance..."
         } else {
             if (!isSyncing) onBalance(balance)
@@ -136,21 +127,21 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
     }
 
     @Suppress("MagicNumber")
-    private fun onProgress(i: Int) {
-        if (i < 100) {
-            binding.textStatus.text = "Downloading blocks...$i%"
+    private fun onProgress(percent: PercentDecimal) {
+        if (percent.isLessThanHundredPercent()) {
+            binding.textStatus.text = "Syncing blocks...${percent.toPercentage()}%"
             binding.textBalance.visibility = View.INVISIBLE
         } else {
             binding.textBalance.visibility = View.VISIBLE
         }
     }
 
-    private fun onProcessorInfoUpdated(info: PirateCompactBlockProcessor.ProcessorInfo) {
-        if (info.isScanning) binding.textStatus.text = "Scanning blocks...${info.scanProgress}%"
+    private fun onProcessorInfoUpdated(info: CompactBlockProcessor.ProcessorInfo) {
+        if (info.isSyncing) binding.textStatus.text = "Syncing blocks...${info.syncProgress}%"
     }
 
     @Suppress("MagicNumber")
-    private fun onBalance(balance: PirateWalletBalance?) {
+    private fun onBalance(balance: WalletBalance?) {
         this.balance = balance
         if (!isSyncing) {
             binding.textBalance.text = """
@@ -171,30 +162,10 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
                 amount,
                 toAddress,
                 "Funds from Demo App"
-            )?.collectWith(lifecycleScope, ::onPendingTxUpdated)
+            )
         }
 
         mainActivity()?.hideKeyboard()
-    }
-
-    @Suppress("ComplexMethod")
-    private fun onPendingTxUpdated(pendingTransaction: PendingTransaction?) {
-        val message = when {
-            pendingTransaction == null -> "Transaction not found"
-            pendingTransaction.isMined() -> "Transaction Mined!\n\nSEND COMPLETE".also { isSending = false }
-            pendingTransaction.isSubmitSuccess() -> "Successfully submitted transaction!\nAwaiting confirmation..."
-            pendingTransaction.isFailedEncoding() ->
-                "ERROR: failed to encode transaction!".also { isSending = false }
-            pendingTransaction.isFailedSubmit() ->
-                "ERROR: failed to submit transaction!".also { isSending = false }
-            pendingTransaction.isCreated() -> "Transaction creation complete! (id: $id)"
-            pendingTransaction.isCreating() -> "Creating transaction!".also { onResetInfo() }
-            else -> "Transaction updated!".also { twig("Unhandled TX state: $pendingTransaction") }
-        }
-        twig("Pending TX Updated: $message")
-        binding.textInfo.apply {
-            text = "$text\n$message"
-        }
     }
 
     private fun onUpdateSendButton() {
@@ -215,10 +186,6 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
                 }
             }
         }
-    }
-
-    private fun onResetInfo() {
-        binding.textInfo.text = "Active Transaction:"
     }
 
     //
@@ -247,7 +214,7 @@ class SendFragment : BaseDemoFragment<FragmentSendBinding>() {
 
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
-        // We rather hide options menu actions while actively using the PirateSynchronizer
+        // We rather hide options menu actions while actively using the Synchronizer
         menu.setGroupVisible(R.id.main_menu_group, false)
     }
 

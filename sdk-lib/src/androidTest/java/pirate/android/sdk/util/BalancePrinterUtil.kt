@@ -1,19 +1,17 @@
 package pirate.android.sdk.util
 
 import androidx.test.platform.app.InstrumentationRegistry
-import pirate.android.sdk.CloseablePirateSynchronizer
-import pirate.android.sdk.PirateSynchronizer
-import pirate.android.sdk.internal.PirateTroubleshootingTwig
+import pirate.android.sdk.CloseableSynchronizer
+import pirate.android.sdk.Synchronizer
 import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.ext.deleteSuspend
 import pirate.android.sdk.internal.model.Checkpoint
-import pirate.android.sdk.internal.twig
 import pirate.android.sdk.model.BlockHeight
-import pirate.android.sdk.model.LightWalletEndpoint
 import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.model.defaultForNetwork
 import pirate.android.sdk.test.readFileLinesInFlow
 import pirate.android.sdk.tool.CheckpointTool
+import pirate.lightwallet.client.model.LightWalletEndpoint
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
@@ -35,23 +33,22 @@ class BalancePrinterUtil {
     private val mnemonics = SimpleMnemonics()
     private val context = InstrumentationRegistry.getInstrumentation().context
     private val alias = "BalanceUtil"
-//    private val caceDbPath = PirateInitializer.cacheDbPath(context, alias)
+//    private val caceDbPath = Initializer.cacheDbPath(context, alias)
 //
-//    private val downloader = PirateCompactBlockDownloader(
-//        PirateLightWalletGrpcService(context, host, port),
-//        PirateCompactBlockDbStore(context, caceDbPath)
+//    private val downloader = CompactBlockDownloader(
+//        LightWalletGrpcService(context, host, port),
+//        CompactBlockDbStore(context, caceDbPath)
 //    )
 
-//    private val processor = PirateCompactBlockProcessor(downloader)
+//    private val processor = CompactBlockProcessor(downloader)
 
-//    private val rustBackend = PirateRustBackend.init(context, cacheDbName, dataDbName)
+//    private val rustBackend = RustBackend.init(context, cacheDbName, dataDbName)
 
     private lateinit var birthday: Checkpoint
-    private var synchronizer: CloseablePirateSynchronizer? = null
+    private var synchronizer: CloseableSynchronizer? = null
 
     @Before
     fun setup() {
-        Twig.plant(PirateTroubleshootingTwig())
         cacheBlocks()
         birthday = runBlocking { CheckpointTool.loadNearest(context, network, birthdayHeight) }
     }
@@ -76,7 +73,7 @@ class BalancePrinterUtil {
     fun printBalances() = runBlocking {
         readFileLinesInFlow("/utils/seeds.txt")
             .map { seedPhrase ->
-                twig("checking balance for: $seedPhrase")
+                Twig.debug { "checking balance for: $seedPhrase" }
                 mnemonics.toSeed(seedPhrase.toCharArray())
             }.collect { seed ->
                 // TODO: clear the dataDb but leave the cacheDb
@@ -94,9 +91,9 @@ class BalancePrinterUtil {
                 - or maybe just set the data destination for the processor
                 - I might need to consider how state is impacting this design
                     - can we be more stateless and thereby improve the flexibility of this code?!!!
-                  */
+                 */
                 synchronizer?.close()
-                synchronizer = PirateSynchronizer.new(
+                synchronizer = Synchronizer.new(
                     context,
                     network,
                     lightWalletEndpoint = LightWalletEndpoint
@@ -144,7 +141,7 @@ class BalancePrinterUtil {
 //        return Wallet(
 //            context,
 //            rustBackend,
-//            PirateSampleSeedProvider(seed),
+//            SampleSeedProvider(seed),
 //            spendingKeyProvider,
 //            Wallet.loadBirthdayFromAssets(context, birthday)
 //        ).apply {
@@ -153,26 +150,6 @@ class BalancePrinterUtil {
 //            }
 //        }
 //    }
-
-    private fun downloadNewBlocks(range: IntRange) = runBlocking {
-        Twig.sprout("downloading")
-        twig("downloading blocks in range $range")
-
-        var downloadedBlockHeight = range.start
-        val count = range.last - range.first + 1
-        val batches =
-            (count / downloadBatchSize + (if (count.rem(downloadBatchSize) == 0) 0 else 1))
-        twig("found $count missing blocks, downloading in $batches batches of $downloadBatchSize...")
-        for (i in 1..batches) {
-            val end = Math.min(range.first + (i * downloadBatchSize), range.last + 1)
-            val batchRange = downloadedBlockHeight until end
-            twig("downloaded $batchRange (batch $i of $batches)") {
-//                downloader.downloadBlockRange(batchRange)
-            }
-            downloadedBlockHeight = end
-        }
-        Twig.clip("downloading")
-    }
 
 //    private fun validateNewBlocks(range: IntRange?): Int {
 // //        val dummyWallet = initWallet("dummySeed")

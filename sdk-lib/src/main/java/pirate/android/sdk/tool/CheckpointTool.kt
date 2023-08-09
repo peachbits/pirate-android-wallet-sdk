@@ -2,10 +2,10 @@ package pirate.android.sdk.tool
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
-import pirate.android.sdk.exception.PirateBirthdayException
-import pirate.android.sdk.internal.from
+import pirate.android.sdk.exception.BirthdayException
+import pirate.android.sdk.internal.Twig
 import pirate.android.sdk.internal.model.Checkpoint
-import pirate.android.sdk.internal.twig
+import pirate.android.sdk.internal.model.ext.from
 import pirate.android.sdk.model.BlockHeight
 import pirate.android.sdk.model.PirateNetwork
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +46,7 @@ internal object CheckpointTool {
     suspend fun loadExact(context: Context, network: PirateNetwork, birthday: BlockHeight) =
         loadNearest(context, network, birthday).also {
             if (it.height != birthday) {
-                throw PirateBirthdayException.PirateExactBirthdayNotFoundException(
+                throw BirthdayException.ExactBirthdayNotFoundException(
                     birthday,
                     it
                 )
@@ -89,11 +89,11 @@ internal object CheckpointTool {
         network: PirateNetwork,
         birthday: BlockHeight?
     ): Checkpoint {
-        twig("loading checkpoint from assets: $birthday")
+        Twig.debug { "loading checkpoint from assets: $birthday" }
         val directory = checkpointDirectory(network)
         val treeFiles = getFilteredFileNames(context, network, directory, birthday)
 
-        twig("found ${treeFiles.size} sapling tree checkpoints: $treeFiles")
+        Twig.debug { "found ${treeFiles.size} sapling tree checkpoints: $treeFiles" }
 
         return getFirstValidWalletBirthday(context, network, directory, treeFiles)
     }
@@ -106,7 +106,7 @@ internal object CheckpointTool {
     ): List<String> {
         val unfilteredTreeFiles = listCheckpointDirectoryContents(context, directory)
         if (unfilteredTreeFiles.isNullOrEmpty()) {
-            throw PirateBirthdayException.PirateMissingBirthdayFilesException(directory)
+            throw BirthdayException.MissingBirthdayFilesException(directory)
         }
 
         val filteredTreeFiles = unfilteredTreeFiles
@@ -116,7 +116,7 @@ internal object CheckpointTool {
             }
 
         if (filteredTreeFiles.isEmpty()) {
-            throw PirateBirthdayException.PirateBirthdayFileNotFoundException(
+            throw BirthdayException.BirthdayFileNotFoundException(
                 directory,
                 birthday
             )
@@ -152,7 +152,7 @@ internal object CheckpointTool {
 
                 return Checkpoint.from(network, jsonString)
             } catch (t: Throwable) {
-                val exception = PirateBirthdayException.PirateMalformattedBirthdayFilesException(
+                val exception = BirthdayException.MalformattedBirthdayFilesException(
                     directory,
                     treefile,
                     t
@@ -162,7 +162,7 @@ internal object CheckpointTool {
                 if (IS_FALLBACK_ON_FAILURE) {
                     // TODO [#684]: If we ever add crash analytics hooks, this would be something to report
                     // TODO [#684]: https://github.com/zcash/zcash-android-wallet-sdk/issues/684
-                    twig("Malformed birthday file $t")
+                    Twig.debug(t) { "Malformed birthday file $t" }
                 } else {
                     throw exception
                 }

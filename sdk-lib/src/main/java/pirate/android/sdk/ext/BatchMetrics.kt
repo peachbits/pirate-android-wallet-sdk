@@ -4,10 +4,10 @@ import pirate.android.sdk.model.BlockHeight
 import kotlin.math.max
 import kotlin.math.min
 
-class PirateBatchMetrics(
+class BatchMetrics(
     val range: ClosedRange<BlockHeight>,
     val batchSize: Int,
-    private val onMetricComplete: ((PirateBatchMetrics, Boolean) -> Unit)? = null
+    private val onMetricComplete: ((BatchMetrics, Boolean) -> Unit)? = null
 ) {
     private var completedBatches = 0
     private var rangeStartTime = 0L

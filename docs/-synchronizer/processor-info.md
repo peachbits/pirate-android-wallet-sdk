@@ -1,4 +1,4 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [PirateSynchronizer](index.md) / [processorInfo](./processor-info.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk](../index.md) / [Synchronizer](index.md) / [processorInfo](./processor-info.md)
 
 # processorInfo
 

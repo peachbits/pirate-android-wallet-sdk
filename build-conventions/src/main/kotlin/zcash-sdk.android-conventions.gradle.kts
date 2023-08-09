@@ -1,6 +1,7 @@
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.ManagedVirtualDevice
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmOptions
+import java.util.Locale
 
 pluginManager.withPlugin("com.android.application") {
     project.the<com.android.build.gradle.AppExtension>().apply {
@@ -9,6 +10,8 @@ pluginManager.withPlugin("com.android.application") {
         defaultConfig {
             minSdk = project.property("ANDROID_MIN_SDK_VERSION").toString().toInt()
             targetSdk = project.property("ANDROID_TARGET_SDK_VERSION").toString().toInt()
+
+            multiDexEnabled = true
 
             // en_XA and ar_XB are pseudolocales for debugging.
             // The rest of the locales provides an explicit list of the languages to keep in the
@@ -31,7 +34,10 @@ pluginManager.withPlugin("com.android.library") {
 
         defaultConfig {
             minSdk = project.property("ANDROID_MIN_SDK_VERSION").toString().toInt()
+            // This is deprecated but there isn't a replacement for it yet with instrumentation tests.
             targetSdk = project.property("ANDROID_TARGET_SDK_VERSION").toString().toInt()
+
+            multiDexEnabled = true
 
             // The last two are for support of pseudolocales in debug builds.
             // If we add other localizations, they should be included in this list.
@@ -50,6 +56,27 @@ pluginManager.withPlugin("com.android.library") {
             jacocoVersion = project.property("JACOCO_VERSION").toString()
         }
     }
+
+    project.the<com.android.build.api.variant.LibraryAndroidComponentsExtension>().apply {
+        onVariants { variant ->
+            if (variant.name.lowercase(Locale.US).contains("release")) {
+                variant.packaging.resources.excludes.addAll(
+                    listOf(
+                        "META-INF/ASL2.0",
+                        "META-INF/DEPENDENCIES",
+                        "META-INF/LICENSE",
+                        "META-INF/LICENSE-notice.md",
+                        "META-INF/LICENSE.md",
+                        "META-INF/LICENSE.txt",
+                        "META-INF/NOTICE",
+                        "META-INF/NOTICE.txt",
+                        "META-INF/license.txt",
+                        "META-INF/notice.txt"
+                    )
+                )
+            }
+        }
+    }
 }
 
 pluginManager.withPlugin("com.android.test") {
@@ -57,8 +84,10 @@ pluginManager.withPlugin("com.android.test") {
         configureBaseExtension()
 
         defaultConfig {
-            minSdk = project.property("ANDROID_MIN_BENCHMARK_VERSION").toString().toInt()
+            minSdk = project.property("ANDROID_MIN_SDK_VERSION").toString().toInt()
             targetSdk = project.property("ANDROID_TARGET_SDK_VERSION").toString().toInt()
+
+            multiDexEnabled = true
 
             // The last two are for support of pseudolocales in debug builds.
             // If we add other localizations, they should be included in this list.
@@ -84,6 +113,8 @@ fun com.android.build.gradle.BaseExtension.configureBaseExtension() {
     ndkVersion = project.property("ANDROID_NDK_VERSION").toString()
 
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
+
         val javaVersion = JavaVersion.toVersion(project.property("ANDROID_JVM_TARGET").toString())
         sourceCompatibility = javaVersion
         targetCompatibility = javaVersion
@@ -116,7 +147,7 @@ fun com.android.build.gradle.BaseExtension.configureBaseExtension() {
 
         @Suppress("UnstableApiUsage")
         managedDevices {
-            @Suppress("MagicNumber", "PropertyName", "VariableNaming")
+            @Suppress("MagicNumber", "VariableNaming")
             val MANAGED_DEVICES_MIN_SDK = 27
 
             val testDeviceMinSdkVersion = project.properties["ANDROID_MIN_SDK_VERSION"]
@@ -136,6 +167,13 @@ fun com.android.build.gradle.BaseExtension.configureBaseExtension() {
                 }
             }
         }
+    }
+
+    dependencies {
+        add(
+            "coreLibraryDesugaring",
+            "com.android.tools:desugar_jdk_libs:${project.property("CORE_LIBRARY_DESUGARING_VERSION")}"
+        )
     }
 
     if (this is CommonExtension<*, *, *, *>) {

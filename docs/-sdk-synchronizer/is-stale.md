@@ -1,12 +1,12 @@
-[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [PirateSdkSynchronizer](index.md) / [isStale](./is-stale.md)
+[zcash-android-wallet-sdk](../../index.md) / [pirate.android.sdk.data](../index.md) / [SdkSynchronizer](index.md) / [isStale](./is-stale.md)
 
 # isStale
 
 `suspend fun isStale(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)
 
-Overrides [PirateSynchronizer.isStale](../-synchronizer/is-stale.md)
+Overrides [Synchronizer.isStale](../-synchronizer/is-stale.md)
 
-A flag to indicate that this PirateSynchronizer is significantly out of sync with it's server. This is determined by
+A flag to indicate that this Synchronizer is significantly out of sync with it's server. This is determined by
 the delta between the current block height reported by the server and the latest block we have stored in cache.
 Whenever this delta is greater than the [staleTolerance](#), this function returns true. This is intended for
 showing progress indicators when the user returns to the app after having not used it for a long period.

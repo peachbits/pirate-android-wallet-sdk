@@ -12,14 +12,13 @@ android {
 
     defaultConfig {
         applicationId = "pirate.android.sdk.demoapp"
-        minSdk = 21
         versionCode = 1
         versionName = "1.0"
-        multiDexEnabled = true
         vectorDrawables.useSupportLibrary = true
     }
 
     buildFeatures {
+        buildConfig = true
         compose = true
         viewBinding = true
     }
@@ -92,6 +91,11 @@ android {
             initWith(buildTypes.getByName("release"))
             signingConfig = signingConfigs.getByName("debug")
             matchingFallbacks += listOf("release")
+
+            // To enable debugging while running benchmark tests, although it reduces their performance
+            if (project.property("IS_DEBUGGABLE_WHILE_BENCHMARKING").toString().toBoolean()) {
+                isDebuggable = true
+            }
         }
     }
 
@@ -103,6 +107,7 @@ android {
 dependencies {
     // SDK
     implementation(projects.sdkLib)
+    implementation(projects.sdkIncubatorLib)
 
     // sample mnemonic plugin
     implementation(libs.zcashwalletplgn)
@@ -137,10 +142,10 @@ dependencies {
 fladle {
     // Firebase Test Lab has min and max values that might differ from our project's
     // These are determined by `gcloud firebase test android models list`
-    @Suppress("MagicNumber", "PropertyName", "VariableNaming")
-    val FIREBASE_TEST_LAB_MIN_API = 19
+    @Suppress("MagicNumber", "VariableNaming")
+    val FIREBASE_TEST_LAB_MIN_API = 27 // Minimum for Pixel2.arm device
 
-    @Suppress("MagicNumber", "PropertyName", "VariableNaming")
+    @Suppress("MagicNumber", "VariableNaming")
     val FIREBASE_TEST_LAB_MAX_API = 33
 
     val minSdkVersion = run {
@@ -176,7 +181,7 @@ fladle {
             testTimeout.set("5m")
 
             devices.addAll(
-                mapOf("model" to "Nexus5", "version" to minSdkVersion),
+                mapOf("model" to "Pixel2.arm", "version" to minSdkVersion),
                 mapOf("model" to "Pixel2.arm", "version" to targetSdkVersion)
             )
 

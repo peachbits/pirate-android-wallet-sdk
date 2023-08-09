@@ -1,4 +1,4 @@
-package cash.z.ecc.android.sdk.model
+package pirate.android.sdk.model
 
 import org.junit.Test
 import kotlin.test.assertEquals

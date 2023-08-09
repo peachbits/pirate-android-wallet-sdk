@@ -10,7 +10,7 @@ package pirate.android.sdk.model
  * notes that are tied up because we are awaiting change from a transaction. When a note has
  * been spent, its change cannot be used until there are enough confirmations.
  */
-data class PirateWalletBalance(
+data class WalletBalance(
     val total: Arrrtoshi,
     val available: Arrrtoshi
 ) {
@@ -20,8 +20,8 @@ data class PirateWalletBalance(
 
     val pending = total - available
 
-    operator fun plus(other: PirateWalletBalance): PirateWalletBalance =
-        PirateWalletBalance(
+    operator fun plus(other: WalletBalance): WalletBalance =
+        WalletBalance(
             total + other.total,
             available + other.available
         )

@@ -1,6 +1,6 @@
 package pirate.android.sdk.sample
 
-import pirate.android.sdk.internal.Twig
+
 import pirate.android.sdk.model.Arrrtoshi
 import pirate.android.sdk.model.PirateNetwork
 import pirate.android.sdk.util.TestWallet
@@ -14,7 +14,10 @@ import org.junit.Test
  */
 class ShieldFundsSample {
 
-    val SEED_PHRASE = "still champion voice habit trend flight survey between bitter process artefact blind carbon truly provide dizzy crush flush breeze blouse charge solid fish spread" // \"//\"deputy visa gentle among clean scout farm drive comfort patch skin salt ranch cool ramp warrior drink narrow normal lunch behind salt deal person"//"deputy visa gentle among clean scout farm drive comfort patch skin salt ranch cool ramp warrior drink narrow normal lunch behind salt deal person"
+    val SEED_PHRASE = "still champion voice habit trend flight survey between bitter process artefact blind carbon" +
+        " truly provide dizzy crush flush breeze blouse charge solid fish spread"
+    // "deputy visa gentle among clean scout farm drive comfort patch skin salt ranch cool ramp warrior drink narrow
+    // normal lunch behind salt deal person"
 
     /**
      * This test will construct a t2z transaction. It is safe to run this repeatedly, because
@@ -26,14 +29,11 @@ class ShieldFundsSample {
     @Test
     @Ignore("This test is broken")
     fun constructT2Z() = runBlocking {
-        Twig.sprout("ShieldFundsSample")
-
         val wallet = TestWallet(TestWallet.Backups.DEV_WALLET, PirateNetwork.Mainnet)
 
         Assert.assertEquals("foo", "${wallet.unifiedAddress} ${wallet.transparentAddress}")
 //        wallet.shieldFunds()
 
-        Twig.clip("ShieldFundsSample")
         Assert.assertEquals(Arrrtoshi(5), wallet.synchronizer.saplingBalances.value?.available)
     }
 }
