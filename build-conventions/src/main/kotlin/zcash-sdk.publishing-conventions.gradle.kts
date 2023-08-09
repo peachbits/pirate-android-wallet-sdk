@@ -39,12 +39,12 @@ plugins.withId("org.gradle.maven-publish") {
                         "This lightweight SDK connects Android to the Pirate Network, allowing third-party " +
                             "Android apps to send and receive shielded transactions easily, securely and privately."
                     )
-                    url.set("https://github.com/zcash/zcash-android-wallet-sdk/")
+                    url.set("https://github.com/piratenetwork/pirate-android-wallet-sdk/")
                     inceptionYear.set("2018")
                     scm {
-                        url.set("https://github.com/zcash/zcash-android-wallet-sdk/")
-                        connection.set("scm:git:git://github.com/zcash/zcash-android-wallet-sdk.git")
-                        developerConnection.set("scm:git:ssh://git@github.com/zcash/zcash-android-wallet-sdk.git")
+                        url.set("https://github.com/piratenetwork/pirate-android-wallet-sdk/")
+                        connection.set("scm:git:git://github.com/piratenetwork/pirate-android-wallet-sdk.git")
+                        developerConnection.set("scm:git:ssh://git@github.com/piratenetwork/pirate-android-wallet-sdk.git")
                     }
                     developers {
                         developer {
