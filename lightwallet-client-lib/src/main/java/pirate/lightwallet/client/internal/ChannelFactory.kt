@@ -16,7 +16,7 @@ internal class AndroidChannelFactory(context: android.content.Context) : Channel
         return AndroidChannelBuilder
             .forAddress(endpoint.host, endpoint.port)
             .context(context)
-            .enableFullStreamDecompression()
+            // .enableFullStreamDecompression()
             .apply {
                 if (endpoint.isSecure) {
                     useTransportSecurity()
